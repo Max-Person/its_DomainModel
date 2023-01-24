@@ -3,14 +3,10 @@ package its.model.expressions
 import its.model.expressions.literals.*
 import its.model.expressions.operators.*
 import its.model.expressions.util.ComparisonResult
-import its.model.expressions.util.CompilationResult
-import its.model.dictionaries.util.DictionariesUtil.generateAuxiliaryRules
 import org.apache.commons.io.IOUtils
 import org.w3c.dom.Node
 import org.xml.sax.SAXException
 import its.model.util.DataType
-import its.model.util.JenaUtil
-import its.model.util.NamingManager
 import java.io.IOException
 import java.nio.charset.StandardCharsets
 import javax.xml.parsers.DocumentBuilderFactory
@@ -61,71 +57,6 @@ interface Operator {
      * @return Копия
      */
     fun clone(newArgs: List<Operator>): Operator
-
-    /**
-     * Скомпилировать оператор
-     * @return Результат компиляции
-     * @see CompilationResult
-     */
-    fun compile(): CompilationResult
-
-    /**
-     * Скомпилировать выражение
-     * @return Результат компиляции
-     * @see CompilationResult
-     */
-    fun compileExpression(): CompilationResult {
-        // TODO: валидация переменных, вводимых операторами
-        // TODO: таблица переменных, вводимых операторами и их валидация
-        // TODO?: оптимизация пауз?
-        // TODO?: оптимизация правил? (удаление одинаковых строк)
-
-        // Добавляем вспомогательные правила
-        var rules = JenaUtil.AUXILIARY_RULES
-
-        // Добавляем вспомогательные правила, сгенерированные по словарям
-        rules += generateAuxiliaryRules()
-
-        // Добавляем паузу
-        rules += JenaUtil.PAUSE_MARK
-
-        // Генерируем имена
-        val skolemName = NamingManager.genVarName()
-        val resPredicateName = if (resultDataType != null) NamingManager.genPredicateName() else ""
-
-        // Упрощаем выражение
-        val expr = semantic()
-
-        // Если корневой оператор - булево значение
-        if (expr is BooleanLiteral) {
-            // Добавляем выражение, равное значению
-            val head = expr.compileAsHead()
-
-            // Генерируем правило и добавляем правило к остальным
-            rules += JenaUtil.genBooleanRule(head, skolemName, resPredicateName)
-        } else {
-            // Компилируем оператор
-            val result = expr.compile()
-
-            // Добавляем скомпилированные правила в результат
-            rules += result.rules
-
-            // Для всех незаконченных правил
-            result.heads.forEach { head ->
-                // Если есть незаконченное правило
-                if (head.isNotEmpty() && resultDataType != null) {
-                    // Генерируем правило и добавляем правило к остальным
-                    rules += if (resultDataType == DataType.Boolean) {
-                        JenaUtil.genBooleanRule(head, skolemName, resPredicateName)
-                    } else {
-                        JenaUtil.genRule(head, skolemName, resPredicateName, result.value)
-                    }
-                }
-            }
-        }
-
-        return CompilationResult(value = resPredicateName, rules = rules)
-    }
 
     /**
      * Семантический анализ дерева

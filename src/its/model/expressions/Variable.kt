@@ -1,8 +1,6 @@
 package its.model.expressions
 
-import its.model.expressions.util.CompilationResult
 import its.model.util.DataType
-import its.model.util.JenaUtil
 
 /**
  * Переменная, вводимая некоторыми операторами
@@ -20,9 +18,6 @@ class Variable(
 
     override val resultDataType: DataType
         get() = DataType.Object
-
-    override fun compile(): CompilationResult =
-        CompilationResult(value = JenaUtil.genVar(name))
 
     override fun clone(): Operator = Variable(name)
 

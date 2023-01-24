@@ -9,7 +9,7 @@ package its.model.models
 data class EnumModel(
     val name: String,
     val values: List<String>,
-    val linerPredicate: String? = null
+    val isLinear: Boolean,
 ) {
 
     /**
@@ -23,16 +23,7 @@ data class EnumModel(
         require(values.isNotEmpty()) {
             "Перечисление $name не содержит значений."
         }
-        require(linerPredicate == null || linerPredicate.isNotBlank()) {
-            "Некорректное имя предиката, задающего линейный порядок."
-        }
     }
-
-    /**
-     * Является ли перечисление линейным
-     */
-    val isLiner
-        get() = linerPredicate != null
 
     /**
      * Содержит ли перечисление указанное значение

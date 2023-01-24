@@ -1,5 +1,7 @@
 package its.model.models
 
+import its.model.dictionaries.RelationshipsDictionary
+
 /**
  * Модель отношения в предметной области
  * @param name Имя отношения
@@ -8,21 +10,65 @@ package its.model.models
  * @param scaleType Тип порядковой шкалы
  * @param relationType Тип связи между классами
  * @param flags Флаги свойств отношения
- * @param varsCount Количество переменных в правиле для вычисления
- * @param head Голова правила для проверки отношения
- * @param rules Завершенные вспомогательные правила для проверки отношения
  */
 data class RelationshipModel(
     val name: String,
     val parent: String? = null,
     val argsClasses: List<String>,
     val scaleType: ScaleType? = null,
+    val scaleRelationshipsNames: List<String>? = null,
     val relationType: RelationType? = null,
     val flags: Int,
-    val varsCount: Int,
-    val head: String,
-    val rules: String? = null
 ) {
+
+    fun scaleRelationships():List<RelationshipModel>{
+        scaleRelationshipsNames!!
+        when (scaleType) {
+            ScaleType.Liner -> {
+                return listOf(
+                    RelationshipModel(
+                        name = scaleRelationshipsNames[0],
+                        argsClasses = argsClasses,
+                        flags = flags
+                    ),
+                    RelationshipModel(
+                        name = scaleRelationshipsNames[1],
+                        argsClasses = argsClasses,
+                        flags = 16
+                    ),
+                    RelationshipModel(
+                        name = scaleRelationshipsNames[2],
+                        argsClasses = argsClasses,
+                        flags = 16
+                    ),
+                    RelationshipModel(
+                        name = scaleRelationshipsNames[3],
+                        argsClasses = argsClasses.plus(argsClasses[0]),
+                        flags = 0
+                    ),
+                    RelationshipModel(
+                        name = scaleRelationshipsNames[4],
+                        argsClasses = argsClasses.plus(argsClasses[0]),
+                        flags = 0
+                    ),
+                    RelationshipModel(
+                        name = scaleRelationshipsNames[5],
+                        argsClasses = argsClasses.plus(argsClasses[0]),
+                        flags = 0
+                    )
+                )
+            }
+
+            ScaleType.Partial -> {
+                TODO("Отношения частичного порядка")
+                return emptyList()
+            }
+
+            else -> {
+                return emptyList()
+            }
+        }
+    }
 
     /**
      * Проверяет корректность модели

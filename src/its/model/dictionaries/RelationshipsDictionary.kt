@@ -2,26 +2,11 @@ package its.model.dictionaries
 
 import com.opencsv.CSVParserBuilder
 import com.opencsv.CSVReaderBuilder
-import its.model.dictionaries.RelationshipsDictionary.LinerScalePatterns.IS_BETWEEN_PATTERN
-import its.model.dictionaries.RelationshipsDictionary.LinerScalePatterns.IS_BETWEEN_VAR_COUNT
-import its.model.dictionaries.RelationshipsDictionary.LinerScalePatterns.IS_CLOSER_TO_THAN_PATTERN
-import its.model.dictionaries.RelationshipsDictionary.LinerScalePatterns.IS_CLOSER_TO_THAN_VAR_COUNT
-import its.model.dictionaries.RelationshipsDictionary.LinerScalePatterns.IS_FURTHER_FROM_THAN_PATTERN
-import its.model.dictionaries.RelationshipsDictionary.LinerScalePatterns.IS_FURTHER_FROM_THAN_VAR_COUNT
-import its.model.dictionaries.RelationshipsDictionary.LinerScalePatterns.REVERSE_PATTERN
-import its.model.dictionaries.RelationshipsDictionary.LinerScalePatterns.REVERSE_TRANSITIVE_CLOSURE_PATTERN
-import its.model.dictionaries.RelationshipsDictionary.LinerScalePatterns.REVERSE_TRANSITIVE_CLOSURE_VAR_COUNT
-import its.model.dictionaries.RelationshipsDictionary.LinerScalePatterns.REVERSE_VAR_COUNT
-import its.model.dictionaries.RelationshipsDictionary.LinerScalePatterns.TRANSITIVE_CLOSURE_PATTERN
-import its.model.dictionaries.RelationshipsDictionary.LinerScalePatterns.TRANSITIVE_CLOSURE_VAR_COUNT
 import its.model.dictionaries.util.DictionariesUtil.COLUMNS_SEPARATOR
 import its.model.dictionaries.util.DictionariesUtil.LIST_ITEMS_SEPARATOR
 import its.model.models.RelationshipModel
 import its.model.models.RelationshipModel.Companion.RelationType
 import its.model.models.RelationshipModel.Companion.ScaleType
-import its.model.util.JenaUtil.POAS_PREF
-import its.model.util.JenaUtil.genLink
-import its.model.util.NamingManager.genPredicateName
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -30,88 +15,6 @@ import java.nio.file.Paths
  * Словарь свойств
  */
 object RelationshipsDictionary {
-
-    // ++++++ Шаблоны вспомогательных правил для отношений порядковых шкал +++++++++
-    // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-    internal object LinerScalePatterns {
-
-        val NUMERATION_RULES_PATTERN = """
-            
-            [
-            (?var1 <linerPredicate> ?var2)
-            noValue(?var3, <linerPredicate>, ?var1)
-            ->
-            (?var1 <numberPredicate> "1"^^xsd:integer)
-            ]
-        
-            [
-            (?var1 <linerPredicate> ?var2)
-            noValue(?var2, <numberPredicate>)
-            (?var1 <numberPredicate> ?var3)
-            addOne(?var3, ?var4)
-            ->
-            (?var2 <numberPredicate> ?var4)
-            ]
-            
-        """.trimIndent()
-
-        const val REVERSE_VAR_COUNT = 0
-        val REVERSE_PATTERN = """
-            (<arg2> <predicate> <arg1>)
-        """.trimIndent()
-
-        const val TRANSITIVE_CLOSURE_VAR_COUNT = 2
-        val TRANSITIVE_CLOSURE_PATTERN = """
-            (<arg1> <numberPredicate> <var1>)
-            (<arg2> <numberPredicate> <var2>)
-            lessThan(<var1>, <var2>)
-        """.trimIndent()
-
-        const val REVERSE_TRANSITIVE_CLOSURE_VAR_COUNT = 2
-        val REVERSE_TRANSITIVE_CLOSURE_PATTERN = """
-            (<arg1> <numberPredicate> <var1>)
-            (<arg2> <numberPredicate> <var2>)
-            greaterThan(<var1>, <var2>)
-        """.trimIndent()
-
-        const val IS_BETWEEN_VAR_COUNT = 3
-        val IS_BETWEEN_PATTERN = """
-            (<arg1> <numberPredicate> <var1>)
-            (<arg2> <numberPredicate> <var2>)
-            (<arg3> <numberPredicate> <var3>)
-            greaterThan(<var1>, <var2>)
-            lessThan(<var1>, <var3>)
-        """.trimIndent()
-
-        const val IS_CLOSER_TO_THAN_VAR_COUNT = 7
-        val IS_CLOSER_TO_THAN_PATTERN = """
-            (<arg1> <numberPredicate> <var1>)
-            (<arg2> <numberPredicate> <var2>)
-            (<arg3> <numberPredicate> <var3>)
-            difference(<var2>, <var1>, <var4>)
-            difference(<var2>, <var3>, <var5>)
-            absoluteValue(<var4>, <var6>)
-            absoluteValue(<var5>, <var7>)
-            lessThan(<var6>, <var7>)
-        """.trimIndent()
-
-        const val IS_FURTHER_FROM_THAN_VAR_COUNT = 7
-        val IS_FURTHER_FROM_THAN_PATTERN = """
-            (<arg1> <numberPredicate> <var1>)
-            (<arg2> <numberPredicate> <var2>)
-            (<arg3> <numberPredicate> <var3>)
-            difference(<var2>, <var1>, <var4>)
-            difference(<var2>, <var3>, <var5>)
-            absoluteValue(<var4>, <var6>)
-            absoluteValue(<var5>, <var7>)
-            greaterThan(<var6>, <var7>)
-        """.trimIndent()
-    }
-
-    object PartialScalePatterns {
-        // TODO
-    }
 
     // +++++++++++++++++++++++++++++++++ Свойства ++++++++++++++++++++++++++++++++++
     // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -200,85 +103,15 @@ object RelationshipsDictionary {
                             "Некорректный набор флагов для отношения линейного порядка."
                         }
 
-                        val scalePredicate = genPredicateName()
                         scaleRelationships[name] = scaleRelations!!
-                        scalePredicates[name] = scalePredicate
                         flags = 6
-
-                        relationships.addAll(
-                            listOf(
-                                RelationshipModel(
-                                    name = scaleRelations[0],
-                                    argsClasses = args,
-                                    flags = flags,
-                                    varsCount = REVERSE_VAR_COUNT,
-                                    head = REVERSE_PATTERN.replace("<predicate>", genLink(POAS_PREF, name))
-                                ),
-                                RelationshipModel(
-                                    name = scaleRelations[1],
-                                    argsClasses = args,
-                                    flags = 16,
-                                    varsCount = TRANSITIVE_CLOSURE_VAR_COUNT,
-                                    head = TRANSITIVE_CLOSURE_PATTERN.replace(
-                                        "<numberPredicate>",
-                                        genLink(POAS_PREF, scalePredicate)
-                                    )
-                                ),
-                                RelationshipModel(
-                                    name = scaleRelations[2],
-                                    argsClasses = args,
-                                    flags = 16,
-                                    varsCount = REVERSE_TRANSITIVE_CLOSURE_VAR_COUNT,
-                                    head = REVERSE_TRANSITIVE_CLOSURE_PATTERN.replace(
-                                        "<numberPredicate>",
-                                        genLink(POAS_PREF, scalePredicate)
-                                    )
-                                ),
-                                RelationshipModel(
-                                    name = scaleRelations[3],
-                                    argsClasses = args.plus(args[0]),
-                                    flags = 0,
-                                    varsCount = IS_BETWEEN_VAR_COUNT,
-                                    head = IS_BETWEEN_PATTERN.replace(
-                                        "<numberPredicate>",
-                                        genLink(POAS_PREF, scalePredicate)
-                                    )
-                                ),
-                                RelationshipModel(
-                                    name = scaleRelations[4],
-                                    argsClasses = args.plus(args[0]),
-                                    flags = 0,
-                                    varsCount = IS_CLOSER_TO_THAN_VAR_COUNT,
-                                    head = IS_CLOSER_TO_THAN_PATTERN.replace(
-                                        "<numberPredicate>",
-                                        genLink(POAS_PREF, scalePredicate)
-                                    )
-                                ),
-                                RelationshipModel(
-                                    name = scaleRelations[5],
-                                    argsClasses = args.plus(args[0]),
-                                    flags = 0,
-                                    varsCount = IS_FURTHER_FROM_THAN_VAR_COUNT,
-                                    head = IS_FURTHER_FROM_THAN_PATTERN.replace(
-                                        "<numberPredicate>",
-                                        genLink(POAS_PREF, scalePredicate)
-                                    )
-                                )
-                            )
-                        )
                     }
 
                     ScaleType.Partial -> {
                         require(flags == 22 || flags == 0) {
                             "Некорректный набор флагов для отношения частичного порядка."
                         }
-
-                        val scalePredicate = genPredicateName()
-                        scaleRelationships[name] = scaleRelations!!
-                        scalePredicates[name] = scalePredicate
                         flags = 22
-
-                        TODO("Отношения частичного порядка")
                     }
 
                     else -> {
@@ -287,39 +120,18 @@ object RelationshipsDictionary {
                         }
                     }
                 }
-
-                val varsCount = if (args.size == 2) {
-                    0
-                } else {
-                    1
-                }
-
-                val head = if (args.size == 2) {
-                    "(<arg1> ${genLink(POAS_PREF, name)} <arg2>)\n"
-                } else {
-                    var tmp = "(<arg1> ${genLink(POAS_PREF, name)} <var1>)\n"
-
-                    args.forEachIndexed { index, _ ->
-                        if (index != 0) {
-                            tmp += "(<var1> ${genLink(POAS_PREF, name)} <arg${index + 1}>)\n"
-                        }
-                    }
-
-                    tmp
-                }
-
-                relationships.add(
-                    RelationshipModel(
-                        name = name,
-                        parent = parent,
-                        argsClasses = args,
-                        scaleType = scaleType,
-                        relationType = relationType,
-                        flags = flags,
-                        varsCount = varsCount,
-                        head = head
-                    )
+                val r = RelationshipModel(
+                    name = name,
+                    parent = parent,
+                    argsClasses = args,
+                    scaleType = scaleType,
+                    scaleRelationshipsNames = scaleRelations!!,
+                    relationType = relationType,
+                    flags = flags
                 )
+
+                relationships.add(r)
+                relationships.addAll(r.scaleRelationships())
             }
         }
     }
@@ -386,22 +198,4 @@ object RelationshipsDictionary {
      * @param name Имя отношения
      */
     fun args(name: String) = get(name)?.argsClasses
-
-    /**
-     * Получить количество переменных в шаблоне правила
-     * @param name Имя отношения
-     */
-    fun varsCount(name: String) = get(name)?.varsCount
-
-    /**
-     * Получить голову правила для проверки отношения
-     * @param name Имя отношения
-     */
-    fun head(name: String) = get(name)?.head
-
-    /**
-     * Получить завершенные правила для проверки отношения
-     * @param name Имя отношения
-     */
-    fun rules(name: String) = get(name)?.rules
 }

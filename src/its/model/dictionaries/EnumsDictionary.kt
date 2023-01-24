@@ -5,7 +5,6 @@ import com.opencsv.CSVReaderBuilder
 import its.model.dictionaries.util.DictionariesUtil.COLUMNS_SEPARATOR
 import its.model.dictionaries.util.DictionariesUtil.LIST_ITEMS_SEPARATOR
 import its.model.models.EnumModel
-import its.model.util.NamingManager
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -71,15 +70,11 @@ object EnumsDictionary {
                     "Для линейного перечисления $name не указан линейный предикат."
                 }
 
-                if (isLiner) {
-                    scalePredicates[name] = NamingManager.genPredicateName()
-                }
-
                 enums.add(
                     EnumModel(
                         name = name,
                         values = values,
-                        linerPredicate = linerPredicate
+                        isLinear = isLiner
                     )
                 )
             }
@@ -112,7 +107,6 @@ object EnumsDictionary {
     fun validate() {
         enums.forEach {
             it.validate()
-            require(!it.isLiner || scalePredicates.containsKey(it.name))
         }
     }
 
@@ -135,17 +129,4 @@ object EnumsDictionary {
      * @return Список всех значений
      */
     fun values(name: String) = get(name)?.values
-
-    /**
-     * Является ли перечисление линейным
-     * @param name Имя перечисления
-     */
-    fun isLiner(name: String) = get(name)?.isLiner
-
-    /**
-     * Получить линейный предикат перечисления
-     * @param name Имя перечисления
-     * @return Линейный предикат перечисления, задающий порядок
-     */
-    fun linerPredicate(name: String) = get(name)?.linerPredicate
 }

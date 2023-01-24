@@ -1,14 +1,7 @@
 package its.model.expressions.operators
 
 import its.model.expressions.Operator
-import its.model.expressions.util.CompilationResult
 import its.model.util.DataType
-import its.model.util.JenaUtil.genEqualPrim
-import its.model.util.JenaUtil.genGreaterEqualPrim
-import its.model.util.JenaUtil.genGreaterThanPrim
-import its.model.util.JenaUtil.genLessEqualPrim
-import its.model.util.JenaUtil.genLessThanPrim
-import its.model.util.JenaUtil.genNotEqualPrim
 
 /**
  * Сравнение с явным указанием оператора
@@ -95,72 +88,6 @@ class CompareWithComparisonOperator(
 
     override val resultDataType = DataType.Boolean
 
-
-    override fun compile(): CompilationResult {
-        // Объявляем переменные
-        val heads = ArrayList<String>()
-        var completedRules = ""
-
-        // Получаем аргументы
-        val arg0 = arg(0)
-        val arg1 = arg(1)
-
-        // Компилируем аргументы
-        val compiledArg0 = arg0.compile()
-        val compiledArg1 = arg1.compile()
-
-        // Передаем завершенные правила дальше
-        completedRules += compiledArg0.rules +
-                compiledArg1.rules
-
-        // Если нужно отрицание
-        if (isNegative) {
-            // Меням оператор на противоположный
-            operator = when (operator) {
-                ComparisonOperator.Equal -> ComparisonOperator.NotEqual
-                ComparisonOperator.Greater -> ComparisonOperator.LessEqual
-                ComparisonOperator.GreaterEqual -> ComparisonOperator.Less
-                ComparisonOperator.Less -> ComparisonOperator.GreaterEqual
-                ComparisonOperator.LessEqual -> ComparisonOperator.Greater
-                ComparisonOperator.NotEqual -> ComparisonOperator.Equal
-            }
-        }
-
-        // Для всех результатов компиляции
-        compiledArg0.heads.forEach { head0 ->
-            compiledArg1.heads.forEach { head1 ->
-                var head = head0 + head1
-
-                // Добавляем проверку соответствующего оператору примитива
-                head += when (operator) {
-                    ComparisonOperator.Equal -> {
-                        genEqualPrim(compiledArg0.value, compiledArg1.value)
-                    }
-
-                    ComparisonOperator.Greater -> {
-                        genGreaterThanPrim(compiledArg0.value, compiledArg1.value)
-                    }
-                    ComparisonOperator.GreaterEqual -> {
-                        genGreaterEqualPrim(compiledArg0.value, compiledArg1.value)
-                    }
-                    ComparisonOperator.Less -> {
-                        genLessThanPrim(compiledArg0.value, compiledArg1.value)
-                    }
-                    ComparisonOperator.LessEqual -> {
-                        genLessEqualPrim(compiledArg0.value, compiledArg1.value)
-                    }
-                    ComparisonOperator.NotEqual -> {
-                        genNotEqualPrim(compiledArg0.value, compiledArg1.value)
-                    }
-                }
-
-                // Добавляем в рзультат
-                heads.add(head)
-            }
-        }
-
-        return CompilationResult("", heads, completedRules)
-    }
 
     override fun clone(): Operator {
         val newArgs = ArrayList<Operator>()
