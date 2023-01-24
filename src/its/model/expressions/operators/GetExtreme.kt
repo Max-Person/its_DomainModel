@@ -31,12 +31,4 @@ class GetExtreme(
     override fun clone(newArgs: List<Operator>): Operator {
         return GetExtreme(newArgs, varName, extremeVarName)
     }
-
-    companion object {
-
-        /**
-         * Шаблон правила выбора экстремального
-         */
-        private const val EXTREME_PATTERN = "[<ruleHead>->drop(0)]"
-    }
 }

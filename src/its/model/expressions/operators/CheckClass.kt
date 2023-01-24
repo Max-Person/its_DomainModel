@@ -30,12 +30,4 @@ class CheckClass(args: List<Operator>) : BaseOperator(args) {
     override fun clone(newArgs: List<Operator>): Operator {
         return CheckClass(newArgs)
     }
-
-    companion object {
-
-        /**
-         * Имя предиката, используемое при компиляции
-         */
-        private const val CLASS_PREDICATE_NAME = "type"
-    }
 }

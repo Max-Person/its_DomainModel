@@ -28,27 +28,4 @@ class GetPropertyValue(args: List<Operator>) : BaseOperator(args) {
     override fun clone(newArgs: List<Operator>): Operator {
         return GetPropertyValue(newArgs)
     }
-
-    companion object {
-
-        /**
-         * Имя предиката, используемое при компиляции
-         */
-        private const val CLASS_PREDICATE_NAME = "type"
-
-        /**
-         * Имя предиката, используемое при компиляции
-         */
-        private const val SUBCLASS_PREDICATE_NAME = "subClassOf"
-
-        /**
-         * Имя отношения, используемого при вычислении самого удаленного класса
-         */
-        private const val RELATIONSHIP_NAME = "isFurtherFromThan"
-
-        /**
-         * Шаблон правила выбора экстремального класса
-         */
-        private const val EXTREME_CLASS_PATTER = "[\n<ruleHead>\n->\ndrop(0)\n]\n"
-    }
 }

@@ -27,17 +27,4 @@ class GetClass(args: List<Operator>) : BaseOperator(args) {
     override fun clone(newArgs: List<Operator>): Operator {
         return GetClass(newArgs)
     }
-
-    companion object {
-
-        /**
-         * Имя предиката, используемое при компиляции
-         */
-        private const val CLASS_PREDICATE_NAME = "type"
-
-        /**
-         * Имя предиката, используемое при компиляции
-         */
-        private const val SUBCLASS_PREDICATE_NAME = "subClassOf"
-    }
 }
