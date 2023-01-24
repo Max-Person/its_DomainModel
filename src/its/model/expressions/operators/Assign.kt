@@ -7,7 +7,7 @@ import its.model.expressions.literals.DoubleLiteral
 import its.model.expressions.literals.EnumLiteral
 import its.model.expressions.literals.IntegerLiteral
 import its.model.expressions.literals.PropertyLiteral
-import its.model.util.DataType
+import its.model.expressions.types.DataType
 
 /**
  * Присваивание

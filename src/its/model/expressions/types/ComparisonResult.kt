@@ -1,4 +1,4 @@
-package its.model.expressions.util
+package its.model.expressions.types
 
 /**
  * Описывает результат сравнения

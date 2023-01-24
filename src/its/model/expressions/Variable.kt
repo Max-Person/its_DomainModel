@@ -1,6 +1,6 @@
 package its.model.expressions
 
-import its.model.util.DataType
+import its.model.expressions.types.DataType
 
 /**
  * Переменная, вводимая некоторыми операторами

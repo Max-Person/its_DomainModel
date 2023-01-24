@@ -1,6 +1,6 @@
 package its.model.models
 
-import its.model.util.DataType
+import its.model.expressions.types.DataType
 
 /**
  * Модель свойства в предметной области

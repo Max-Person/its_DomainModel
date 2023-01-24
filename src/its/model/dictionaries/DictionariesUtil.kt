@@ -1,6 +1,4 @@
-package its.model.dictionaries.util
-
-import its.model.dictionaries.*
+package its.model.dictionaries
 
 object DictionariesUtil {
 

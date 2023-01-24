@@ -2,8 +2,8 @@ package its.model.expressions
 
 import its.model.expressions.literals.*
 import its.model.expressions.operators.*
-import its.model.expressions.util.ComparisonResult
-import its.model.util.DataType
+import its.model.expressions.types.ComparisonResult
+import its.model.expressions.types.DataType
 import org.w3c.dom.Node
 import org.xml.sax.InputSource
 import org.xml.sax.SAXException

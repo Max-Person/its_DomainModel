@@ -1,4 +1,4 @@
-package its.model.util
+package its.model.expressions.types
 
 /**
  * Тип данных

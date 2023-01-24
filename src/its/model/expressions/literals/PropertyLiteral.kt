@@ -3,7 +3,7 @@ package its.model.expressions.literals
 import its.model.dictionaries.PropertiesDictionary
 import its.model.expressions.Literal
 import its.model.expressions.Operator
-import its.model.util.DataType
+import its.model.expressions.types.DataType
 
 /**
  * Property литерал

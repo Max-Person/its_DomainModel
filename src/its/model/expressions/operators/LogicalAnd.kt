@@ -1,7 +1,7 @@
 package its.model.expressions.operators
 
 import its.model.expressions.Operator
-import its.model.util.DataType
+import its.model.expressions.types.DataType
 
 /**
  * Логическое И

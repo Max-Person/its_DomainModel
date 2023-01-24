@@ -2,8 +2,8 @@ package its.model.dictionaries
 
 import com.opencsv.CSVParserBuilder
 import com.opencsv.CSVReaderBuilder
-import its.model.dictionaries.util.DictionariesUtil.COLUMNS_SEPARATOR
-import its.model.dictionaries.util.DictionariesUtil.LIST_ITEMS_SEPARATOR
+import its.model.dictionaries.DictionariesUtil.COLUMNS_SEPARATOR
+import its.model.dictionaries.DictionariesUtil.LIST_ITEMS_SEPARATOR
 import its.model.models.EnumModel
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
