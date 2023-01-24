@@ -3,12 +3,12 @@ package its.model.expressions
 import its.model.expressions.literals.*
 import its.model.expressions.operators.*
 import its.model.expressions.util.ComparisonResult
-import org.apache.commons.io.IOUtils
 import org.w3c.dom.Node
 import org.xml.sax.SAXException
 import its.model.util.DataType
+import org.xml.sax.InputSource
 import java.io.IOException
-import java.nio.charset.StandardCharsets
+import java.io.StringReader
 import javax.xml.parsers.DocumentBuilderFactory
 import javax.xml.parsers.ParserConfigurationException
 
@@ -190,7 +190,7 @@ interface Operator {
                 // Создаем DocumentBuilder
                 val documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder()
                 // Создаем DOM документ из строки
-                val document = documentBuilder.parse(IOUtils.toInputStream(str, StandardCharsets.UTF_8))
+                val document = documentBuilder.parse(InputSource(StringReader(str)))
 
                 // Получаем корневой элемент документа
                 val xml: Node = document.documentElement
