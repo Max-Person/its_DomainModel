@@ -4,7 +4,7 @@ package its.model.models
  * Модель перечисления в предметной области
  * @param name Имя перечисления
  * @param values Возможные значения
- * @param linerPredicate Имя предиката, задающего линейный порядок
+ * @param isLinear Является ли перечисление упорядоченным
  */
 data class EnumModel(
     val name: String,

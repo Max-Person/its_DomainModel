@@ -98,7 +98,7 @@ object RelationshipsDictionary {
                 }
 
                 when (scaleType) {
-                    ScaleType.Liner -> {
+                    ScaleType.Linear -> {
                         require(flags == 6 || flags == 0) {
                             "Некорректный набор флагов для отношения линейного порядка."
                         }

@@ -1,13 +1,12 @@
 package its.model.models
 
-import its.model.dictionaries.RelationshipsDictionary
-
 /**
  * Модель отношения в предметной области
  * @param name Имя отношения
  * @param parent Имя родительского отношения
  * @param argsClasses Имена классов аргументов
  * @param scaleType Тип порядковой шкалы
+ * @param scaleRelationshipsNames Имена отношений, задаваемых этим базовым отношением
  * @param relationType Тип связи между классами
  * @param flags Флаги свойств отношения
  */
@@ -24,7 +23,7 @@ data class RelationshipModel(
     fun scaleRelationships():List<RelationshipModel>{
         scaleRelationshipsNames!!
         when (scaleType) {
-            ScaleType.Liner -> {
+            ScaleType.Linear -> {
                 return listOf(
                     RelationshipModel(
                         name = scaleRelationshipsNames[0],
@@ -85,7 +84,7 @@ data class RelationshipModel(
             "Отношение порядковой шкалы может быть только бинарным и только между объектами одного класса."
         }
         when (scaleType) {
-            ScaleType.Liner -> require(flags == 6) {
+            ScaleType.Linear -> require(flags == 6) {
                 "Некорректный набор флагов для отношения линейного порядка."
             }
 
@@ -200,7 +199,7 @@ data class RelationshipModel(
             /**
              * Линейный порядок
              */
-            object Liner : ScaleType()
+            object Linear : ScaleType()
 
             /**
              * Частичный порядок
@@ -210,7 +209,7 @@ data class RelationshipModel(
             companion object {
 
                 fun valueOf(value: String) = when (value) {
-                    "LINER" -> Liner
+                    "LINER" -> Linear
                     "PARTIAL" -> Partial
                     else -> null
                 }

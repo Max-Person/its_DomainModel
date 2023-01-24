@@ -60,13 +60,13 @@ object EnumsDictionary {
             rows.forEach { row ->
                 val name = row[0]
                 val values = row[1].split(LIST_ITEMS_SEPARATOR).filter { it.isNotBlank() }
-                val isLiner = row[2].toBoolean()
-                val linerPredicate = row[3].ifBlank { null }
+                val isLinear = row[2].toBoolean()
+                val linearPredicate = row[3].ifBlank { null }
 
                 require(!exist(name)) {
                     "Перечисление $name уже объявлено в словаре."
                 }
-                require(!isLiner || linerPredicate != null) {
+                require(!isLinear || linearPredicate != null) {
                     "Для линейного перечисления $name не указан линейный предикат."
                 }
 
@@ -74,7 +74,7 @@ object EnumsDictionary {
                     EnumModel(
                         name = name,
                         values = values,
-                        isLinear = isLiner
+                        isLinear = isLinear
                     )
                 )
             }

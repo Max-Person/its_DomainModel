@@ -1,12 +1,12 @@
 package its.model.expressions.operators
 
+import its.model.dictionaries.PropertiesDictionary
 import its.model.expressions.Literal
 import its.model.expressions.Operator
 import its.model.expressions.literals.DoubleLiteral
 import its.model.expressions.literals.EnumLiteral
 import its.model.expressions.literals.IntegerLiteral
 import its.model.expressions.literals.PropertyLiteral
-import its.model.dictionaries.PropertiesDictionary
 import its.model.util.DataType
 
 /**
