@@ -10,7 +10,7 @@ package its.model.models
  * @param relationType Тип связи между классами
  * @param flags Флаги свойств отношения
  */
-data class RelationshipModel(
+open class RelationshipModel(
     val name: String,
     val parent: String? = null,
     val argsClasses: List<String>,
@@ -20,7 +20,12 @@ data class RelationshipModel(
     val flags: Int,
 ) {
 
-    fun scaleRelationships():List<RelationshipModel>{
+    /**
+     * Создает набор производных отношений порядковой шкалы
+     *
+     * *Важно:* Все элементы возвращаемого массива должны быть объектами реализующего класса (наследника)
+     */
+    internal open fun scaleRelationships():List<RelationshipModel>{
         scaleRelationshipsNames!!
         when (scaleType) {
             ScaleType.Linear -> {
@@ -73,7 +78,7 @@ data class RelationshipModel(
      * Проверяет корректность модели
      * @throws IllegalArgumentException
      */
-    fun validate() {
+    open fun validate() {
         require(name.isNotBlank()) {
             "Некорректное имя отношения."
         }
@@ -96,6 +101,34 @@ data class RelationshipModel(
                 "Некорректный набор флагов."
             }
         }
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as RelationshipModel
+
+        if (name != other.name) return false
+        if (parent != other.parent) return false
+        if (argsClasses != other.argsClasses) return false
+        if (scaleType != other.scaleType) return false
+        if (scaleRelationshipsNames != other.scaleRelationshipsNames) return false
+        if (relationType != other.relationType) return false
+        if (flags != other.flags) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = name.hashCode()
+        result = 31 * result + (parent?.hashCode() ?: 0)
+        result = 31 * result + argsClasses.hashCode()
+        result = 31 * result + (scaleType?.hashCode() ?: 0)
+        result = 31 * result + (scaleRelationshipsNames?.hashCode() ?: 0)
+        result = 31 * result + (relationType?.hashCode() ?: 0)
+        result = 31 * result + flags
+        return result
     }
 
     /**
@@ -134,7 +167,57 @@ data class RelationshipModel(
     val isIntransitive
         get() = flags and INTRANSITIVE != 0
 
-    companion object {
+    /**
+     * Типы связей между классами
+     */
+    enum class RelationType {
+
+        /**
+         * Один к одному
+         */
+        OneToOne,
+
+        /**
+         * Один ко многим
+         */
+        OneToMany;
+
+        companion object _static {
+            @JvmStatic
+            fun fromString(value: String) = when (value) {
+                "ONE_TO_ONE" -> OneToOne
+                "ONE_TO_MANY" -> OneToMany
+                else -> null
+            }
+        }
+    }
+
+    /**
+     * Тип порядковой шкалы
+     */
+    enum class ScaleType {
+
+        /**
+         * Линейный порядок
+         */
+        Linear,
+
+        /**
+         * Частичный порядок
+         */
+        Partial;
+
+        companion object _static {
+            @JvmStatic
+            fun fromString(value: String) = when (value) {
+                "LINEAR" -> Linear
+                "PARTIAL" -> Partial
+                else -> null
+            }
+        }
+    }
+
+    companion object _static {
 
         /**
          * Флаг симметричности отношения
@@ -165,55 +248,7 @@ data class RelationshipModel(
          * Флаг анти-транзитивности отношения
          */
         const val INTRANSITIVE = 32
-
-        /**
-         * Типы связей между классами
-         */
-        sealed class RelationType {
-
-            /**
-             * Один к одному
-             */
-            object OneToOne : RelationType()
-
-            /**
-             * Один ко многим
-             */
-            object OneToMany : RelationType()
-
-            companion object {
-
-                fun valueOf(value: String) = when (value) {
-                    "ONE_TO_ONE" -> OneToOne
-                    "ONE_TO_MANY" -> OneToMany
-                    else -> null
-                }
-            }
-        }
-
-        /**
-         * Тип порядковой шкалы
-         */
-        sealed class ScaleType {
-
-            /**
-             * Линейный порядок
-             */
-            object Linear : ScaleType()
-
-            /**
-             * Частичный порядок
-             */
-            object Partial : ScaleType()
-
-            companion object {
-
-                fun valueOf(value: String) = when (value) {
-                    "LINER" -> Linear
-                    "PARTIAL" -> Partial
-                    else -> null
-                }
-            }
-        }
     }
+
+
 }
