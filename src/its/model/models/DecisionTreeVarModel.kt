@@ -5,7 +5,7 @@ package its.model.models
  * @param name Имя переменной
  * @param className Имя класса переменной
  */
-data class DecisionTreeVarModel(
+open class DecisionTreeVarModel(
     val name: String,
     val className: String
 ) {
@@ -14,7 +14,7 @@ data class DecisionTreeVarModel(
      * Проверяет корректность модели
      * @throws IllegalArgumentException
      */
-    fun validate() {
+    open fun validate() {
         require(name.isNotBlank()) {
             "Некорректное имя переменной."
         }

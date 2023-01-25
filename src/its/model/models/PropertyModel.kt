@@ -11,10 +11,11 @@ import its.model.expressions.types.DataType
  * @param valuesRanges Диапазоны возможных значений свойства (только для свойств с типом Integer и Double)
  * @see DataType
  */
-data class PropertyModel(
+open class PropertyModel(
     val name: String,
-    val dataType: DataType,
+    val dataType: DataType?,
     val enumName: String? = null,
+    val isStatic: Boolean,
     val owners: List<String>? = null,
     val valuesRanges: List<Pair<Double, Double>>? = null
 ) {
@@ -23,7 +24,7 @@ data class PropertyModel(
      * Проверяет корректность модели
      * @throws IllegalArgumentException
      */
-    fun validate() {
+    open fun validate() {
         require(name.isNotBlank()) {
             "Некорректное имя свойства."
         }
@@ -48,12 +49,6 @@ data class PropertyModel(
             }
         }
     }
-
-    /**
-     * Является свойство ли статическим
-     */
-    val isStatic
-        get() = owners != null
 
     /**
      * Попадает ли значение в один из диапазонов свойства

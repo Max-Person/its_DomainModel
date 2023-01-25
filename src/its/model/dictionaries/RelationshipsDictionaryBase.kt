@@ -1,29 +1,16 @@
 package its.model.dictionaries
 
-import com.opencsv.CSVParserBuilder
-import com.opencsv.CSVReaderBuilder
-import its.model.dictionaries.DictionariesUtil.COLUMNS_SEPARATOR
-import its.model.dictionaries.DictionariesUtil.valueParser
+import its.model.DomainModel
 import its.model.models.RelationshipModel
-import java.nio.charset.StandardCharsets
-import java.nio.file.Files
-import java.nio.file.Paths
 import kotlin.reflect.KClass
-import kotlin.reflect.full.primaryConstructor
-import kotlin.reflect.jvm.javaConstructor
 
 /**
- * Словарь свойств
+ * Словарь отношений
  */
-abstract class RelationshipsDictionaryBase<R : RelationshipModel>(path: String, stored: KClass<R>) {
+abstract class RelationshipsDictionaryBase<R : RelationshipModel>(path: String, storedType: KClass<R>) : DictionaryBase<R>(path, storedType){
 
     // +++++++++++++++++++++++++++++++++ Свойства ++++++++++++++++++++++++++++++++++
     // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-    /**
-     * Список отношений
-     */
-    private val relationships: MutableList<R> = mutableListOf()
 
     /**
      * Отношения порядковых шкал
@@ -31,70 +18,48 @@ abstract class RelationshipsDictionaryBase<R : RelationshipModel>(path: String, 
      * key - имя отношения,
      * val - имена отношений порядковых шкал для этого отношения
      */
-    private val scaleRelationships: MutableMap<String, List<String>> = HashMap()
+    protected val scaleRelationships: MutableMap<String, List<String>> = HashMap()
 
     // ++++++++++++++++++++++++++++++++ Инициализация ++++++++++++++++++++++++++++++
     // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-    init {
-        val parser = CSVParserBuilder().withSeparator(COLUMNS_SEPARATOR).build()
-        val bufferedReader = Files.newBufferedReader(Paths.get(path), StandardCharsets.UTF_8)
-        val csvReader = CSVReaderBuilder(bufferedReader).withCSVParser(parser).build()
-        csvReader.use { reader ->
-            val rows = reader.readAll()
-
-            rows.forEach { row ->
-                val constructor = stored.primaryConstructor?.javaConstructor!!
-                val args = row.mapIndexed { index, s ->
-                    valueParser.parseType(s, constructor.genericParameterTypes[index])
-                }
-                val relationship = constructor.newInstance(*args.toTypedArray())
-
-                validateAdded(relationship)
-
-                relationships.add(relationship)
-                val scaleRelations = relationship.scaleRelationships().map {
-                    require(stored.isInstance(it))
-                    it as R
-                }
-                relationships.addAll(scaleRelations)
-                scaleRelationships[relationship.name] = scaleRelations.map { it.name }
-            }
+    override fun onAddValidation(value: R, stored: KClass<R>) {
+        require(!exist(value.name)) {
+            "Отношение ${value.name} уже объявлено в словаре."
         }
+        value.validate()
+    }
+
+    override fun onAddActions(added: R, stored: KClass<R>) {
+        val scaleRelations = added.scaleRelationships().map {
+            require(stored.isInstance(it))
+            it as R
+        }
+        values.addAll(scaleRelations)
+        scaleRelationships[added.name] = scaleRelations.map { it.name }
     }
 
     // ++++++++++++++++++++++++++++++++++++ Методы +++++++++++++++++++++++++++++++++
     // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-    fun forEach(block: (R) -> Unit) {
-        relationships.forEach(block)
-    }
-
     /**
      * Получить модель отношения по имени
      * @param name Имя отношения
      */
-    fun get(name: String) = relationships.firstOrNull { it.name == name }
-
-    protected open fun validateAdded(added: R){
-        require(!exist(added.name)) {
-            "Отношение ${added.name} уже объявлено в словаре."
-        }
-        added.validate()
-    }
+    fun get(name: String) = values.firstOrNull { it.name == name }
 
     /**
      * Проверяет корректность содержимого словаря
      * @throws IllegalArgumentException
      */
-    open fun validate() {
-        relationships.forEach {
+    override fun validate() {
+        values.forEach {
             it.validate()
             require(it.parent == null || exist(it.parent)) {
                 "Отношение ${it.parent} не объявлено в словаре."
             }
             it.argsClasses.forEach { className ->
-                require(ClassesDictionary.exist(className)) {
+                require(DomainModel.classesDictionary.exist(className)) {
                     "Класс $className не объявлен в словаре."
                 }
             }
@@ -118,7 +83,7 @@ abstract class RelationshipsDictionaryBase<R : RelationshipModel>(path: String, 
      * Существует ли отношение
      * @param name Имя отношения
      */
-    fun exist(name: String) = relationships.any { it.name == name }
+    fun exist(name: String) = values.any { it.name == name }
 
     /**
      * Получить список классов аргументов

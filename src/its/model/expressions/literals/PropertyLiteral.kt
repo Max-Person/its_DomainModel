@@ -1,6 +1,6 @@
 package its.model.expressions.literals
 
-import its.model.dictionaries.PropertiesDictionary
+import its.model.DomainModel
 import its.model.expressions.Literal
 import its.model.expressions.Operator
 import its.model.expressions.types.DataType
@@ -13,7 +13,7 @@ class PropertyLiteral(value: String) : Literal(value) {
 
     init {
         // Проверяем существование свойства
-        require(PropertiesDictionary.exist(value)) { "Свойство $value не объявлено в словаре." }
+        require(DomainModel.propertiesDictionary.exist(value)) { "Свойство $value не объявлено в словаре." }
     }
 
     override val resultDataType: DataType

@@ -1,6 +1,6 @@
 package its.model.expressions.operators
 
-import its.model.dictionaries.PropertiesDictionary
+import its.model.DomainModel
 import its.model.expressions.Literal
 import its.model.expressions.Operator
 import its.model.expressions.literals.DoubleLiteral
@@ -21,11 +21,11 @@ class Assign(args: List<Operator>) : BaseOperator(args) {
             val propertyName = (arg(1) as PropertyLiteral).value
             val newValueDataType = arg(2).resultDataType!!
 
-            require(PropertiesDictionary.isStatic(propertyName) == false) {
+            require(DomainModel.propertiesDictionary.isStatic(propertyName) == false) {
                 "Свойство $propertyName не должно быть статическим."
             }
-            require(PropertiesDictionary.dataType(propertyName) == newValueDataType) {
-                "Тип данных $newValueDataType не соответствует типу ${PropertiesDictionary.dataType(propertyName)} свойства $propertyName."
+            require(DomainModel.propertiesDictionary.dataType(propertyName) == newValueDataType) {
+                "Тип данных $newValueDataType не соответствует типу ${DomainModel.propertiesDictionary.dataType(propertyName)} свойства $propertyName."
             }
             require(arg2 is Literal || arg2 is GetPropertyValue) {
                 "Нельзя присвоить свойству динамическое значение." // FIXME?: можно, но тогда не получится его контролировать
@@ -34,30 +34,30 @@ class Assign(args: List<Operator>) : BaseOperator(args) {
             // FIXME?: проверять попадает ли в диапазон значение при arg2 is GetPropertyValue?
             when (arg2) {
                 is IntegerLiteral -> {
-                    require(PropertiesDictionary.isValueInRange(propertyName, arg2.value.toInt()) == true) {
+                    require(DomainModel.propertiesDictionary.isValueInRange(propertyName, arg2.value.toInt()) == true) {
                         "Значение ${arg2.value.toInt()} вне диапазона значений свойства $propertyName."
                     }
                 }
 
                 is DoubleLiteral -> {
-                    require(PropertiesDictionary.isValueInRange(propertyName, arg2.value.toDouble()) == true) {
+                    require(DomainModel.propertiesDictionary.isValueInRange(propertyName, arg2.value.toDouble()) == true) {
                         "Значение ${arg2.value.toDouble()} вне диапазона значений свойства $propertyName."
                     }
                 }
 
                 is EnumLiteral -> {
-                    require(PropertiesDictionary.enumName(propertyName)!! == arg2.owner) {
-                        "Тип перечисления ${PropertiesDictionary.enumName(propertyName)} свойства $propertyName не соответствует типу перечисления ${arg2.owner} значения."
+                    require(DomainModel.propertiesDictionary.enumName(propertyName)!! == arg2.owner) {
+                        "Тип перечисления ${DomainModel.propertiesDictionary.enumName(propertyName)} свойства $propertyName не соответствует типу перечисления ${arg2.owner} значения."
                     }
                 }
 
                 is GetPropertyValue -> {
                     require(
-                        PropertiesDictionary.enumName(propertyName)!!
-                                == PropertiesDictionary.enumName((arg2.arg(1) as PropertyLiteral).value)!!
+                        DomainModel.propertiesDictionary.enumName(propertyName)!!
+                                == DomainModel.propertiesDictionary.enumName((arg2.arg(1) as PropertyLiteral).value)!!
                     ) {
-                        "Тип перечисления ${PropertiesDictionary.enumName(propertyName)} свойства $propertyName не соответствует типу перечисления ${
-                            PropertiesDictionary.enumName(
+                        "Тип перечисления ${DomainModel.propertiesDictionary.enumName(propertyName)} свойства $propertyName не соответствует типу перечисления ${
+                            DomainModel.propertiesDictionary.enumName(
                                 (arg2.arg(1) as PropertyLiteral).value
                             )
                         } значения."

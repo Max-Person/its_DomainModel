@@ -6,7 +6,7 @@ package its.model.models
  * @param values Возможные значения
  * @param isLinear Является ли перечисление упорядоченным
  */
-data class EnumModel(
+open class EnumModel(
     val name: String,
     val values: List<String>,
     val isLinear: Boolean,
@@ -16,7 +16,7 @@ data class EnumModel(
      * Проверяет корректность модели
      * @throws IllegalArgumentException
      */
-    fun validate() {
+    open fun validate() {
         require(name.isNotBlank()) {
             "Некорректное имя перечисления."
         }

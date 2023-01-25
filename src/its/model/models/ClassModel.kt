@@ -9,7 +9,7 @@ import its.model.expressions.types.DataType
  * @param parent Имя класса родителя
  * @param calcExprXML Выражение для вычисления в формате XML
  */
-data class ClassModel(
+open class ClassModel(
     val name: String,
     val parent: String? = null,
     val calcExprXML: String? = null
@@ -19,7 +19,7 @@ data class ClassModel(
      * Проверяет корректность модели
      * @throws IllegalArgumentException
      */
-    fun validate() {
+    open fun validate() {
         require(name.isNotBlank()) {
             "Некорректное имя класса."
         }
@@ -36,12 +36,4 @@ data class ClassModel(
      */
     val calcExpr
         get() = if (calcExprXML != null) Operator.fromXMLString(calcExprXML) else null
-
-    companion object {
-
-        /**
-         * Имя переменной в выражении для вычисления класса
-         */
-        const val CALC_EXPR_VAR_NAME = "obj"
-    }
 }

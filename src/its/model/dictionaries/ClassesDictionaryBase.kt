@@ -1,65 +1,24 @@
 package its.model.dictionaries
 
-import com.opencsv.CSVParserBuilder
-import com.opencsv.CSVReaderBuilder
-import its.model.dictionaries.DictionariesUtil.COLUMNS_SEPARATOR
 import its.model.models.ClassModel
-import java.nio.charset.StandardCharsets
-import java.nio.file.Files
-import java.nio.file.Paths
+import kotlin.reflect.KClass
 
 /**
  * Словарь классов
  */
-object ClassesDictionary {
-
-    // +++++++++++++++++++++++++++++++++ Свойства ++++++++++++++++++++++++++++++++++
-    // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-    /**
-     * Список классов
-     */
-    private val classes: MutableList<ClassModel> = mutableListOf()
+abstract class ClassesDictionaryBase<C : ClassModel>(path: String, storedType: KClass<C>) : DictionaryBase<C>(path, storedType) {
 
     // ++++++++++++++++++++++++++++++++ Инициализация ++++++++++++++++++++++++++++++
     // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-    /**
-     * Инициализирует словарь данными
-     * @param path Путь с фалу с данными для словаря
-     */
-    internal fun init(path: String) {
-        // Очищаем старые значения
-        classes.clear()
-
-        // Создаем объекты
-        val parser = CSVParserBuilder().withSeparator(COLUMNS_SEPARATOR).build()
-        val bufferedReader = Files.newBufferedReader(Paths.get(path), StandardCharsets.UTF_8)
-        val csvReader = CSVReaderBuilder(bufferedReader).withCSVParser(parser).build()
-
-        // Считываем файл
-        csvReader.use { reader ->
-            val rows = reader.readAll()
-
-            rows.forEach { row ->
-                val name = row[0]
-                val parent = row[1].ifBlank { null }
-                val calcExprXML = row[2].ifBlank { null }
-
-                require(!exist(name)) {
-                    "Класс $name уже объявлен в словаре."
-                }
-
-                classes.add(
-                    ClassModel(
-                        name = name,
-                        parent = parent,
-                        calcExprXML = calcExprXML
-                    )
-                )
-            }
+    override fun onAddValidation(value: C, stored: KClass<C>) {
+        require(!exist(value.name)) {
+            "Класс ${value.name} уже объявлено в словаре."
         }
+        value.validate()
     }
+
+    override fun onAddActions(added: C, stored: KClass<C>) {}
 
     // ++++++++++++++++++++++++++++++++++++ Методы +++++++++++++++++++++++++++++++++
     // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -68,14 +27,14 @@ object ClassesDictionary {
      * Получить модель класса по имени
      * @param name Имя класса
      */
-    internal fun get(name: String) = classes.firstOrNull { it.name == name }
+    internal fun get(name: String) = values.firstOrNull { it.name == name }
 
     /**
      * Проверяет корректность содержимого словаря
      * @throws IllegalArgumentException
      */
-    fun validate() {
-        classes.forEach {
+    override fun validate() {
+        values.forEach {
             it.validate()
             require(it.parent == null || exist(it.parent)) {
                 "Класс ${it.parent} не объявлен в словаре."
@@ -87,7 +46,7 @@ object ClassesDictionary {
      * Существует ли класс
      * @param name Имя класса
      */
-    fun exist(name: String) = classes.any { it.name == name }
+    fun exist(name: String) = values.any { it.name == name }
 
     /**
      * Получить имя родительского класса

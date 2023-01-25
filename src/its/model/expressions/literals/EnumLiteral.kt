@@ -1,6 +1,6 @@
 package its.model.expressions.literals
 
-import its.model.dictionaries.EnumsDictionary
+import its.model.DomainModel
 import its.model.expressions.Literal
 import its.model.expressions.Operator
 import its.model.expressions.types.DataType
@@ -14,8 +14,8 @@ class EnumLiteral(value: String, val owner: String) : Literal(value) {
 
     init {
         // Проверяем существование enum и наличие у него такого значения
-        require(EnumsDictionary.exist(owner)) { "Enum $owner не объявлен в словаре." }
-        require(EnumsDictionary.containsValue(owner, value) == true) {
+        require(DomainModel.enumsDictionary.exist(owner)) { "Enum $owner не объявлен в словаре." }
+        require(DomainModel.enumsDictionary.containsValue(owner, value) == true) {
             "Enum $owner не содержит значения $value."
         }
     }

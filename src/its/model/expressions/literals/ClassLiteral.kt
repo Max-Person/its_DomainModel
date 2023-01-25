@@ -1,6 +1,6 @@
 package its.model.expressions.literals
 
-import its.model.dictionaries.ClassesDictionary
+import its.model.DomainModel
 import its.model.expressions.Literal
 import its.model.expressions.Operator
 import its.model.expressions.types.DataType
@@ -13,7 +13,7 @@ class ClassLiteral(value: String) : Literal(value) {
 
     init {
         // Проверяем существование класса
-        require(ClassesDictionary.exist(value)) { "Класс $value не объявлен в словаре." }
+        require(DomainModel.classesDictionary.exist(value)) { "Класс $value не объявлен в словаре." }
     }
 
     override val resultDataType: DataType

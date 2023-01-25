@@ -1,6 +1,6 @@
 package its.model.expressions.literals
 
-import its.model.dictionaries.RelationshipsDictionary
+import its.model.DomainModel
 import its.model.expressions.Literal
 import its.model.expressions.Operator
 import its.model.expressions.types.DataType
@@ -13,7 +13,7 @@ class RelationshipLiteral(value: String) : Literal(value) {
 
     init {
         // Проверяем существование отношения
-        require(RelationshipsDictionary.exist(value)) { "Отношение $value не объявлено в словаре." }
+        require(DomainModel.relationshipsDictionary.exist(value)) { "Отношение $value не объявлено в словаре." }
     }
 
     override val resultDataType: DataType
