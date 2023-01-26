@@ -6,19 +6,19 @@ import kotlin.reflect.KClass
 /**
  * Словарь классов
  */
-abstract class ClassesDictionaryBase<C : ClassModel>(path: String, storedType: KClass<C>) : DictionaryBase<C>(path, storedType) {
+abstract class ClassesDictionaryBase<C : ClassModel>(storedType: KClass<C>) : DictionaryBase<C>(storedType) {
 
     // ++++++++++++++++++++++++++++++++ Инициализация ++++++++++++++++++++++++++++++
     // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-    override fun onAddValidation(value: C, stored: KClass<C>) {
+    override fun onAddValidation(value: C) {
         require(!exist(value.name)) {
             "Класс ${value.name} уже объявлено в словаре."
         }
         value.validate()
     }
 
-    override fun onAddActions(added: C, stored: KClass<C>) {}
+    override fun onAddActions(added: C) {}
 
     // ++++++++++++++++++++++++++++++++++++ Методы +++++++++++++++++++++++++++++++++
     // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

@@ -8,19 +8,19 @@ import kotlin.reflect.KClass
 /**
  * Словарь свойств
  */
-abstract class PropertiesDictionaryBase<P : PropertyModel>(path: String, storedType: KClass<P>) : DictionaryBase<P>(path, storedType) {
+abstract class PropertiesDictionaryBase<P : PropertyModel>(storedType: KClass<P>) : DictionaryBase<P>(storedType) {
 
     // ++++++++++++++++++++++++++++++++ Инициализация ++++++++++++++++++++++++++++++
     // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-    override fun onAddValidation(value: P, stored: KClass<P>) {
+    override fun onAddValidation(value: P) {
         require(!exist(value.name)) {
             "Свойство ${value.name} уже объявлено в словаре."
         }
         value.validate()
     }
 
-    override fun onAddActions(added: P, stored: KClass<P>) {}
+    override fun onAddActions(added: P) {}
 
     // ++++++++++++++++++++++++++++++++++++ Методы +++++++++++++++++++++++++++++++++
     // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

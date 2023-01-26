@@ -7,7 +7,7 @@ import kotlin.reflect.KClass
 /**
  * Словарь отношений
  */
-abstract class RelationshipsDictionaryBase<R : RelationshipModel>(path: String, storedType: KClass<R>) : DictionaryBase<R>(path, storedType){
+abstract class RelationshipsDictionaryBase<R : RelationshipModel>(storedType: KClass<R>) : DictionaryBase<R>(storedType){
 
     // +++++++++++++++++++++++++++++++++ Свойства ++++++++++++++++++++++++++++++++++
     // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -23,19 +23,19 @@ abstract class RelationshipsDictionaryBase<R : RelationshipModel>(path: String, 
     // ++++++++++++++++++++++++++++++++ Инициализация ++++++++++++++++++++++++++++++
     // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-    override fun onAddValidation(value: R, stored: KClass<R>) {
+    override fun onAddValidation(value: R) {
         require(!exist(value.name)) {
             "Отношение ${value.name} уже объявлено в словаре."
         }
         value.validate()
     }
 
-    override fun onAddActions(added: R, stored: KClass<R>) {
+    override fun onAddActions(added: R) {
         val scaleRelations = added.scaleRelationships().map {
-            require(stored.isInstance(it))
+            require(storedType.isInstance(it))
             it as R
         }
-        values.addAll(scaleRelations)
+        addAll(scaleRelations)
         scaleRelationships[added.name] = scaleRelations.map { it.name }
     }
 

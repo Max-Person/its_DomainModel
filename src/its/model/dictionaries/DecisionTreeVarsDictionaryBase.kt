@@ -8,19 +8,19 @@ import kotlin.reflect.KClass
 /**
  * Словарь переменных дерева мысли
  */
-abstract class DecisionTreeVarsDictionaryBase<V : DecisionTreeVarModel>(path: String, storedType: KClass<V>) : DictionaryBase<V>(path, storedType) {
+abstract class DecisionTreeVarsDictionaryBase<V : DecisionTreeVarModel>(storedType: KClass<V>) : DictionaryBase<V>(storedType) {
 
     // ++++++++++++++++++++++++++++++++ Инициализация ++++++++++++++++++++++++++++++
     // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-    override fun onAddValidation(value: V, stored: KClass<V>) {
+    override fun onAddValidation(value: V) {
         require(!exist(value.name)) {
             "Переменная ${value.name} уже объявлено в словаре."
         }
         value.validate()
     }
 
-    override fun onAddActions(added: V, stored: KClass<V>) {}
+    override fun onAddActions(added: V) {}
 
     // ++++++++++++++++++++++++++++++++++++ Методы +++++++++++++++++++++++++++++++++
     // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

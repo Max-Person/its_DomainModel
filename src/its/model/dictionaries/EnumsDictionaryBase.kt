@@ -6,19 +6,19 @@ import kotlin.reflect.KClass
 /**
  * Словарь перечислений
  */
-abstract class EnumsDictionaryBase<E : EnumModel>(path: String, storedType: KClass<E>) : DictionaryBase<E>(path, storedType)  {
+abstract class EnumsDictionaryBase<E : EnumModel>(storedType: KClass<E>) : DictionaryBase<E>(storedType)  {
 
     // ++++++++++++++++++++++++++++++++ Инициализация ++++++++++++++++++++++++++++++
     // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-    override fun onAddValidation(value: E, stored: KClass<E>) {
+    override fun onAddValidation(value: E) {
         require(!exist(value.name)) {
             "Перечисление ${value.name} уже объявлено в словаре."
         }
         value.validate()
     }
 
-    override fun onAddActions(added: E, stored: KClass<E>) {}
+    override fun onAddActions(added: E) {}
 
     // ++++++++++++++++++++++++++++++++++++ Методы +++++++++++++++++++++++++++++++++
     // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

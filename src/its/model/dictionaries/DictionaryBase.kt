@@ -12,7 +12,7 @@ import kotlin.reflect.KClass
 import kotlin.reflect.full.primaryConstructor
 import kotlin.reflect.jvm.javaConstructor
 
-abstract class DictionaryBase<T : Any>(path: String, storedType: KClass<T>) {
+abstract class DictionaryBase<T : Any>(protected val storedType: KClass<T>) {
 
     // +++++++++++++++++++++++++++++++++ Свойства ++++++++++++++++++++++++++++++++++
     // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -41,16 +41,26 @@ abstract class DictionaryBase<T : Any>(path: String, storedType: KClass<T>) {
          */
         private const val RANGE_SEPARATOR = '-'
 
-        @JvmField
-        val valueParser = TypeParser.newBuilder().setSplitStrategy { s: String, h: SplitStrategyHelper ->
+        private val valueParser = TypeParser.newBuilder().setSplitStrategy { s: String, h: SplitStrategyHelper ->
             s.split(LIST_ITEMS_SEPARATOR)
         }.setNullStringStrategy{ s: String, nullStringStrategyHelper: NullStringStrategyHelper -> s.equals("")}.build()
 
-        @JvmField
-        val csvParser = CSVParserBuilder().withSeparator(COLUMNS_SEPARATOR).build()
+        private val csvParser = CSVParserBuilder().withSeparator(COLUMNS_SEPARATOR).build()
     }
 
-    init {
+    private var isInit = false
+
+    /**
+     * Инициализация словаря из файла .csv.
+     *
+     * *Важно:* функции инициализации не могут быть вызваны повторно на одном объекте
+     * @param path путь к файлу словаря
+     */
+    fun fromCSV(path: String) : DictionaryBase<T> {
+        require(!isInit){
+            "Функция инициализации словаря не может быть вызвана повторно"
+        }
+
         val bufferedReader = Files.newBufferedReader(Paths.get(path), StandardCharsets.UTF_8)
         val csvReader = CSVReaderBuilder(bufferedReader).withCSVParser(csvParser).build()
         csvReader.use { reader ->
@@ -63,11 +73,32 @@ abstract class DictionaryBase<T : Any>(path: String, storedType: KClass<T>) {
                 }
                 val value = constructor.newInstance(*args.toTypedArray())
 
-                onAddValidation(value, storedType)
-
-                values.add(value)
+                add(value)
             }
         }
+        isInit = true
+        return this
+    }
+
+    /**
+     * Добавление элемента в словарь.
+     * Перед добавлением элемент валидируется с помощью onAddValidation.
+     * После добавления элемента выполняются дополнительные действия onAddActions
+     * @param value добавляемый элемент
+     */
+    protected fun add(value: T){
+        onAddValidation(value)
+        values.add(value)
+        onAddActions(value)
+    }
+
+    /**
+     * Добавление нескольких элементов в словарь.
+     * @see add
+     * @param values добавляемые элементы
+     */
+    protected fun addAll(values : Collection<T>){
+        values.forEach {add(it)}
     }
 
     /**
@@ -76,15 +107,15 @@ abstract class DictionaryBase<T : Any>(path: String, storedType: KClass<T>) {
      * @param value созданный элемент, требующий проверки
      * @throws IllegalArgumentException
      */
-    protected abstract fun onAddValidation(value : T, stored: KClass<T>)
+    protected abstract fun onAddValidation(value : T)
 
     /**
      * Дополнительные действия, которые необходимо выполнить при добавлении элемента в словарь.
      * Выполняется после добавления элемента в словарь
-     * @param added созданный элемент, требующий проверки
+     * @param added созданный элемент, для которого выполняются дополнительные действия
      * @throws IllegalArgumentException
      */
-    protected abstract fun onAddActions(added : T, stored: KClass<T>)
+    protected abstract fun onAddActions(added : T)
 
     // ++++++++++++++++++++++++++++++++++++ Методы +++++++++++++++++++++++++++++++++
     // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
