@@ -83,17 +83,17 @@ sealed class DataType {
 
     companion object {
 
-        fun valueOf(value: kotlin.String) = when (value) {
-            "DECISION_TREE_VAR" -> DecisionTreeVar
+        fun valueOf(value: kotlin.String) = when (value.uppercase()) {
+            "DECISIONTREEVAR","DECISION_TREE_VAR" -> DecisionTreeVar
             "CLASS" -> Class
             "OBJECT" -> Object
             "PROPERTY" -> Property
             "RELATIONSHIP" -> Relationship
             "STRING" -> String
-            "BOOLEAN" -> Boolean
+            "BOOL","BOOLEAN" -> Boolean
             "INTEGER" -> Integer
             "DOUBLE" -> Double
-            "COMPARISON_RESULT" -> ComparisonResult
+            "COMPARISONRESULT","COMPARISON_RESULT" -> ComparisonResult
             "ENUM" -> Enum
             else -> null
         }

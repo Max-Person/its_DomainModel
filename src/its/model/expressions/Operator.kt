@@ -4,6 +4,7 @@ import its.model.expressions.literals.*
 import its.model.expressions.operators.*
 import its.model.expressions.types.ComparisonResult
 import its.model.expressions.types.DataType
+import org.w3c.dom.Element
 import org.w3c.dom.Node
 import org.xml.sax.InputSource
 import org.xml.sax.SAXException
@@ -193,7 +194,7 @@ interface Operator {
                 val document = documentBuilder.parse(InputSource(StringReader(str)))
 
                 // Получаем корневой элемент документа
-                val xml: Node = document.documentElement
+                val xml: Element = document.documentElement
 
                 // Строим дерево
                 return build(xml)
@@ -220,7 +221,7 @@ interface Operator {
                 val document = documentBuilder.parse(path)
 
                 // Получаем корневой элемент документа
-                val xml: Node = document.documentElement
+                val xml: Element = document.documentElement
 
                 // Строим дерево
                 return build(xml)
@@ -236,67 +237,67 @@ interface Operator {
 
         /**
          * Создает оператор из узла XML
-         * @param node XML узел
+         * @param el XML узел
          * @return Оператор
          */
-        private fun build(node: Node): Operator {
+        fun build(el: Element): Operator {
             val children = mutableListOf<Operator>()
-            for (i in 0 until node.childNodes.length) {
-                val child = node.childNodes.item(i)
+            for (i in 0 until el.childNodes.length) {
+                val child = el.childNodes.item(i)
                 if (child.nodeType == Node.ELEMENT_NODE) {
-                    children.add(build(child))
+                    children.add(build(child as Element))
                 }
             }
 
-            when (node.nodeName) {
+            when (el.nodeName) {
                 "Variable" -> {
-                    return Variable(node.attributes.getNamedItem("name").nodeValue)
+                    return Variable(el.attributes.getNamedItem("name").nodeValue)
                 }
 
                 "DecisionTreeVar" -> {
-                    return DecisionTreeVarLiteral(node.attributes.getNamedItem("name").nodeValue)
+                    return DecisionTreeVarLiteral(el.attributes.getNamedItem("name").nodeValue)
                 }
 
                 "Class" -> {
-                    return ClassLiteral(node.attributes.getNamedItem("name").nodeValue)
+                    return ClassLiteral(el.attributes.getNamedItem("name").nodeValue)
                 }
 
                 "Object" -> {
-                    return ObjectLiteral(node.attributes.getNamedItem("name").nodeValue)
+                    return ObjectLiteral(el.attributes.getNamedItem("name").nodeValue)
                 }
 
                 "Property" -> {
-                    return PropertyLiteral(node.attributes.getNamedItem("name").nodeValue)
+                    return PropertyLiteral(el.attributes.getNamedItem("name").nodeValue)
                 }
 
                 "Relationship" -> {
-                    return RelationshipLiteral(node.attributes.getNamedItem("name").nodeValue)
+                    return RelationshipLiteral(el.attributes.getNamedItem("name").nodeValue)
                 }
 
                 "ComparisonResult" -> {
-                    return ComparisonResultLiteral(ComparisonResult.valueOf(node.attributes.getNamedItem("value").nodeValue)!!)
+                    return ComparisonResultLiteral(ComparisonResult.valueOf(el.attributes.getNamedItem("value").nodeValue)!!)
                 }
 
                 "String" -> {
-                    return StringLiteral(node.attributes.getNamedItem("value").nodeValue)
+                    return StringLiteral(el.attributes.getNamedItem("value").nodeValue)
                 }
 
                 "Boolean" -> {
-                    return BooleanLiteral(node.attributes.getNamedItem("value").nodeValue.toBoolean())
+                    return BooleanLiteral(el.attributes.getNamedItem("value").nodeValue.toBoolean())
                 }
 
                 "Integer" -> {
-                    return IntegerLiteral(node.attributes.getNamedItem("value").nodeValue.toInt())
+                    return IntegerLiteral(el.attributes.getNamedItem("value").nodeValue.toInt())
                 }
 
                 "Double" -> {
-                    return DoubleLiteral(node.attributes.getNamedItem("value").nodeValue.toDouble())
+                    return DoubleLiteral(el.attributes.getNamedItem("value").nodeValue.toDouble())
                 }
 
                 "Enum" -> {
                     return EnumLiteral(
-                        node.attributes.getNamedItem("value").nodeValue,
-                        node.attributes.getNamedItem("owner").nodeValue
+                        el.attributes.getNamedItem("value").nodeValue,
+                        el.attributes.getNamedItem("owner").nodeValue
                     )
                 }
 
@@ -321,32 +322,32 @@ interface Operator {
                 }
 
                 "Compare" -> {
-                    return if (node.attributes.getNamedItem("operator") == null) {
+                    return if (el.attributes.getNamedItem("operator") == null) {
                         Compare(children)
                     } else {
                         val operator =
-                            CompareWithComparisonOperator.ComparisonOperator.valueOf(node.attributes.getNamedItem("operator").nodeValue)!!
+                            CompareWithComparisonOperator.ComparisonOperator.valueOf(el.attributes.getNamedItem("operator").nodeValue)!!
                         CompareWithComparisonOperator(children, operator)
                     }
                 }
 
                 "ExistenceQuantifier" -> {
-                    return ExistenceQuantifier(children, node.attributes.getNamedItem("varName").nodeValue)
+                    return ExistenceQuantifier(children, el.attributes.getNamedItem("varName").nodeValue)
                 }
 
                 "ForAllQuantifier" -> {
-                    return ForAllQuantifier(children, node.attributes.getNamedItem("varName").nodeValue)
+                    return ForAllQuantifier(children, el.attributes.getNamedItem("varName").nodeValue)
                 }
 
                 "GetByCondition" -> {
-                    return GetByCondition(children, node.attributes.getNamedItem("varName").nodeValue)
+                    return GetByCondition(children, el.attributes.getNamedItem("varName").nodeValue)
                 }
 
                 "GetByRelationship" -> {
                     return GetByRelationship(
                         children,
-                        if (node.attributes.getNamedItem("varName") == null) null
-                        else node.attributes.getNamedItem("varName").nodeValue
+                        if (el.attributes.getNamedItem("varName") == null) null
+                        else el.attributes.getNamedItem("varName").nodeValue
                     )
                 }
 
@@ -357,8 +358,8 @@ interface Operator {
                 "GetExtreme" -> {
                     return GetExtreme(
                         children,
-                        node.attributes.getNamedItem("varName").nodeValue,
-                        node.attributes.getNamedItem("extremeVarName").nodeValue
+                        el.attributes.getNamedItem("varName").nodeValue,
+                        el.attributes.getNamedItem("extremeVarName").nodeValue
                     )
                 }
 
@@ -378,7 +379,7 @@ interface Operator {
                     return LogicalNot(children)
                 }
             }
-            throw IllegalArgumentException("Неизвестный тип узла ${node.nodeName}.")
+            throw IllegalArgumentException("Неизвестный тип узла ${el.nodeName}.")
         }
     }
 }
