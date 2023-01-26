@@ -17,8 +17,17 @@ open class RelationshipModel(
     val scaleType: ScaleType? = null,
     val scaleRelationshipsNames: List<String>? = null,
     val relationType: RelationType? = null,
-    val flags: Int,
+    flags: Int,
 ) {
+    val flags : Int
+    init {
+        if(flags == 0 && scaleType == ScaleType.Linear)
+            this.flags = 6
+        else if(flags == 0 && scaleType == ScaleType.Partial)
+            this.flags = 22
+        else
+            this.flags = flags
+    }
 
     /**
      * Создает набор производных отношений порядковой шкалы
@@ -26,9 +35,9 @@ open class RelationshipModel(
      * *Важно:* Все элементы возвращаемого массива должны быть объектами реализующего класса (наследника)
      */
     internal open fun scaleRelationships():List<RelationshipModel>{
-        scaleRelationshipsNames!!
         when (scaleType) {
             ScaleType.Linear -> {
+                scaleRelationshipsNames!!
                 return listOf(
                     RelationshipModel(
                         name = scaleRelationshipsNames[0],
