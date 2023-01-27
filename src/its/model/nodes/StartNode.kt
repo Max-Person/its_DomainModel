@@ -1,5 +1,7 @@
 package its.model.nodes
 
+import its.model.visitors.DecisionTreeSource
+import its.model.visitors.DecisionTreeVisitor
 import org.w3c.dom.Element
 
 class StartNode(
@@ -13,5 +15,13 @@ class StartNode(
 
     override fun declaredVariables(): Map<String, String> {
         return initVariables
+    }
+
+    override fun <I> accept(visitor: DecisionTreeVisitor<I>): I {
+        val info = mapOf(
+            DecisionTreeSource.fromCurrent(this) to visitor.process(this),
+            DecisionTreeSource.fromBranch(main) to main.accept(visitor),
+        )
+        return visitor.process(this,  info)
     }
 }

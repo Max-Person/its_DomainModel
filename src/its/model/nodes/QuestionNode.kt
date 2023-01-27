@@ -3,6 +3,8 @@ package its.model.nodes
 import its.model.expressions.Literal
 import its.model.expressions.Operator
 import its.model.expressions.types.DataType
+import its.model.visitors.DecisionTreeSource
+import its.model.visitors.DecisionTreeVisitor
 import org.w3c.dom.Element
 
 class QuestionNode (
@@ -23,4 +25,10 @@ class QuestionNode (
             el.getAttribute("enumOwner").ifBlank { null }
         ) to build(it.getChild())!!}.toMap(),
     )
+
+    override fun <I> accept(visitor: DecisionTreeVisitor<I>): I {
+        val info = mutableMapOf(DecisionTreeSource.fromCurrent(this) to visitor.process(this))
+        info.putAll(next.map { DecisionTreeSource.fromOutcome(it.key, it.value) to it.value.accept(visitor) })
+        return visitor.process(this,  info)
+    }
 }

@@ -1,5 +1,6 @@
 package its.model.nodes
 
+import its.model.visitors.DecisionTreeVisitor
 import org.w3c.dom.Element
 import org.w3c.dom.Node
 import org.xml.sax.InputSource
@@ -95,6 +96,8 @@ sealed class DecisionTreeNode{
             }
         }
     }
+
+    abstract fun <I> accept(visitor: DecisionTreeVisitor<I>) : I
 }
 
 fun Element.getChildren() : List<Element>{

@@ -1,6 +1,8 @@
 package its.model.nodes
 
 import its.model.expressions.Operator
+import its.model.visitors.DecisionTreeSource
+import its.model.visitors.DecisionTreeVisitor
 import org.w3c.dom.Element
 
 
@@ -24,5 +26,16 @@ class FindActionNode(
         val decl: MutableMap<String, String> = HashMap()
         decl[varName] = varClass
         return decl
+    }
+
+    override fun <I> accept(visitor: DecisionTreeVisitor<I>): I {
+        val info = mutableMapOf(
+            DecisionTreeSource.fromCurrent(this) to visitor.process(this),
+            DecisionTreeSource.fromOutcome("found", nextIfFound) to nextIfFound.accept(visitor),
+        )
+        if(nextIfNone != null)
+            info.put(DecisionTreeSource.fromOutcome("none", nextIfNone), nextIfNone.accept(visitor))
+
+        return visitor.process(this,  info)
     }
 }
