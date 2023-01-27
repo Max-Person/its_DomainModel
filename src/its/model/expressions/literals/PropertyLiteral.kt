@@ -4,6 +4,7 @@ import its.model.DomainModel
 import its.model.expressions.Literal
 import its.model.expressions.Operator
 import its.model.expressions.types.DataType
+import its.model.visitors.OperatorVisitor
 
 /**
  * Property литерал
@@ -20,4 +21,8 @@ class PropertyLiteral(value: String) : Literal(value) {
         get() = DataType.Property
 
     override fun clone(): Operator = PropertyLiteral(value)
+
+    override fun <I> accept(visitor: OperatorVisitor<I>): I {
+        return visitor.process(this)
+    }
 }

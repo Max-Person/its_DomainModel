@@ -2,6 +2,7 @@ package its.model.expressions.operators
 
 import its.model.expressions.Operator
 import its.model.expressions.types.DataType
+import its.model.visitors.OperatorVisitor
 
 /**
  * Квантор существования
@@ -33,5 +34,9 @@ class ExistenceQuantifier(
 
     override fun clone(newArgs: List<Operator>): Operator {
         return ExistenceQuantifier(newArgs, varName)
+    }
+
+    override fun <I> accept(visitor: OperatorVisitor<I>): I {
+        return visitor.process(this, visitor.process(this), args.map { it.accept(visitor) })
     }
 }

@@ -3,6 +3,7 @@ package its.model.expressions.literals
 import its.model.expressions.Literal
 import its.model.expressions.Operator
 import its.model.expressions.types.DataType
+import its.model.visitors.OperatorVisitor
 
 /**
  * Boolean литерал
@@ -15,4 +16,8 @@ class BooleanLiteral(value: Boolean) : Literal(value.toString()) {
 
 
     override fun clone(): Operator = BooleanLiteral(value.toBoolean())
+
+    override fun <I> accept(visitor: OperatorVisitor<I>): I {
+        return visitor.process(this)
+    }
 }

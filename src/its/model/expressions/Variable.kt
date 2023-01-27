@@ -1,6 +1,7 @@
 package its.model.expressions
 
 import its.model.expressions.types.DataType
+import its.model.visitors.OperatorVisitor
 
 /**
  * Переменная, вводимая некоторыми операторами
@@ -24,5 +25,9 @@ class Variable(
     override fun clone(newArgs: List<Operator>): Operator {
         require(newArgs.isEmpty()) { "Для переменной аргументы не требуются." }
         return clone()
+    }
+
+    override fun <I> accept(visitor: OperatorVisitor<I>): I {
+        return visitor.process(this)
     }
 }

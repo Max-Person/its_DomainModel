@@ -2,6 +2,7 @@ package its.model.expressions.operators
 
 import its.model.expressions.Operator
 import its.model.expressions.types.DataType
+import its.model.visitors.OperatorVisitor
 
 /**
  * Оператор проверки значения свойства объекта
@@ -36,5 +37,9 @@ class CheckPropertyValue(args: List<Operator>) : BaseOperator(args) {
 
     override fun clone(newArgs: List<Operator>): Operator {
         return CheckPropertyValue(newArgs)
+    }
+
+    override fun <I> accept(visitor: OperatorVisitor<I>): I {
+        return visitor.process(this, visitor.process(this), args.map { it.accept(visitor) })
     }
 }
