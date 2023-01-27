@@ -3,32 +3,32 @@ package its.model.expressions.types
 /**
  * Описывает результат сравнения
  */
-sealed class ComparisonResult {
+enum class ComparisonResult {
 
     /**
      * Больше
      */
-    object Greater : ComparisonResult()
+    Greater,
 
     /**
      * Меньше
      */
-    object Less : ComparisonResult()
+    Less,
 
     /**
      * Эквивалентно
      */
-    object Equal : ComparisonResult()
+    Equal,
 
     /**
      * Неэквивалентно
      */
-    object NotEqual : ComparisonResult()
+    NotEqual,
 
     /**
      * Не определено
      */
-    object Undetermined : ComparisonResult()
+    Undetermined;
 
     override fun toString() = when (this) {
         Greater -> "GREATER"
@@ -38,13 +38,13 @@ sealed class ComparisonResult {
         Undetermined -> "UNDETERMINED"
     }
 
-    companion object {
-
-        fun valueOf(value: String) = when (value) {
+    companion object _static {
+        @JvmStatic
+        fun fromString(value: String) = when (value.uppercase()) {
             "GREATER" -> Greater
             "LESS" -> Less
             "EQUAL" -> Equal
-            "NOT_EQUAL" -> NotEqual
+            "NOTEQUAL", "NOT_EQUAL" -> NotEqual
             "UNDETERMINED" -> Undetermined
             else -> null
         }

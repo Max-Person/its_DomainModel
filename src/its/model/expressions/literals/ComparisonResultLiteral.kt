@@ -15,5 +15,5 @@ class ComparisonResultLiteral(value: ComparisonResult) : Literal(value.toString(
     override val resultDataType: DataType
         get() = DataType.ComparisonResult
 
-    override fun clone(): Operator = ComparisonResultLiteral(ComparisonResult.valueOf(value)!!)
+    override fun clone(): Operator = ComparisonResultLiteral(ComparisonResult.fromString(value)!!)
 }

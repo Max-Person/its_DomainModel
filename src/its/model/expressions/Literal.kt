@@ -1,6 +1,7 @@
 package its.model.expressions
 
-import its.model.expressions.literals.BooleanLiteral
+import its.model.expressions.literals.*
+import its.model.expressions.types.ComparisonResult
 import its.model.expressions.types.DataType
 import java.lang.IllegalArgumentException
 
@@ -31,6 +32,26 @@ abstract class Literal(
                 "true" -> return BooleanLiteral(true)
                 "false" -> return BooleanLiteral(false)
                 else -> throw IllegalArgumentException("преобразование значения $string в литерал невозможно")
+            }
+        }
+        
+        @JvmStatic
+        fun fromString(string: String, dataType: DataType, enumOwner: String? = null) : Literal{
+            when(dataType){
+                DataType.DecisionTreeVar -> return DecisionTreeVarLiteral(string)
+                DataType.Class -> return ClassLiteral(string)
+                DataType.Object -> return ObjectLiteral(string)
+                DataType.Property -> return PropertyLiteral(string)
+                DataType.Relationship -> return RelationshipLiteral(string)
+                DataType.ComparisonResult -> return ComparisonResultLiteral(ComparisonResult.fromString(string)!!)
+                DataType.String -> return StringLiteral(string)
+                DataType.Boolean -> return BooleanLiteral(string.toBoolean())
+                DataType.Integer -> return IntegerLiteral(string.toInt())
+                DataType.Double -> return DoubleLiteral(string.toDouble())
+                DataType.Enum -> return EnumLiteral(
+                    string,
+                    enumOwner!!,
+                )
             }
         }
     }

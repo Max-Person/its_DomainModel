@@ -9,16 +9,17 @@ import its.model.expressions.types.DataType
  */
 class Compare(args: List<Operator>) : BaseOperator(args) {
 
-    override val argsDataTypes = listOf(
+    override val argsDataTypes get() = listOf(
         listOf(DataType.Integer, DataType.Double),
         listOf(DataType.Double, DataType.Integer),
         listOf(DataType.Integer, DataType.Integer),
         listOf(DataType.Double, DataType.Double),
         listOf(DataType.String, DataType.String),
-        listOf(DataType.Object, DataType.Object)
+        listOf(DataType.Object, DataType.Object),
+        listOf(DataType.Enum, DataType.Enum)
     )
 
-    override val resultDataType = DataType.ComparisonResult
+    override val resultDataType get() = DataType.ComparisonResult
 
     override fun clone(): Operator {
         val newArgs = ArrayList<Operator>()

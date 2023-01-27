@@ -9,7 +9,7 @@ class ThoughtBranch (
     val start: DecisionTreeNode,
 ){
     internal constructor(el : Element) : this(
-        DataType.valueOf(el.getAttribute("type"))!!,
+        DataType.fromString(el.getAttribute("type"))!!,
         el.getAttribute("paramName").ifBlank { null },
         DecisionTreeNode.build(el.getChild())!!,
     )

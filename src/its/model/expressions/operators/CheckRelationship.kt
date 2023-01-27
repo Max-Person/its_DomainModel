@@ -16,15 +16,15 @@ class CheckRelationship(args: List<Operator>) : BaseOperator(args) {
      */
     internal var isNegative = false
 
-    override val argsDataTypes = listOf(
-        listOf(DataType.Relationship, DataType.Object)
+    override val argsDataTypes get() = listOf(
+        listOf(DataType.Object, DataType.Relationship, DataType.Object)
     )
 
 
     override val isArgsCountUnlimited: Boolean
         get() = true
 
-    override val resultDataType = DataType.Boolean
+    override val resultDataType get() = DataType.Boolean
 
 
     override fun clone(): Operator {

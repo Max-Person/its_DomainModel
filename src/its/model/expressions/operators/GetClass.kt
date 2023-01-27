@@ -8,10 +8,10 @@ import its.model.expressions.types.DataType
  */
 class GetClass(args: List<Operator>) : BaseOperator(args) {
 
-    override val argsDataTypes = listOf(listOf(DataType.Object))
+    override val argsDataTypes get() = listOf(listOf(DataType.Object))
 
 
-    override val resultDataType = DataType.Object
+    override val resultDataType get() = DataType.Object
 
 
     override fun clone(): Operator {

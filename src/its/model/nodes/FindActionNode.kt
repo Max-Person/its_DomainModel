@@ -16,8 +16,8 @@ class FindActionNode(
         Operator.build(el.getSingleByWrapper("Expression")),
         el.getChild("DecisionTreeVarDecl").getAttribute("name"),
         el.getChild("DecisionTreeVarDecl").getAttribute("type"),
-        build(el.getChildren("Outcome").first { it.getAttribute("value").equals("found")})!!,
-        build(el.getChildren("Outcome").firstOrNull { it.getAttribute("value").equals("none")}),
+        build(el.getByOutcome("found"))!!,
+        build(el.getByOutcome("none")),
     )
 
     override fun declaredVariables(): Map<String, String> {

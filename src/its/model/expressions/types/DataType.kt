@@ -3,62 +3,62 @@ package its.model.expressions.types
 /**
  * Тип данных
  */
-sealed class DataType {
+enum class DataType {
 
     /**
      * Переменная дерева мысли
      */
-    object DecisionTreeVar : DataType()
+    DecisionTreeVar,
 
     /**
      * Класс
      */
-    object Class : DataType()
+    Class,
 
     /**
      * Объект
      */
-    object Object : DataType()
+    Object,
 
     /**
      * Свойство
      */
-    object Property : DataType()
+    Property,
 
     /**
      * Отношение
      */
-    object Relationship : DataType()
+    Relationship,
 
     /**
      * Строка
      */
-    object String : DataType()
+    String,
 
     /**
      * Булево значение
      */
-    object Boolean : DataType()
+    Boolean,
 
     /**
      * Целое число
      */
-    object Integer : DataType()
+    Integer,
 
     /**
      * Дробное число
      */
-    object Double : DataType()
+    Double,
 
     /**
      * Результат сравнения
      */
-    object ComparisonResult : DataType()
+    ComparisonResult,
 
     /**
      * Enum
      */
-    object Enum : DataType()
+    Enum;
 
     /**
      * Может ли этот тип быть преобразован в другой
@@ -81,9 +81,9 @@ sealed class DataType {
         Enum -> "ENUM"
     }
 
-    companion object {
+    companion object _static{
 
-        fun valueOf(value: kotlin.String) = when (value.uppercase()) {
+        fun fromString(value: kotlin.String) = when (value.uppercase()) {
             "DECISIONTREEVAR","DECISION_TREE_VAR" -> DecisionTreeVar
             "CLASS" -> Class
             "OBJECT" -> Object
@@ -91,9 +91,9 @@ sealed class DataType {
             "RELATIONSHIP" -> Relationship
             "STRING" -> String
             "BOOL","BOOLEAN" -> Boolean
-            "INTEGER" -> Integer
+            "INT","INTEGER" -> Integer
             "DOUBLE" -> Double
-            "COMPARISONRESULT","COMPARISON_RESULT" -> ComparisonResult
+            "COMPARISON", "COMPARISONRESULT","COMPARISON_RESULT" -> ComparisonResult
             "ENUM" -> Enum
             else -> null
         }

@@ -12,10 +12,12 @@ abstract class ClassesDictionaryBase<C : ClassModel>(storedType: KClass<C>) : Di
     // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
     override fun onAddValidation(value: C) {
+        require(value.name.isNotBlank()){
+            "Невозможно использовать пустое имя класса."
+        }
         require(!exist(value.name)) {
             "Класс ${value.name} уже объявлено в словаре."
         }
-        value.validate()
     }
 
     override fun onAddActions(added: C) {}

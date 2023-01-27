@@ -12,10 +12,10 @@ class GetExtreme(
     val extremeVarName: String
 ): BaseOperator(args) {
 
-    override val argsDataTypes = listOf(listOf(DataType.Boolean, DataType.Boolean))
+    override val argsDataTypes get() = listOf(listOf(DataType.Boolean, DataType.Boolean))
 
 
-    override val resultDataType = DataType.Object
+    override val resultDataType get() = DataType.Object
 
 
     override fun clone(): Operator {

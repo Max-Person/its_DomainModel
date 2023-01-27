@@ -8,10 +8,10 @@ class LogicAggregationNode (
     val next: Map<Boolean, DecisionTreeNode>,
 ) : DecisionTreeNode(){
     internal constructor(el : Element) : this(
-        LogicalOp.valueOf(el.getAttribute("operator")),
+        LogicalOp.fromString(el.getAttribute("operator"))!!,
         el.getChildren("ThoughtBranch").map { ThoughtBranch(it) },
         hashMapOf(
-            true to build(el.getChildren("Outcome").first { it.getAttribute("value").equals("true")})!!,
-            false to build(el.getChildren("Outcome").first { it.getAttribute("value").equals("false")})!!)
+            true to build(el.getByOutcome("true"))!!,
+            false to build(el.getByOutcome("false"))!!)
     )
 }

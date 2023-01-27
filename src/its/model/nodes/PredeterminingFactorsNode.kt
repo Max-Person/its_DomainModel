@@ -8,6 +8,6 @@ class PredeterminingFactorsNode (
 ) : DecisionTreeNode(){
     internal constructor(el : Element) : this(
         el.getSeveralByWrapper("Predetermining").map { build(it)!!},
-        build(el.getChildren("Outcome").first { it.getAttribute("value").equals("undetermined")})!!
+        build(el.getByOutcome("undetermined"))!!
     )
 }

@@ -8,7 +8,7 @@ import its.model.expressions.types.DataType
  * @param dataType Тип данных свойства
  * @param enumName Имя перечисления (только для свойств с типом Enum)
  * @param owners Имена классов, обладающих этим свойством
- * @param valuesRanges Диапазоны возможных значений свойства (только для свойств с типом Integer и Double)
+ * @param valueRange Диапазоны возможных значений свойства (только для свойств с типом Integer и Double)
  * @see DataType
  */
 open class PropertyModel(
@@ -17,7 +17,7 @@ open class PropertyModel(
     val enumName: String? = null,
     val isStatic: Boolean,
     val owners: List<String>? = null,
-    val valuesRanges: List<Pair<Double, Double>>? = null
+    val valueRange: Range? = null
 ) {
 
     /**
@@ -40,13 +40,8 @@ open class PropertyModel(
         require(owners == null || owners.isNotEmpty()) {
             "Свойством $name не обладает ни один класс."
         }
-        require(dataType == DataType.Integer || dataType == DataType.Double || valuesRanges == null) {
+        require(dataType == DataType.Integer || dataType == DataType.Double || valueRange == null) {
             "У свойства $name не может быть диапазонов значений, т.к. оно имеет тип $dataType."
-        }
-        valuesRanges?.forEach {
-            require(it.first <= it.second) {
-                "Начальное значение одного из диапазонов свойства $name больше конечного."
-            }
         }
     }
 
@@ -56,12 +51,9 @@ open class PropertyModel(
      */
     fun isValueInRange(value: Int): Boolean {
         if (dataType != DataType.Integer) return false
-        if (valuesRanges.isNullOrEmpty()) return true
+        if (valueRange == null) return true
 
-        valuesRanges.forEach {
-            if (value.toDouble() in it.first..it.second) return true
-        }
-        return false
+        return valueRange.contains(value)
     }
 
     /**
@@ -70,11 +62,8 @@ open class PropertyModel(
      */
     fun isValueInRange(value: Double): Boolean {
         if (dataType != DataType.Double) return false
-        if (valuesRanges.isNullOrEmpty()) return true
+        if (valueRange == null) return true
 
-        valuesRanges.forEach {
-            if (value in it.first..it.second) return true
-        }
-        return false
+        return valueRange.contains(value)
     }
 }

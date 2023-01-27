@@ -16,10 +16,10 @@ class ForAllQuantifier(
      */
     internal var isNegative = false
 
-    override val argsDataTypes = listOf(listOf(DataType.Boolean, DataType.Boolean))
+    override val argsDataTypes get() = listOf(listOf(DataType.Boolean, DataType.Boolean))
 
 
-    override val resultDataType = DataType.Boolean
+    override val resultDataType get() = DataType.Boolean
 
     override fun clone(): Operator {
         val newArgs = ArrayList<Operator>()

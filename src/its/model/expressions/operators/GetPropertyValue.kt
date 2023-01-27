@@ -10,9 +10,10 @@ import its.model.expressions.types.DataType
  */
 class GetPropertyValue(args: List<Operator>) : BaseOperator(args) {
 
-    override val argsDataTypes = listOf(listOf(DataType.Object, DataType.Property))
+    override val argsDataTypes
+        get() = listOf(listOf(DataType.Object, DataType.Property))
 
-    override val resultDataType = DomainModel.propertiesDictionary.dataType((args[3] as Literal).value)
+    override val resultDataType get() = DomainModel.propertiesDictionary.dataType((args[1] as Literal).value)
 
 
     override fun clone(): Operator {

@@ -121,6 +121,10 @@ fun Element.getChild(tagName : String) : Element{
     return getChildren(tagName).first()
 }
 
+fun Element.getByOutcome(outcomeVal : String) : Element?{
+    return getChildren("Outcome").firstOrNull { it.getAttribute("value").equals(outcomeVal)}?.getChild()
+}
+
 fun Element.getSeveralByWrapper(wrapper : String) : List<Element>{
     return getChild(wrapper).getChildren()
 }

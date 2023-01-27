@@ -12,10 +12,10 @@ class GetByRelationship(
     private val varName: String?
 ) : BaseOperator(args) {
 
-    override val argsDataTypes = listOf(listOf(DataType.Object, DataType.Relationship))
+    override val argsDataTypes get() = listOf(listOf(DataType.Object, DataType.Relationship))
 
 
-    override val resultDataType = DataType.Object
+    override val resultDataType get() = DataType.Object
 
 
     override fun clone(): Operator {

@@ -76,17 +76,18 @@ class CompareWithComparisonOperator(
                 )) { "Указанный оператор не совместим с этими типам данных" }
     }
 
-    override val argsDataTypes = listOf(
+    override val argsDataTypes get() = listOf(
         listOf(DataType.Integer, DataType.Double),
         listOf(DataType.Double, DataType.Integer),
         listOf(DataType.Integer, DataType.Integer),
         listOf(DataType.Double, DataType.Double),
         listOf(DataType.String, DataType.String),
-        listOf(DataType.Object, DataType.Object)
+        listOf(DataType.Object, DataType.Object),
+        listOf(DataType.Enum, DataType.Enum)
     )
 
 
-    override val resultDataType = DataType.Boolean
+    override val resultDataType get() = DataType.Boolean
 
 
     override fun clone(): Operator {

@@ -275,7 +275,7 @@ interface Operator {
                 }
 
                 "ComparisonResult" -> {
-                    return ComparisonResultLiteral(ComparisonResult.valueOf(el.attributes.getNamedItem("value").nodeValue)!!)
+                    return ComparisonResultLiteral(ComparisonResult.fromString(el.attributes.getNamedItem("value").nodeValue)!!)
                 }
 
                 "String" -> {

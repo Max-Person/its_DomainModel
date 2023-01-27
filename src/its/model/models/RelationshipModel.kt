@@ -193,9 +193,9 @@ open class RelationshipModel(
 
         companion object _static {
             @JvmStatic
-            fun fromString(value: String) = when (value) {
-                "ONE_TO_ONE" -> OneToOne
-                "ONE_TO_MANY" -> OneToMany
+            fun fromString(value: String) = when (value.uppercase()) {
+                "ONETOONE","ONE_TO_ONE" -> OneToOne
+                "ONETOMANY","ONE_TO_MANY" -> OneToMany
                 else -> null
             }
         }
@@ -218,7 +218,7 @@ open class RelationshipModel(
 
         companion object _static {
             @JvmStatic
-            fun fromString(value: String) = when (value) {
+            fun fromString(value: String) = when (value.uppercase()) {
                 "LINEAR" -> Linear
                 "PARTIAL" -> Partial
                 else -> null
