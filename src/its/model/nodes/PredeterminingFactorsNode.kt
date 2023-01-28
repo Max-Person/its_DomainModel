@@ -1,6 +1,7 @@
 package its.model.nodes
 
-import its.model.visitors.DecisionTreeSource
+import its.model.visitors.DecisionTreeBehaviour
+import its.model.visitors.DecisionTreeVisitor.InfoSource
 import its.model.visitors.DecisionTreeVisitor
 import org.w3c.dom.Element
 
@@ -14,9 +15,13 @@ class PredeterminingFactorsNode (
     )
 
     override fun <I> accept(visitor: DecisionTreeVisitor<I>): I {
-        val info = mutableMapOf(DecisionTreeSource.fromCurrent(this) to visitor.process(this))
-        info.putAll(predetermining.map { DecisionTreeSource.fromPredetermining(it) to it.accept(visitor) })
-        info[DecisionTreeSource.fromOutcome("undetermined", undetermined)] = undetermined.accept(visitor)
+        val info = mutableMapOf(InfoSource.fromCurrent(this) to visitor.process(this))
+        info.putAll(predetermining.map { InfoSource.fromPredetermining(it) to it.accept(visitor) })
+        info[InfoSource.fromOutcome("undetermined", undetermined)] = undetermined.accept(visitor)
         return visitor.process(this,  info)
+    }
+
+    override fun <I> use(behaviour: DecisionTreeBehaviour<I>): I {
+        return behaviour.process(this)
     }
 }

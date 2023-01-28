@@ -1,7 +1,8 @@
 package its.model.nodes
 
 import its.model.expressions.types.DataType
-import its.model.visitors.DecisionTreeSource
+import its.model.visitors.DecisionTreeBehaviour
+import its.model.visitors.DecisionTreeVisitor.InfoSource
 import its.model.visitors.DecisionTreeVisitor
 import org.w3c.dom.Element
 
@@ -21,9 +22,13 @@ class ThoughtBranch(
 
     override fun <I> accept(visitor: DecisionTreeVisitor<I>): I {
         val info = mapOf(
-            DecisionTreeSource.fromCurrent(this) to visitor.process(this),
-            DecisionTreeSource.fromOutcome("start", start) to start.accept(visitor),
+            InfoSource.fromCurrent(this) to visitor.process(this),
+            InfoSource.fromOutcome("start", start) to start.accept(visitor),
         )
         return visitor.process(this,  info)
+    }
+
+    override fun <I> use(behaviour: DecisionTreeBehaviour<I>): I {
+        return behaviour.process(this)
     }
 }
