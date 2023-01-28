@@ -1,14 +1,14 @@
-package its.model.visitors
+package its.model.nodes.visitors
 
 import its.model.nodes.*
-import its.model.visitors.DecisionTreeVisitor.InfoSource
+import its.model.nodes.visitors.DecisionTreeVisitor.InfoSource
 
 /**
  * Простая реализация интерфейса [DecisionTreeVisitor] для случаев,
  * когда логика обработки разных типов узлов не так важна, как факт обхода дерева решений.
  * @see DecisionTreeVisitor
  */
-abstract class SimpleDecisionTreeVisitor<Info> : DecisionTreeVisitor<Info>  {
+abstract class SimpleDecisionTreeVisitor<Info> : DecisionTreeVisitor<Info> {
     // ---------------------- Для узлов дерева решений ---------------------------
     // ---------------------- До обработки дочерних узлов ------------------------
     override fun process(node: BranchResultNode) : Info     { return process(node as DecisionTreeNode) }

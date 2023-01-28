@@ -2,8 +2,8 @@ package its.model.expressions.operators
 
 import its.model.expressions.Operator
 import its.model.expressions.types.DataType
-import its.model.visitors.OperatorBehaviour
-import its.model.visitors.OperatorVisitor
+import its.model.expressions.visitors.OperatorBehaviour
+import its.model.expressions.visitors.OperatorVisitor
 
 /**
  * Получить класс объекта

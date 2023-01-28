@@ -8,8 +8,8 @@ import its.model.expressions.literals.EnumLiteral
 import its.model.expressions.literals.IntegerLiteral
 import its.model.expressions.literals.PropertyLiteral
 import its.model.expressions.types.DataType
-import its.model.visitors.OperatorBehaviour
-import its.model.visitors.OperatorVisitor
+import its.model.expressions.visitors.OperatorBehaviour
+import its.model.expressions.visitors.OperatorVisitor
 
 /**
  * Присваивание

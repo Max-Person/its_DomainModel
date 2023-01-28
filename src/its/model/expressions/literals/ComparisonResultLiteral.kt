@@ -4,8 +4,8 @@ import its.model.expressions.Literal
 import its.model.expressions.Operator
 import its.model.expressions.types.ComparisonResult
 import its.model.expressions.types.DataType
-import its.model.visitors.OperatorBehaviour
-import its.model.visitors.OperatorVisitor
+import its.model.expressions.visitors.OperatorBehaviour
+import its.model.expressions.visitors.OperatorVisitor
 
 /**
  * Литерал результата сравнения

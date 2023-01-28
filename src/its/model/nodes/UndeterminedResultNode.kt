@@ -1,7 +1,7 @@
 package its.model.nodes
 
-import its.model.visitors.DecisionTreeBehaviour
-import its.model.visitors.DecisionTreeVisitor
+import its.model.nodes.visitors.DecisionTreeBehaviour
+import its.model.nodes.visitors.DecisionTreeVisitor
 
 class UndeterminedResultNode : DecisionTreeNode(){
     override fun <I> accept(visitor: DecisionTreeVisitor<I>): I {

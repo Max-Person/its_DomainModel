@@ -1,9 +1,8 @@
 package its.model.nodes
 
-import its.model.visitors.DecisionTreeBehaviour
-import its.model.visitors.DecisionTreeVisitor
+import its.model.nodes.visitors.DecisionTreeBehaviour
+import its.model.nodes.visitors.DecisionTreeVisitor
 import org.w3c.dom.Element
-import org.w3c.dom.Node
 import org.xml.sax.InputSource
 import org.xml.sax.SAXException
 import java.io.IOException
@@ -18,6 +17,7 @@ sealed class DecisionTreeNode{
          * @param str Строка с XML
          * @return начальный узел дерева решений
          */
+        @JvmStatic
         fun fromXMLString(str: String): StartNode? {
             try {
                 // Создаем DocumentBuilder
@@ -49,6 +49,7 @@ sealed class DecisionTreeNode{
          * @param path Путь к файлу
          * @return начальный узел дерева решений
          */
+        @JvmStatic
         fun fromXMLFile(path: String): StartNode? {
             try {
                 // Создаем DocumentBuilder
@@ -80,6 +81,7 @@ sealed class DecisionTreeNode{
          * @param el XML узел
          * @return узел дерева решений
          */
+        @JvmStatic
         fun build(el: Element?): DecisionTreeNode? {
             if(el == null)
                 return null
@@ -115,40 +117,4 @@ sealed class DecisionTreeNode{
      * @see accept
      */
     abstract fun <I> use(behaviour: DecisionTreeBehaviour<I>) : I
-}
-
-fun Element.getChildren() : List<Element>{
-    val out = mutableListOf<Element>()
-    var child = this.firstChild
-    while (child != null){
-        if(child.nodeType == Node.ELEMENT_NODE){
-            out.add(child as Element)
-        }
-        child = child.nextSibling
-    }
-    return out
-}
-
-fun Element.getChild() : Element{
-    return getChildren().first()
-}
-
-fun Element.getChildren(tagName : String) : List<Element>{
-    return getChildren().filter { it.tagName.equals(tagName) }
-}
-
-fun Element.getChild(tagName : String) : Element{
-    return getChildren(tagName).first()
-}
-
-fun Element.getByOutcome(outcomeVal : String) : Element?{
-    return getChildren("Outcome").firstOrNull { it.getAttribute("value").equals(outcomeVal)}?.getChild()
-}
-
-fun Element.getSeveralByWrapper(wrapper : String) : List<Element>{
-    return getChild(wrapper).getChildren()
-}
-
-fun Element.getSingleByWrapper(wrapper : String) : Element{
-    return getChild(wrapper).getChild()
 }

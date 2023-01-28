@@ -19,7 +19,8 @@ class DomainModel<
     @JvmField val relationshipsDictionary: RelationshipsDictionaryBase<R>
         ) {
 
-    lateinit var decisionTree: StartNode
+    @JvmField
+    var decisionTree: StartNode? = null
 
     companion object _static{
         private var instance : DomainModel<*, *, *, *, *>? = null
@@ -58,6 +59,10 @@ class DomainModel<
         @JvmStatic
         val relationshipsDictionary
             get() = instance!!.relationshipsDictionary
+
+        @JvmStatic
+        val decisionTree
+            get() = instance!!.decisionTree!!
     }
 
 

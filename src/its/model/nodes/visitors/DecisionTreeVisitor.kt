@@ -1,4 +1,4 @@
-package its.model.visitors
+package its.model.nodes.visitors
 
 import its.model.nodes.*
 

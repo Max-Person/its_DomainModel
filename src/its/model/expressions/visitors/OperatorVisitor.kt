@@ -1,4 +1,4 @@
-package its.model.visitors
+package its.model.expressions.visitors
 
 import its.model.expressions.Variable
 import its.model.expressions.Operator

@@ -4,8 +4,8 @@ import its.model.expressions.literals.*
 import its.model.expressions.operators.*
 import its.model.expressions.types.ComparisonResult
 import its.model.expressions.types.DataType
-import its.model.visitors.OperatorBehaviour
-import its.model.visitors.OperatorVisitor
+import its.model.expressions.visitors.OperatorBehaviour
+import its.model.expressions.visitors.OperatorVisitor
 import org.w3c.dom.Element
 import org.w3c.dom.Node
 import org.xml.sax.InputSource
@@ -180,7 +180,7 @@ interface Operator {
      */
     fun <I> use(behaviour: OperatorBehaviour<I>) : I
 
-    companion object {
+    companion object _static{
 
         /**
          * Изменяемая таблица переменных
@@ -198,6 +198,7 @@ interface Operator {
          *
          * val - Список известных классов переменной
          */
+        @JvmStatic
         val varsTable: Map<String, List<String>>
             get() = mVarsTable
 
@@ -206,6 +207,7 @@ interface Operator {
          * @param str Строка с XML
          * @return Выражение
          */
+        @JvmStatic
         fun fromXMLString(str: String): Operator? {
             try {
                 // Создаем DocumentBuilder
@@ -233,6 +235,7 @@ interface Operator {
          * @param path Путь к файлу
          * @return Выражение
          */
+        @JvmStatic
         fun fromXMLFile(path: String): Operator? {
             try {
                 // Создаем DocumentBuilder
@@ -260,6 +263,7 @@ interface Operator {
          * @param el XML узел
          * @return Оператор
          */
+        @JvmStatic
         fun build(el: Element): Operator {
             val children = mutableListOf<Operator>()
             for (i in 0 until el.childNodes.length) {

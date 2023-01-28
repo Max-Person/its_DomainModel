@@ -1,9 +1,9 @@
 package its.model.nodes
 
 import its.model.expressions.Operator
-import its.model.visitors.DecisionTreeBehaviour
-import its.model.visitors.DecisionTreeVisitor.InfoSource
-import its.model.visitors.DecisionTreeVisitor
+import its.model.nodes.visitors.DecisionTreeBehaviour
+import its.model.nodes.visitors.DecisionTreeVisitor.InfoSource
+import its.model.nodes.visitors.DecisionTreeVisitor
 import org.w3c.dom.Element
 
 class CycleAggregationNode (

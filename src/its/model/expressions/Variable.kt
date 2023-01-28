@@ -1,8 +1,8 @@
 package its.model.expressions
 
 import its.model.expressions.types.DataType
-import its.model.visitors.OperatorBehaviour
-import its.model.visitors.OperatorVisitor
+import its.model.expressions.visitors.OperatorBehaviour
+import its.model.expressions.visitors.OperatorVisitor
 
 /**
  * Переменная, вводимая некоторыми операторами
