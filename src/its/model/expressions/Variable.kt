@@ -1,6 +1,7 @@
 package its.model.expressions
 
 import its.model.expressions.types.DataType
+import its.model.visitors.OperatorBehaviour
 import its.model.visitors.OperatorVisitor
 
 /**
@@ -29,5 +30,9 @@ class Variable(
 
     override fun <I> accept(visitor: OperatorVisitor<I>): I {
         return visitor.process(this)
+    }
+
+    override fun <I> use(behaviour: OperatorBehaviour<I>): I {
+        return behaviour.process(this)
     }
 }

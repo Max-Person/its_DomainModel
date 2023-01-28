@@ -1,9 +1,19 @@
 package its.model.visitors
 
 import its.model.expressions.Variable
+import its.model.expressions.Operator
 import its.model.expressions.literals.*
 import its.model.expressions.operators.*
 
+/**
+ * Интерфейс, описывающий некоторое поведение, применяемое при обходе выражений (подклассы [Operator])
+ *
+ * Отличие данного интерфейса от [OperatorBehaviour] в том,
+ * что [OperatorVisitor] реализовывается с целью полного обхода дерева решений
+ * (Функция [Operator.accept] реализует логику обхода дерева).
+ * Таким образом, данный класс стоит считать частным случаем соответсвующего -Behaviour класса.
+ * @see Operator.accept
+ */
 interface OperatorVisitor<Info> {
 
     // -------------------- Для листьев дерева выражений ---------------------

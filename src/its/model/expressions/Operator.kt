@@ -4,6 +4,7 @@ import its.model.expressions.literals.*
 import its.model.expressions.operators.*
 import its.model.expressions.types.ComparisonResult
 import its.model.expressions.types.DataType
+import its.model.visitors.OperatorBehaviour
 import its.model.visitors.OperatorVisitor
 import org.w3c.dom.Element
 import org.w3c.dom.Node
@@ -161,7 +162,23 @@ interface Operator {
         // TODO
     }
 
+    /**
+     * Применяет визитор [visitor] и реализовывает полный обход дерева выражений
+     * @param visitor применяемый визитор
+     * @return информация, возвращаемая визитором при обработке данного узла
+     * @see OperatorVisitor
+     * @see run
+     */
     fun <I> accept(visitor: OperatorVisitor<I>) : I
+
+    /**
+     * Применяет поведение [behaviour] к данному узлу
+     * @param behaviour применяемое поведение
+     * @return информация, возвращаемая поведением при обработке данного узла
+     * @see OperatorBehaviour
+     * @see accept
+     */
+    fun <I> use(behaviour: OperatorBehaviour<I>) : I
 
     companion object {
 
