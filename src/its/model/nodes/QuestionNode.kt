@@ -25,7 +25,9 @@ class QuestionNode (
             DataType.fromString(el.getAttribute("type"))!!,
             el.getAttribute("enumOwner").ifBlank { null }
         ) to build(it.getChild())!!}.toMap(),
-    )
+    ){
+        collectAdditionalInfo(el)
+    }
 
     override fun <I> accept(visitor: DecisionTreeVisitor<I>): I {
         val info = mutableMapOf(InfoSource.fromCurrent(this) to visitor.process(this))

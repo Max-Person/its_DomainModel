@@ -12,7 +12,9 @@ class StartNode(
     internal constructor(el : Element) : this(
         el.getChildren("DecisionTreeVarDecl").map{it.getAttribute("name") to it.getAttribute("type")}.toMap(),
         ThoughtBranch(el.getChild("ThoughtBranch")),
-    )
+    ){
+        collectAdditionalInfo(el)
+    }
 
     override fun declaredVariables(): Map<String, String> {
         return initVariables

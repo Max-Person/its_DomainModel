@@ -11,7 +11,23 @@ import javax.xml.parsers.DocumentBuilderFactory
 import javax.xml.parsers.ParserConfigurationException
 
 sealed class DecisionTreeNode{
+    var additionalInfo = mapOf<String, String>()
+        private set
+
+    protected fun collectAdditionalInfo(el: Element){
+        val info = mutableMapOf<String, String>()
+        for(i in 0 until el.attributes.length){
+            val atr = el.attributes.item(i)
+            if(atr.nodeName.startsWith(ADDITIONAL_INFO_PREFIX)){
+                info[atr.nodeName.drop(ADDITIONAL_INFO_PREFIX.length)] = atr.nodeValue
+            }
+        }
+        additionalInfo = info.toMap()
+    }
+
     companion object _static{
+        private const val ADDITIONAL_INFO_PREFIX = "_"
+
         /**
          * Создает дерево решений из XML строки
          * @param str Строка с XML

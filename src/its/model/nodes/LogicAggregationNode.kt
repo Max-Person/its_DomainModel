@@ -16,7 +16,9 @@ class LogicAggregationNode (
         hashMapOf(
             true to build(el.getByOutcome("true"))!!,
             false to build(el.getByOutcome("false"))!!)
-    )
+    ){
+        collectAdditionalInfo(el)
+    }
 
     override fun <I> accept(visitor: DecisionTreeVisitor<I>): I {
         val info = mutableMapOf(InfoSource.fromCurrent(this) to visitor.process(this))

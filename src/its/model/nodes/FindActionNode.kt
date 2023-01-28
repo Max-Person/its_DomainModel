@@ -21,7 +21,9 @@ class FindActionNode(
         el.getChild("DecisionTreeVarDecl").getAttribute("type"),
         build(el.getByOutcome("found"))!!,
         build(el.getByOutcome("none")),
-    )
+    ){
+        collectAdditionalInfo(el)
+    }
 
     override fun declaredVariables(): Map<String, String> {
         val decl: MutableMap<String, String> = HashMap()

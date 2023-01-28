@@ -15,7 +15,9 @@ class ThoughtBranch(
         DataType.fromString(el.getAttribute("type"))!!,
         el.getAttribute("paramName").ifBlank { null },
         build(el.getChild())!!,
-    )
+    ){
+        collectAdditionalInfo(el)
+    }
 
     val isParametrized: Boolean
         get() = parameterName != null

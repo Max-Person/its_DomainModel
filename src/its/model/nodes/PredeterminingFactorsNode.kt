@@ -12,7 +12,9 @@ class PredeterminingFactorsNode (
     internal constructor(el : Element) : this(
         el.getSeveralByWrapper("Predetermining").map { build(it)!!},
         build(el.getByOutcome("undetermined"))!!
-    )
+    ){
+        collectAdditionalInfo(el)
+    }
 
     override fun <I> accept(visitor: DecisionTreeVisitor<I>): I {
         val info = mutableMapOf(InfoSource.fromCurrent(this) to visitor.process(this))
