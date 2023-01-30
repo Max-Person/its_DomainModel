@@ -29,7 +29,7 @@ abstract class ClassesDictionaryBase<C : ClassModel>(storedType: KClass<C>) : Di
      * Получить модель класса по имени
      * @param name Имя класса
      */
-    internal fun get(name: String) = values.firstOrNull { it.name == name }
+    override fun get(name: String) = values.firstOrNull { it.name == name }
 
     /**
      * Проверяет корректность содержимого словаря

@@ -32,7 +32,10 @@ abstract class RelationshipsDictionaryBase<R : RelationshipModel>(storedType: KC
 
     override fun onAddActions(added: R) {
         val scaleRelations = added.scaleRelationships().map {
-            require(storedType.isInstance(it))
+            require(storedType.isInstance(it)){
+                "Отношения типа ${storedType.simpleName}, задающие порядковую шкалу, должны создавать отношения того же типа как производные.\n" +
+                        "Скорее всего функция scaleRelationships() не переопределена в классе $storedType."
+            }
             it as R
         }
         addAll(scaleRelations)
@@ -46,7 +49,7 @@ abstract class RelationshipsDictionaryBase<R : RelationshipModel>(storedType: KC
      * Получить модель отношения по имени
      * @param name Имя отношения
      */
-    fun get(name: String) = values.firstOrNull { it.name == name }
+    override fun get(name: String) = values.firstOrNull { it.name == name }
 
     /**
      * Проверяет корректность содержимого словаря

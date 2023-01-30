@@ -29,7 +29,7 @@ abstract class DecisionTreeVarsDictionaryBase<V : DecisionTreeVarModel>(storedTy
      * Получить модель переменной по имени
      * @param name Имя переменной
      */
-    internal fun get(name: String) = values.firstOrNull { it.name == name }
+    override fun get(name: String) = values.firstOrNull { it.name == name }
 
     /**
      * Проверяет корректность содержимого словаря

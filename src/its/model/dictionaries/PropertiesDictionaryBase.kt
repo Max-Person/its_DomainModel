@@ -29,7 +29,7 @@ abstract class PropertiesDictionaryBase<P : PropertyModel>(storedType: KClass<P>
      * Получить модель свойства по имени
      * @param name Имя свойства
      */
-    internal fun get(name: String) = values.firstOrNull { it.name == name }
+    override fun get(name: String) = values.firstOrNull { it.name == name }
 
     /**
      * Проверяет корректность содержимого словаря

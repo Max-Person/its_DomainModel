@@ -10,7 +10,7 @@ class StartNode(
     val main: ThoughtBranch
 ) : DecisionTreeNode(), DecisionTreeVarDeclaration {
     internal constructor(el : Element) : this(
-        el.getChildren("DecisionTreeVarDecl").map{it.getAttribute("name") to it.getAttribute("type")}.toMap(),
+        el.getSeveralByWrapper("InputVariables").associate { it.getAttribute("name") to it.getAttribute("type") },
         ThoughtBranch(el.getChild("ThoughtBranch")),
     ){
         collectAdditionalInfo(el)

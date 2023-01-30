@@ -27,7 +27,7 @@ abstract class EnumsDictionaryBase<E : EnumModel>(storedType: KClass<E>) : Dicti
      * Получить модель перечисления по имени
      * @param name Имя перечисления
      */
-    internal fun get(name: String) = values.firstOrNull { it.name == name }
+    override fun get(name: String) = values.firstOrNull { it.name == name }
 
     /**
      * Проверяет корректность содержимого словаря

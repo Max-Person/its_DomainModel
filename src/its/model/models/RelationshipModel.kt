@@ -34,7 +34,7 @@ open class RelationshipModel(
      *
      * *Важно:* Все элементы возвращаемого массива должны быть объектами реализующего класса (наследника)
      */
-    internal open fun scaleRelationships():List<RelationshipModel>{
+    open fun scaleRelationships():List<RelationshipModel>{
         when (scaleType) {
             ScaleType.Linear -> {
                 scaleRelationshipsNames!!

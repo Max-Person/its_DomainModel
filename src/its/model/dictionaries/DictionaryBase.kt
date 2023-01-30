@@ -69,7 +69,7 @@ abstract class DictionaryBase<T : Any>(protected val storedType: KClass<T>) {
                 return@registerParser DiscreteRange(discrete.map{it.toDouble()})
         }.setNullStringStrategy{ s: String, nullStringStrategyHelper: NullStringStrategyHelper -> s.equals("")}.build()
 
-        private val csvParser = CSVParserBuilder().withSeparator(COLUMNS_SEPARATOR).build()
+        private val csvParser = CSVParserBuilder().withSeparator(COLUMNS_SEPARATOR).withEscapeChar('\\').build()
     }
 
     private var isInit = false
@@ -92,8 +92,8 @@ abstract class DictionaryBase<T : Any>(protected val storedType: KClass<T>) {
 
             rows.forEach { row ->
                 val constructor = storedType.primaryConstructor?.javaConstructor!!
-                val args = row.mapIndexed { index, s ->
-                    valueParser.parseType(s, constructor.genericParameterTypes[index])
+                val args = constructor.genericParameterTypes.mapIndexed{ index, type ->
+                    valueParser.parseType(row[index].trim(), type)
                 }
                 val value = constructor.newInstance(*args.toTypedArray())
 
@@ -149,6 +149,12 @@ abstract class DictionaryBase<T : Any>(protected val storedType: KClass<T>) {
      * @throws IllegalArgumentException
      */
     abstract fun validate()
+
+    abstract fun get(name : String) : T?
+
+    fun contains(name : String) : Boolean{
+        return get(name) != null
+    }
 
     fun forEach(block: (T) -> Unit) {
         values.forEach(block)
