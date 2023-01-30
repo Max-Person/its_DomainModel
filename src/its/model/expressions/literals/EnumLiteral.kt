@@ -34,4 +34,22 @@ class EnumLiteral(value: String, val owner: String) : Literal(value) {
     override fun <I> use(behaviour: OperatorBehaviour<I>): I {
         return behaviour.process(this)
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+        if (!super.equals(other)) return false
+
+        other as EnumLiteral
+
+        if (owner != other.owner) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = super.hashCode()
+        result = 31 * result + owner.hashCode()
+        return result
+    }
 }
