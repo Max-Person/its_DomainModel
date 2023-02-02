@@ -1,6 +1,8 @@
 package its.model.nodes
 
+import its.model.DomainModel
 import its.model.expressions.Operator
+import its.model.models.DecisionTreeVarModel
 import its.model.nodes.visitors.DecisionTreeBehaviour
 import its.model.nodes.visitors.DecisionTreeVisitor.InfoSource
 import its.model.nodes.visitors.DecisionTreeVisitor
@@ -10,11 +12,22 @@ import org.w3c.dom.Element
 //FindAction пока выделен отдельно, но в случае появления новых действий можно выделить общий родительский класс
 class FindActionNode(
     val selectorExpr: Operator,
-    private val varName: String,
-    private val varClass: String,
+    varName: String,
+    varClass: String,
     val nextIfFound: DecisionTreeNode,
     val nextIfNone: DecisionTreeNode? = null,
 ) : DecisionTreeNode(), DecisionTreeVarDeclaration {
+    val variable: DecisionTreeVarModel
+    init {
+        require(DomainModel.decisionTreeVarsDictionary.contains(varName)){
+            "Переменная $varName, используемая в дереве решений, не объявлена в словаре"
+        }
+        require(DomainModel.decisionTreeVarsDictionary.getClass(varName) == varClass){
+            "Переменная $varName, используемая в дереве решений, объявлена с классом, не совпадающим с объявлением в словаре"
+        }
+        variable = DomainModel.decisionTreeVarsDictionary.get(varName)!!
+    }
+
     internal constructor(el : Element) : this(
         Operator.build(el.getSingleByWrapper("Expression")),
         el.getChild("DecisionTreeVarDecl").getAttribute("name"),
@@ -25,10 +38,12 @@ class FindActionNode(
         collectAdditionalInfo(el)
     }
 
-    override fun declaredVariables(): Map<String, String> {
-        val decl: MutableMap<String, String> = HashMap()
-        decl[varName] = varClass
-        return decl
+    override fun declaredVariable(): DecisionTreeVarModel {
+        return variable
+    }
+
+    override fun declarationExpression(): Operator {
+        return selectorExpr
     }
 
     override fun <I> accept(visitor: DecisionTreeVisitor<I>): I {

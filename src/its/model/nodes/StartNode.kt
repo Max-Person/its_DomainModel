@@ -8,7 +8,7 @@ import org.w3c.dom.Element
 class StartNode(
     val initVariables: Map<String, String> = HashMap(),
     val main: ThoughtBranch
-) : DecisionTreeNode(), DecisionTreeVarDeclaration {
+) : DecisionTreeNode() {
     internal constructor(el : Element) : this(
         el.getSeveralByWrapper("InputVariables").associate { it.getAttribute("name") to it.getAttribute("type") },
         ThoughtBranch(el.getChild("ThoughtBranch")),
@@ -16,7 +16,7 @@ class StartNode(
         collectAdditionalInfo(el)
     }
 
-    override fun declaredVariables(): Map<String, String> {
+    fun declaredVariables(): Map<String, String> {
         return initVariables
     }
 
