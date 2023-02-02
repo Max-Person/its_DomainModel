@@ -3,6 +3,8 @@ package its.model.expressions
 import its.model.expressions.literals.*
 import its.model.expressions.types.ComparisonResult
 import its.model.expressions.types.DataType
+import its.model.expressions.visitors.LiteralBehaviour
+import its.model.expressions.visitors.OperatorBehaviour
 import java.lang.IllegalArgumentException
 
 /**
@@ -41,6 +43,10 @@ abstract class Literal(
         return result
     }
 
+    abstract fun <I> use(behaviour: LiteralBehaviour<I>): I
+    final override fun <I> use(behaviour: OperatorBehaviour<I>): I {
+        return use(behaviour as LiteralBehaviour<I>)
+    }
 
     companion object _static{
         @JvmStatic
