@@ -14,10 +14,14 @@ class FindActionNode(
     val selectorExpr: Operator,
     varName: String,
     varClass: String,
-    val nextIfFound: DecisionTreeNode,
-    val nextIfNone: DecisionTreeNode? = null,
+    val next: Outcomes<String>,
 ) : DecisionTreeNode(), DecisionTreeVarDeclaration {
     val variable: DecisionTreeVarModel
+    val nextIfFound
+        get() = next["found"]!!
+    val nextIfNone
+        get() = next["none"]
+
     init {
         require(DomainModel.decisionTreeVarsDictionary.contains(varName)){
             "Переменная $varName, используемая в дереве решений, не объявлена в словаре"
@@ -32,8 +36,15 @@ class FindActionNode(
         Operator.build(el.getSingleByWrapper("Expression")),
         el.getChild("DecisionTreeVarDecl").getAttribute("name"),
         el.getChild("DecisionTreeVarDecl").getAttribute("type"),
-        build(el.getByOutcome("found"))!!,
-        build(el.getByOutcome("none")),
+        Outcomes(mapOf(
+            "found" to (build(el.getByOutcome("found"))!! to getAdditionalInfo(el.getOutcome("found")!!)),
+             )
+        .run {
+            return@run if(el.getByOutcome("none") != null)
+                this.plus("none" to (build(el.getByOutcome("none"))!! to getAdditionalInfo(el.getOutcome("none")!!)))
+            else
+                this
+        })
     ){
         collectAdditionalInfo(el)
     }
@@ -52,7 +63,7 @@ class FindActionNode(
             InfoSource.fromOutcome("found", nextIfFound) to nextIfFound.accept(visitor),
         )
         if(nextIfNone != null)
-            info.put(InfoSource.fromOutcome("none", nextIfNone), nextIfNone.accept(visitor))
+            info.put(InfoSource.fromOutcome("none", nextIfNone!!), nextIfNone!!.accept(visitor))
 
         return visitor.process(this,  info)
     }

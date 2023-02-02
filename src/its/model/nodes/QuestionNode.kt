@@ -13,18 +13,20 @@ class QuestionNode (
     val enumOwner: String? = null,
     val isSwitch : Boolean = false,
     val expr: Operator,
-    val next: Map<Literal, DecisionTreeNode>,
+    val next: Outcomes<Literal>
 ): DecisionTreeNode() {
     internal constructor(el : Element) : this(
         DataType.fromString(el.getAttribute("type"))!!,
         el.getAttribute("enumOwner").ifBlank { null },
         el.getAttribute("isSwitch").toBoolean(),
         Operator.build(el.getSingleByWrapper("Expression")),
-        el.getChildren("Outcome").map { Literal.fromString(
-            it.getAttribute("value"),
-            DataType.fromString(el.getAttribute("type"))!!,
-            el.getAttribute("enumOwner").ifBlank { null }
-        ) to build(it.getChild())!!}.toMap(),
+        Outcomes(el.getChildren("Outcome").map {
+            Literal.fromString(
+                it.getAttribute("value"),
+                DataType.fromString(el.getAttribute("type"))!!,
+                el.getAttribute("enumOwner").ifBlank { null }
+            ) to (build(it.getChild())!! to getAdditionalInfo(it))
+        }.toMap())
     ){
         collectAdditionalInfo(el)
     }

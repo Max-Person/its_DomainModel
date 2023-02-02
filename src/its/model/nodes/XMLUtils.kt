@@ -28,7 +28,11 @@ internal fun Element.getChild(tagName : String) : Element {
 }
 
 internal fun Element.getByOutcome(outcomeVal : String) : Element?{
-    return getChildren("Outcome").firstOrNull { it.getAttribute("value").equals(outcomeVal)}?.getChild()
+    return getOutcome(outcomeVal)?.getChild()
+}
+
+internal fun Element.getOutcome(outcomeVal : String) : Element?{
+    return getChildren("Outcome").firstOrNull { it.getAttribute("value").equals(outcomeVal)}
 }
 
 internal fun Element.getSeveralByWrapper(wrapper : String) : List<Element>{

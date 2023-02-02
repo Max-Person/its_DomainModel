@@ -15,18 +15,23 @@ sealed class DecisionTreeNode{
         private set
 
     protected fun collectAdditionalInfo(el: Element){
-        val info = mutableMapOf<String, String>()
-        for(i in 0 until el.attributes.length){
-            val atr = el.attributes.item(i)
-            if(atr.nodeName.startsWith(ADDITIONAL_INFO_PREFIX)){
-                info[atr.nodeName.drop(ADDITIONAL_INFO_PREFIX.length)] = atr.nodeValue
-            }
-        }
-        additionalInfo = info.toMap()
+        additionalInfo = getAdditionalInfo(el)
     }
 
     companion object _static{
         private const val ADDITIONAL_INFO_PREFIX = "_"
+
+        @JvmStatic
+        protected fun getAdditionalInfo(el: Element) : Map<String, String>{
+            val info = mutableMapOf<String, String>()
+            for(i in 0 until el.attributes.length){
+                val atr = el.attributes.item(i)
+                if(atr.nodeName.startsWith(ADDITIONAL_INFO_PREFIX)){
+                    info[atr.nodeName.drop(ADDITIONAL_INFO_PREFIX.length)] = atr.nodeValue
+                }
+            }
+            return info
+        }
 
         /**
          * Создает дерево решений из XML строки

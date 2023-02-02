@@ -12,7 +12,7 @@ class CycleAggregationNode (
     private val varName: String,
     private val varClass: String,
     val thoughtBranch: ThoughtBranch,
-    val next: Map<Boolean, DecisionTreeNode>,
+    val next: Outcomes<Boolean>,
 ) : DecisionTreeNode(){
     internal constructor(el : Element) : this(
         LogicalOp.fromString(el.getAttribute("operator"))!!,
@@ -20,9 +20,10 @@ class CycleAggregationNode (
         el.getChild("DecisionTreeVarDecl").getAttribute("name"),
         el.getChild("DecisionTreeVarDecl").getAttribute("type"),
         ThoughtBranch(el.getChild("ThoughtBranch")),
-        hashMapOf(
-            true to build(el.getByOutcome("true"))!!,
-            false to build(el.getByOutcome("false"))!!)
+        Outcomes(mapOf(
+            true to (build(el.getByOutcome("true"))!! to getAdditionalInfo(el.getOutcome("true")!!)),
+            false to (build(el.getByOutcome("false"))!! to getAdditionalInfo(el.getOutcome("false")!!))
+        ))
     ){
         collectAdditionalInfo(el)
     }
