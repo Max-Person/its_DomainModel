@@ -19,7 +19,7 @@ import kotlin.reflect.KClass
 import kotlin.reflect.full.primaryConstructor
 import kotlin.reflect.jvm.javaConstructor
 
-abstract class DictionaryBase<T : Any>(protected val storedType: KClass<T>) {
+abstract class DictionaryBase<T : Any>(protected val storedType: KClass<T>) : Iterable<T> {
 
     // +++++++++++++++++++++++++++++++++ Свойства ++++++++++++++++++++++++++++++++++
     // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -151,6 +151,14 @@ abstract class DictionaryBase<T : Any>(protected val storedType: KClass<T>) {
     abstract fun validate()
 
     abstract fun get(name : String) : T?
+
+    override fun iterator(): Iterator<T> {
+        return values.iterator()
+    }
+
+    fun get(predicate: (T) -> Boolean): T? {
+        return values.firstOrNull (predicate)
+    }
 
     fun contains(name : String) : Boolean{
         return get(name) != null
