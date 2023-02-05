@@ -15,23 +15,10 @@ sealed class DecisionTreeNode{
         private set
 
     protected fun collectAdditionalInfo(el: Element){
-        additionalInfo = getAdditionalInfo(el)
+        additionalInfo = el.getAdditionalInfo()
     }
 
     companion object _static{
-        private const val ADDITIONAL_INFO_PREFIX = "_"
-
-        @JvmStatic
-        protected fun getAdditionalInfo(el: Element) : Map<String, String>{
-            val info = mutableMapOf<String, String>()
-            for(i in 0 until el.attributes.length){
-                val atr = el.attributes.item(i)
-                if(atr.nodeName.startsWith(ADDITIONAL_INFO_PREFIX)){
-                    info[atr.nodeName.drop(ADDITIONAL_INFO_PREFIX.length)] = atr.nodeValue
-                }
-            }
-            return info
-        }
 
         /**
          * Создает дерево решений из XML строки
@@ -101,6 +88,7 @@ sealed class DecisionTreeNode{
          * Создает узел дерева решений из узла XML
          * @param el XML узел
          * @return узел дерева решений
+         * @see canBuildFrom
          */
         @JvmStatic
         fun build(el: Element?): DecisionTreeNode? {
@@ -117,6 +105,26 @@ sealed class DecisionTreeNode{
                 "PredeterminingFactorsNode" -> PredeterminingFactorsNode(el)
                 "UndeterminedNode" -> UndeterminedResultNode()
                 else -> null
+            }
+        }
+
+        /**
+         * Может ли узел дерева решений быть построен из узла XML
+         * @param el XML узел
+         * @return возможность построения узла дерева решений
+         */
+        @JvmStatic
+        fun canBuildFrom(el: Element): Boolean {
+            return when (el.tagName) {
+                "StartNode" -> true
+                "BranchResultNode" -> true
+                "QuestionNode" -> true
+                "FindActionNode" -> true
+                "LogicAggregationNode" -> true
+                "CycleAggregationNode" -> true
+                "PredeterminingFactorsNode" -> true
+                "UndeterminedNode" -> true
+                else -> false
             }
         }
     }

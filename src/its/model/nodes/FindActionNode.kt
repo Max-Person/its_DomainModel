@@ -33,18 +33,10 @@ class FindActionNode(
     }
 
     internal constructor(el : Element) : this(
-        Operator.build(el.getSingleByWrapper("Expression")),
-        el.getChild("DecisionTreeVarDecl").getAttribute("name"),
-        el.getChild("DecisionTreeVarDecl").getAttribute("type"),
-        Outcomes(mapOf(
-            "found" to (build(el.getByOutcome("found"))!! to getAdditionalInfo(el.getOutcome("found")!!)),
-             )
-        .run {
-            return@run if(el.getByOutcome("none") != null)
-                this.plus("none" to (build(el.getByOutcome("none"))!! to getAdditionalInfo(el.getOutcome("none")!!)))
-            else
-                this
-        })
+        Operator.build(el.getSingleByWrapper("Expression")!!),
+        el.getChild("DecisionTreeVarDecl")!!.getAttribute("name"),
+        el.getChild("DecisionTreeVarDecl")!!.getAttribute("type"),
+        Outcomes(el) { it }
     ){
         collectAdditionalInfo(el)
     }

@@ -1,40 +1,61 @@
 package its.model.nodes
 
-class Outcomes<KeyType>(private val next : Map<KeyType, Pair<DecisionTreeNode, Map<String, String>>>) : Map<KeyType, DecisionTreeNode>{
+import its.model.Info
+import its.model.InfoMap
+import org.w3c.dom.Element
 
-    class Outcome<KeyType>(override val key: KeyType, override val value: DecisionTreeNode) : Map.Entry<KeyType, DecisionTreeNode>
+open class Outcome<KeyType>(
+    override val key: KeyType,
+    override val value: DecisionTreeNode,
+    val additionalInfo : Map<String, String> = emptyMap()
+) : Info<KeyType, DecisionTreeNode>{
+    internal constructor(el : Element, keyFromString : (str :String) -> KeyType)
+            : this(
+        keyFromString(el.getAttribute("value")),
+        DecisionTreeNode.build(el.getChildren().first{DecisionTreeNode.canBuildFrom(it)})!!,
+        el.getAdditionalInfo(),
+    )
 
-    override operator fun get(key: KeyType) : DecisionTreeNode?{
-        return next[key]?.first
-    }
+}
+
+class Outcomes<KeyType>(info: Collection<Outcome<KeyType>>) : InfoMap<Outcome<KeyType>, KeyType, DecisionTreeNode>(info.toSet()){
+    internal constructor(el : Element, keyFromString : (str :String) -> KeyType)
+            : this(
+        el.getChildren("Outcome").map { Outcome(it, keyFromString) }
+    )
 
     fun additionalInfo(key: KeyType) : Map<String, String>?{
-        return next[key]?.second
+        return getFull(key)?.additionalInfo
     }
 
-    override val entries: Set<Map.Entry<KeyType, DecisionTreeNode>>
-        get() = next.map { (key, value) -> Outcome(key, value.first) }.toSet()
+}
 
-    override val values
-        get() = next.values.map { it.first }
+class PredeterminingOutcome(
+    key: String,
+    value: DecisionTreeNode,
+    additionalInfo : Map<String, String> = emptyMap(),
+    val decidingBranch: ThoughtBranch?,
+) : Outcome<String>(key, value, additionalInfo) {
+    internal constructor(el : Element)
+            : this(
+        el.getAttribute("value"),
+        DecisionTreeNode.build(el.getChildren().first { DecisionTreeNode.canBuildFrom(it) })!!,
+        el.getAdditionalInfo(),
+        if(el.getChild("ThoughtBranch") != null) ThoughtBranch(el.getChild("ThoughtBranch")!!) else null,
+    )
+}
 
-    override fun isEmpty(): Boolean {
-        return next.isEmpty()
+class PredeterminingOutcomes(info: Collection<PredeterminingOutcome>) : InfoMap<PredeterminingOutcome, String, DecisionTreeNode>(info.toSet()){
+    internal constructor(el : Element)
+            : this(
+        el.getChildren("Outcome").map { PredeterminingOutcome(it) }
+    )
+
+    fun additionalInfo(key: String) : Map<String, String>?{
+        return getFull(key)?.additionalInfo
     }
 
-    override fun containsValue(value: DecisionTreeNode): Boolean {
-        return next.values.any { it.first == value }
+    fun decidingBranch(key: String) : ThoughtBranch?{
+        return getFull(key)?.decidingBranch
     }
-
-    override fun containsKey(key: KeyType): Boolean {
-        return next.containsKey(key)
-    }
-
-    override val keys
-        get() = next.keys
-
-    override val size: Int
-        get() = next.size
-
-
 }

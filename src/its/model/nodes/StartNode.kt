@@ -11,7 +11,7 @@ class StartNode(
 ) : DecisionTreeNode() {
     internal constructor(el : Element) : this(
         el.getSeveralByWrapper("InputVariables").associate { it.getAttribute("name") to it.getAttribute("type") },
-        ThoughtBranch(el.getChild("ThoughtBranch")),
+        ThoughtBranch(el.getChild("ThoughtBranch")!!),
     ){
         collectAdditionalInfo(el)
     }

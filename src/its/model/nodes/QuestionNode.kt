@@ -19,14 +19,12 @@ class QuestionNode (
         DataType.fromString(el.getAttribute("type"))!!,
         el.getAttribute("enumOwner").ifBlank { null },
         el.getAttribute("isSwitch").toBoolean(),
-        Operator.build(el.getSingleByWrapper("Expression")),
-        Outcomes(el.getChildren("Outcome").map {
-            Literal.fromString(
-                it.getAttribute("value"),
-                DataType.fromString(el.getAttribute("type"))!!,
-                el.getAttribute("enumOwner").ifBlank { null }
-            ) to (build(it.getChild())!! to getAdditionalInfo(it))
-        }.toMap())
+        Operator.build(el.getSingleByWrapper("Expression")!!),
+        Outcomes(el) { Literal.fromString(
+            it,
+            DataType.fromString(el.getAttribute("type"))!!,
+            el.getAttribute("enumOwner").ifBlank { null }
+        ) }
     ){
         collectAdditionalInfo(el)
     }

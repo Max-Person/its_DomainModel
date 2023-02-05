@@ -13,10 +13,7 @@ class LogicAggregationNode (
     internal constructor(el : Element) : this(
         LogicalOp.fromString(el.getAttribute("operator"))!!,
         el.getChildren("ThoughtBranch").map { ThoughtBranch(it) },
-        Outcomes(mapOf(
-            true to (build(el.getByOutcome("true"))!! to getAdditionalInfo(el.getOutcome("true")!!)),
-            false to (build(el.getByOutcome("false"))!! to getAdditionalInfo(el.getOutcome("false")!!))
-        ))
+        Outcomes(el) { it.toBoolean() }
     ){
         collectAdditionalInfo(el)
     }

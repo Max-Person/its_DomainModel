@@ -16,14 +16,11 @@ class CycleAggregationNode (
 ) : DecisionTreeNode(){
     internal constructor(el : Element) : this(
         LogicalOp.fromString(el.getAttribute("operator"))!!,
-        Operator.build(el.getSingleByWrapper("SelectorExpression")),
-        el.getChild("DecisionTreeVarDecl").getAttribute("name"),
-        el.getChild("DecisionTreeVarDecl").getAttribute("type"),
-        ThoughtBranch(el.getChild("ThoughtBranch")),
-        Outcomes(mapOf(
-            true to (build(el.getByOutcome("true"))!! to getAdditionalInfo(el.getOutcome("true")!!)),
-            false to (build(el.getByOutcome("false"))!! to getAdditionalInfo(el.getOutcome("false")!!))
-        ))
+        Operator.build(el.getSingleByWrapper("SelectorExpression")!!),
+        el.getChild("DecisionTreeVarDecl")!!.getAttribute("name"),
+        el.getChild("DecisionTreeVarDecl")!!.getAttribute("type"),
+        ThoughtBranch(el.getChild("ThoughtBranch")!!),
+        Outcomes(el) { it.toBoolean() }
     ){
         collectAdditionalInfo(el)
     }

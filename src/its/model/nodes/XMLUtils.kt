@@ -15,16 +15,16 @@ internal fun Element.getChildren() : List<Element>{
     return out
 }
 
-internal fun Element.getChild() : Element {
-    return getChildren().first()
+internal fun Element.getChild() : Element? {
+    return getChildren().firstOrNull()
 }
 
 internal fun Element.getChildren(tagName : String) : List<Element>{
     return getChildren().filter { it.tagName.equals(tagName) }
 }
 
-internal fun Element.getChild(tagName : String) : Element {
-    return getChildren(tagName).first()
+internal fun Element.getChild(tagName : String) : Element? {
+    return getChildren(tagName).firstOrNull()
 }
 
 internal fun Element.getByOutcome(outcomeVal : String) : Element?{
@@ -36,9 +36,22 @@ internal fun Element.getOutcome(outcomeVal : String) : Element?{
 }
 
 internal fun Element.getSeveralByWrapper(wrapper : String) : List<Element>{
-    return getChild(wrapper).getChildren()
+    return getChild(wrapper)!!.getChildren()
 }
 
-internal fun Element.getSingleByWrapper(wrapper : String) : Element {
-    return getChild(wrapper).getChild()
+internal fun Element.getSingleByWrapper(wrapper : String) : Element? {
+    return getChild(wrapper)!!.getChild()
+}
+
+private const val ADDITIONAL_INFO_PREFIX = "_"
+
+internal fun Element.getAdditionalInfo() : Map<String, String>{
+    val info = mutableMapOf<String, String>()
+    for(i in 0 until this.attributes.length){
+        val atr = this.attributes.item(i)
+        if(atr.nodeName.startsWith(ADDITIONAL_INFO_PREFIX)){
+            info[atr.nodeName.drop(ADDITIONAL_INFO_PREFIX.length)] = atr.nodeValue
+        }
+    }
+    return info
 }

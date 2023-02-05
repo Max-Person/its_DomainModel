@@ -6,20 +6,25 @@ import its.model.nodes.visitors.DecisionTreeVisitor
 import org.w3c.dom.Element
 
 class PredeterminingFactorsNode (
-    val predetermining: List<DecisionTreeNode> = emptyList(),
-    val undetermined: DecisionTreeNode,
+    val next: PredeterminingOutcomes
 ) : DecisionTreeNode(){
+    val predetermining
+        get() = next.filterKeys { it.startsWith("predetermining") }
+    val undetermined
+        get() = next["undetermined"]
+
     internal constructor(el : Element) : this(
-        el.getSeveralByWrapper("Predetermining").map { build(it)!!},
-        build(el.getByOutcome("undetermined"))!!
+        PredeterminingOutcomes(el)
     ){
         collectAdditionalInfo(el)
     }
 
     override fun <I> accept(visitor: DecisionTreeVisitor<I>): I {
         val info = mutableMapOf(InfoSource.fromCurrent(this) to visitor.process(this))
-        info.putAll(predetermining.map { InfoSource.fromPredetermining(it) to it.accept(visitor) })
-        info[InfoSource.fromOutcome("undetermined", undetermined)] = undetermined.accept(visitor)
+        info.putAll(predetermining.values.map { InfoSource.fromPredetermining(it) to it.accept(visitor) })
+        if(undetermined != null){
+            info[InfoSource.fromOutcome("undetermined", undetermined!!)] = undetermined!!.accept(visitor)
+        }
         return visitor.process(this,  info)
     }
 
