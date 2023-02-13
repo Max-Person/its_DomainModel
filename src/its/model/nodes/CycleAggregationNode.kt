@@ -13,7 +13,7 @@ class CycleAggregationNode (
     private val varClass: String,
     val thoughtBranch: ThoughtBranch,
     val next: Outcomes<Boolean>,
-) : DecisionTreeNode(){
+) : DecisionTreeNode(), LinkNode{
     internal constructor(el : Element) : this(
         LogicalOp.fromString(el.getAttribute("operator"))!!,
         Operator.build(el.getSingleByWrapper("SelectorExpression")!!),
@@ -24,6 +24,9 @@ class CycleAggregationNode (
     ){
         collectAdditionalInfo(el)
     }
+
+    override val children: List<DecisionTreeNode>
+        get() = next.values.toList()
 
     override fun <I> accept(visitor: DecisionTreeVisitor<I>): I {
         val info = mapOf(

@@ -7,7 +7,7 @@ import org.w3c.dom.Element
 
 class PredeterminingFactorsNode (
     val next: PredeterminingOutcomes
-) : DecisionTreeNode(){
+) : DecisionTreeNode(), LinkNode{
     val predetermining
         get() = next.filterKeys { it.startsWith("predetermining") }
     val undetermined
@@ -18,6 +18,9 @@ class PredeterminingFactorsNode (
     ){
         collectAdditionalInfo(el)
     }
+
+    override val children: List<DecisionTreeNode>
+        get() = next.values.toList()
 
     override fun <I> accept(visitor: DecisionTreeVisitor<I>): I {
         val info = mutableMapOf(InfoSource.fromCurrent(this) to visitor.process(this))

@@ -14,7 +14,7 @@ class QuestionNode (
     val isSwitch : Boolean = false,
     val expr: Operator,
     val next: Outcomes<Literal>
-): DecisionTreeNode() {
+): DecisionTreeNode(), LinkNode {
     internal constructor(el : Element) : this(
         DataType.fromString(el.getAttribute("type"))!!,
         el.getAttribute("enumOwner").ifBlank { null },
@@ -28,6 +28,9 @@ class QuestionNode (
     ){
         collectAdditionalInfo(el)
     }
+
+    override val children: List<DecisionTreeNode>
+        get() = next.values.toList()
 
     override fun <I> accept(visitor: DecisionTreeVisitor<I>): I {
         val info = mutableMapOf(InfoSource.fromCurrent(this) to visitor.process(this))
