@@ -4,8 +4,6 @@ import its.model.DomainModel
 import its.model.expressions.Operator
 import its.model.models.DecisionTreeVarModel
 import its.model.nodes.visitors.DecisionTreeBehaviour
-import its.model.nodes.visitors.DecisionTreeVisitor.InfoSource
-import its.model.nodes.visitors.DecisionTreeVisitor
 import org.w3c.dom.Element
 
 
@@ -50,17 +48,6 @@ class FindActionNode(
 
     override fun declarationExpression(): Operator {
         return selectorExpr
-    }
-
-    override fun <I> accept(visitor: DecisionTreeVisitor<I>): I {
-        val info = mutableMapOf(
-            InfoSource.fromCurrent(this) to visitor.process(this),
-            InfoSource.fromOutcome("found", nextIfFound) to nextIfFound.accept(visitor),
-        )
-        if(nextIfNone != null)
-            info.put(InfoSource.fromOutcome("none", nextIfNone!!), nextIfNone!!.accept(visitor))
-
-        return visitor.process(this,  info)
     }
 
     override fun <I> use(behaviour: DecisionTreeBehaviour<I>): I {

@@ -6,10 +6,7 @@ import its.model.expressions.operators.*
 
 /**
  * Интерфейс, описывающий некоторое поведение, внедряемое в узлы дерева выражения (подклассы [Operator])
- *
- * Отличие данного интерфейса от [OperatorBehaviour] в том,
- * что в общем случае [OperatorBehaviour] не подразумевает полного обхода дерева выражения.
- * Таким образом, данный класс стоит считать более общим случаем соответсвующего -Visitor класса.
+ * @param Info тип возвращаемого функциями поведения значения
  * @see Operator.use
  */
 interface OperatorBehaviour<Info> : LiteralBehaviour<Info>{

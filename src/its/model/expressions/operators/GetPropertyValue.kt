@@ -5,7 +5,6 @@ import its.model.expressions.Literal
 import its.model.expressions.Operator
 import its.model.expressions.types.DataType
 import its.model.expressions.visitors.OperatorBehaviour
-import its.model.expressions.visitors.OperatorVisitor
 
 /**
  * Получить значение свойства объекта
@@ -30,10 +29,6 @@ class GetPropertyValue(args: List<Operator>) : BaseOperator(args) {
 
     override fun clone(newArgs: List<Operator>): Operator {
         return GetPropertyValue(newArgs)
-    }
-
-    override fun <I> accept(visitor: OperatorVisitor<I>): I {
-        return visitor.process(this, visitor.process(this), args.map { it.accept(visitor) })
     }
 
     override fun <I> use(behaviour: OperatorBehaviour<I>): I {

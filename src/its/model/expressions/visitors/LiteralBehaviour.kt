@@ -1,7 +1,13 @@
 package its.model.expressions.visitors
 
+import its.model.expressions.Literal
 import its.model.expressions.literals.*
 
+/**
+ * Интерфейс, описывающий некоторое поведение, внедряемое в литералы дерева выражения (подклассы [Literal])
+ * @param Info тип возвращаемого функциями поведения значения
+ * @see Literal.use
+ */
 interface LiteralBehaviour<Info> {
     // -------------------- Для листьев дерева выражений ---------------------
     fun process(literal: BooleanLiteral): Info

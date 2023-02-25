@@ -1,7 +1,6 @@
 package its.model.nodes
 
 import its.model.nodes.visitors.DecisionTreeBehaviour
-import its.model.nodes.visitors.DecisionTreeVisitor
 import org.w3c.dom.Element
 import org.xml.sax.InputSource
 import org.xml.sax.SAXException
@@ -130,20 +129,10 @@ sealed class DecisionTreeNode{
     }
 
     /**
-     * Применяет визитор [visitor] и реализовывает полный обход дерева выражений
-     * @param visitor применяемый визитор
-     * @return информация, возвращаемая визитором при обработке данного узла
-     * @see DecisionTreeVisitor
-     * @see run
-     */
-    abstract fun <I> accept(visitor: DecisionTreeVisitor<I>) : I
-
-    /**
      * Применяет поведение [behaviour] к данному узлу
      * @param behaviour применяемое поведение
      * @return информация, возвращаемая поведением при обработке данного узла
      * @see DecisionTreeBehaviour
-     * @see accept
      */
     abstract fun <I> use(behaviour: DecisionTreeBehaviour<I>) : I
 }

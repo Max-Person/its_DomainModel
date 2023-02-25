@@ -2,7 +2,6 @@ package its.model.nodes
 
 import its.model.expressions.Literal
 import its.model.nodes.visitors.DecisionTreeBehaviour
-import its.model.nodes.visitors.DecisionTreeVisitor
 import org.w3c.dom.Element
 
 class BranchResultNode(
@@ -10,10 +9,6 @@ class BranchResultNode(
 ) : DecisionTreeNode(){
     internal constructor(el : Element) : this(Literal.fromString(el.getAttribute("value"))){
         collectAdditionalInfo(el)
-    }
-
-    override fun <I> accept(visitor: DecisionTreeVisitor<I>): I {
-        return visitor.process(this)
     }
 
     override fun <I> use(behaviour: DecisionTreeBehaviour<I>): I {

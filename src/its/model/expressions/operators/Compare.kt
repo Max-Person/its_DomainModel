@@ -3,7 +3,6 @@ package its.model.expressions.operators
 import its.model.expressions.Operator
 import its.model.expressions.types.DataType
 import its.model.expressions.visitors.OperatorBehaviour
-import its.model.expressions.visitors.OperatorVisitor
 
 /**
  * Сравнение
@@ -35,10 +34,6 @@ class Compare(args: List<Operator>) : BaseOperator(args) {
 
     override fun clone(newArgs: List<Operator>): Operator {
         return Compare(newArgs)
-    }
-
-    override fun <I> accept(visitor: OperatorVisitor<I>): I {
-        return visitor.process(this, visitor.process(this), args.map { it.accept(visitor) })
     }
 
     override fun <I> use(behaviour: OperatorBehaviour<I>): I {

@@ -5,7 +5,6 @@ import its.model.expressions.Operator
 import its.model.expressions.types.ComparisonResult
 import its.model.expressions.types.DataType
 import its.model.expressions.visitors.LiteralBehaviour
-import its.model.expressions.visitors.OperatorVisitor
 
 /**
  * Литерал результата сравнения
@@ -18,10 +17,6 @@ class ComparisonResultLiteral(value: ComparisonResult) : Literal(value.toString(
         get() = DataType.ComparisonResult
 
     override fun clone(): Operator = ComparisonResultLiteral(ComparisonResult.fromString(value)!!)
-
-    override fun <I> accept(visitor: OperatorVisitor<I>): I {
-        return visitor.process(this)
-    }
 
     override fun <I> use(behaviour: LiteralBehaviour<I>): I {
         return behaviour.process(this)
