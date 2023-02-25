@@ -18,16 +18,14 @@ open class Outcome<KeyType>(
 
 }
 
-class Outcomes<KeyType>(info: Collection<Outcome<KeyType>>) : InfoMap<Outcome<KeyType>, KeyType, DecisionTreeNode>(info.toSet()){
-    internal constructor(el : Element, keyFromString : (str :String) -> KeyType)
-            : this(
-        el.getChildren("Outcome").map { Outcome(it, keyFromString) }
-    )
+typealias Outcomes<KeyType> = InfoMap<out Outcome<KeyType>, KeyType, DecisionTreeNode>
 
-    fun additionalInfo(key: KeyType) : Map<String, String>?{
-        return getFull(key)?.additionalInfo
-    }
+internal fun <KeyType> getOutcomes(el : Element, keyFromString : (str :String) -> KeyType) : Outcomes<KeyType>{
+    return Outcomes(el.getChildren("Outcome").map { Outcome(it, keyFromString) }.toSet())
+}
 
+fun <KeyType> Outcomes<KeyType>.additionalInfo(key: KeyType) : Map<String, String>?{
+    return this.getFull(key)?.additionalInfo
 }
 
 class PredeterminingOutcome(
@@ -45,17 +43,12 @@ class PredeterminingOutcome(
     )
 }
 
-class PredeterminingOutcomes(info: Collection<PredeterminingOutcome>) : InfoMap<PredeterminingOutcome, String, DecisionTreeNode>(info.toSet()){
-    internal constructor(el : Element)
-            : this(
-        el.getChildren("Outcome").map { PredeterminingOutcome(it) }
-    )
+typealias PredeterminingOutcomes = InfoMap<PredeterminingOutcome, String, DecisionTreeNode>
 
-    fun additionalInfo(key: String) : Map<String, String>?{
-        return getFull(key)?.additionalInfo
-    }
+internal fun getPredeterminingOutcomes(el : Element) : PredeterminingOutcomes{
+    return PredeterminingOutcomes(el.getChildren("Outcome").map { PredeterminingOutcome(it) }.toSet())
+}
 
-    fun decidingBranch(key: String) : ThoughtBranch?{
-        return getFull(key)?.decidingBranch
-    }
+fun PredeterminingOutcomes.predeterminingBranch(key: String) : ThoughtBranch?{
+    return this.getFull(key)?.decidingBranch
 }

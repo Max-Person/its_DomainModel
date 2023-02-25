@@ -12,8 +12,8 @@ class FindActionNode(
     val selectorExpr: Operator,
     varName: String,
     varClass: String,
-    val next: Outcomes<String>,
-) : DecisionTreeNode(), DecisionTreeVarDeclaration, LinkNode {
+    override val next: Outcomes<String>,
+) : LinkNode<String>(), DecisionTreeVarDeclaration {
     val variable: DecisionTreeVarModel
     val nextIfFound
         get() = next["found"]!!
@@ -30,14 +30,11 @@ class FindActionNode(
         variable = DomainModel.decisionTreeVarsDictionary.get(varName)!!
     }
 
-    override val children: List<DecisionTreeNode>
-        get() = next.values.toList()
-
     internal constructor(el : Element) : this(
         Operator.build(el.getSingleByWrapper("Expression")!!),
         el.getChild("DecisionTreeVarDecl")!!.getAttribute("name"),
         el.getChild("DecisionTreeVarDecl")!!.getAttribute("type"),
-        Outcomes(el) { it }
+        getOutcomes(el) { it }
     ){
         collectAdditionalInfo(el)
     }

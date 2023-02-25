@@ -10,21 +10,18 @@ class CycleAggregationNode (
     private val varName: String,
     private val varClass: String,
     val thoughtBranch: ThoughtBranch,
-    val next: Outcomes<Boolean>,
-) : DecisionTreeNode(), LinkNode{
+    override val next: Outcomes<Boolean>,
+) : LinkNode<Boolean>(){
     internal constructor(el : Element) : this(
         LogicalOp.fromString(el.getAttribute("operator"))!!,
         Operator.build(el.getSingleByWrapper("SelectorExpression")!!),
         el.getChild("DecisionTreeVarDecl")!!.getAttribute("name"),
         el.getChild("DecisionTreeVarDecl")!!.getAttribute("type"),
         ThoughtBranch(el.getChild("ThoughtBranch")!!),
-        Outcomes(el) { it.toBoolean() }
+        getOutcomes(el) { it.toBoolean() }
     ){
         collectAdditionalInfo(el)
     }
-
-    override val children: List<DecisionTreeNode>
-        get() = next.values.toList()
 
     override fun <I> use(behaviour: DecisionTreeBehaviour<I>): I {
         return behaviour.process(this)

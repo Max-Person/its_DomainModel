@@ -11,14 +11,14 @@ class QuestionNode (
     val enumOwner: String? = null,
     val isSwitch : Boolean = false,
     val expr: Operator,
-    val next: Outcomes<Literal>
-): DecisionTreeNode(), LinkNode {
+    override val next: Outcomes<Literal>
+): LinkNode<Literal>() {
     internal constructor(el : Element) : this(
         DataType.fromString(el.getAttribute("type"))!!,
         el.getAttribute("enumOwner").ifBlank { null },
         el.getAttribute("isSwitch").toBoolean(),
         Operator.build(el.getSingleByWrapper("Expression")!!),
-        Outcomes(el) { Literal.fromString(
+        getOutcomes(el) { Literal.fromString(
             it,
             DataType.fromString(el.getAttribute("type"))!!,
             el.getAttribute("enumOwner").ifBlank { null }
@@ -26,9 +26,6 @@ class QuestionNode (
     ){
         collectAdditionalInfo(el)
     }
-
-    override val children: List<DecisionTreeNode>
-        get() = next.values.toList()
 
     override fun <I> use(behaviour: DecisionTreeBehaviour<I>): I {
         return behaviour.process(this)
