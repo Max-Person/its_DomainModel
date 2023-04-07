@@ -12,6 +12,7 @@ class FindActionNode(
     val selectorExpr: Operator,
     varName: String,
     varClass: String,
+    val errorCategories: List<FindErrorCategory>,
     override val next: Outcomes<String>,
 ) : LinkNode<String>(), DecisionTreeVarDeclaration {
     val variable: DecisionTreeVarModel
@@ -19,6 +20,18 @@ class FindActionNode(
         get() = next["found"]!!
     val nextIfNone
         get() = next["none"]
+
+    class FindErrorCategory(
+        val priority: Int,
+        val selectorExpr: Operator,
+        val additionalInfo : Map<String, String> = mapOf()
+    ){
+        constructor(el: Element) : this(
+            el.getAttribute("priority").toInt(),
+            Operator.build(el.getSingleByWrapper("Expression")!!),
+            el.getAdditionalInfo()
+        )
+    }
 
     init {
         require(DomainModel.decisionTreeVarsDictionary.contains(varName)){
@@ -34,6 +47,7 @@ class FindActionNode(
         Operator.build(el.getSingleByWrapper("Expression")!!),
         el.getChild("DecisionTreeVarDecl")!!.getAttribute("name"),
         el.getChild("DecisionTreeVarDecl")!!.getAttribute("type"),
+        el.getChildren("FindError").map {errEl -> FindErrorCategory(errEl) }.sortedBy { category -> category.priority },
         getOutcomes(el) { it }
     ){
         collectAdditionalInfo(el)
