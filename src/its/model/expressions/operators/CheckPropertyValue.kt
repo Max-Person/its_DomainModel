@@ -1,7 +1,8 @@
 package its.model.expressions.operators
 
 import its.model.expressions.Operator
-import its.model.expressions.types.DataType
+import its.model.expressions.literals.PropertyRef
+import its.model.expressions.types.Types
 import its.model.expressions.visitors.OperatorBehaviour
 
 /**
@@ -16,14 +17,14 @@ class CheckPropertyValue(args: List<Operator>) : BaseOperator(args) {
 
     override val argsDataTypes
         get() = listOf(
-            listOf(DataType.Object, DataType.Property, DataType.Integer),
-            listOf(DataType.Object, DataType.Property, DataType.Double),
-            listOf(DataType.Object, DataType.Property, DataType.Boolean),
-            listOf(DataType.Object, DataType.Property, DataType.String),
-            listOf(DataType.Object, DataType.Property, DataType.Enum)
+            listOf(Types.Object, PropertyRef::class, Types.Integer),
+            listOf(Types.Object, PropertyRef::class, Types.Double),
+            listOf(Types.Object, PropertyRef::class, Types.Boolean),
+            listOf(Types.Object, PropertyRef::class, Types.String),
+            listOf(Types.Object, PropertyRef::class, Types.Enum)
         )
 
-    override val resultDataType get() = DataType.Boolean
+    override val resultDataType get() = Types.Boolean
 
     override fun clone(): Operator {
         val newArgs = ArrayList<Operator>()

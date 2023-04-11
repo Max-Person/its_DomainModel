@@ -15,5 +15,6 @@
     <orderEntry type="library" name="opencsv" level="project" />
     <orderEntry type="library" name="github.drapostolos.type.parser" level="project" />
     <orderEntry type="library" name="Maven: org.jetbrains.kotlin:kotlin-reflect:1.6.10" level="project" />
+    <orderEntry type="library" name="apache.jena.core" level="project" />
   </component>
 </module>

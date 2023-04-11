@@ -1,7 +1,7 @@
 package its.model.expressions.operators
 
 import its.model.expressions.Operator
-import its.model.expressions.types.DataType
+import its.model.expressions.types.Types
 import its.model.expressions.visitors.OperatorBehaviour
 
 /**
@@ -11,16 +11,16 @@ import its.model.expressions.visitors.OperatorBehaviour
 class Compare(args: List<Operator>) : BaseOperator(args) {
 
     override val argsDataTypes get() = listOf(
-        listOf(DataType.Integer, DataType.Double),
-        listOf(DataType.Double, DataType.Integer),
-        listOf(DataType.Integer, DataType.Integer),
-        listOf(DataType.Double, DataType.Double),
-        listOf(DataType.String, DataType.String),
-        listOf(DataType.Object, DataType.Object),
-        listOf(DataType.Enum, DataType.Enum)
+        listOf(Types.Integer, Types.Double),
+        listOf(Types.Double, Types.Integer),
+        listOf(Types.Integer, Types.Integer),
+        listOf(Types.Double, Types.Double),
+        listOf(Types.String, Types.String),
+        listOf(Types.Object, Types.Object),
+        listOf(Types.Enum, Types.Enum)
     )
 
-    override val resultDataType get() = DataType.ComparisonResult
+    override val resultDataType get() = Types.ComparisonResult
 
     override fun clone(): Operator {
         val newArgs = ArrayList<Operator>()

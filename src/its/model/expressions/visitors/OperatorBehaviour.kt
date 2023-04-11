@@ -1,6 +1,5 @@
 package its.model.expressions.visitors
 
-import its.model.expressions.Variable
 import its.model.expressions.Operator
 import its.model.expressions.operators.*
 
@@ -10,11 +9,9 @@ import its.model.expressions.operators.*
  * @see Operator.use
  */
 interface OperatorBehaviour<Info> : LiteralBehaviour<Info>{
-    // -------------------- Для листьев дерева выражений ---------------------
-    fun process(variable: Variable) : Info
-
     // ------------------ Для узлов дерева выражений -------------------------
-    fun process(op: Assign) : Info
+    fun process(op: AssignProperty) : Info
+    fun process(op: AssignVariable) : Info
     fun process(op: CheckClass) : Info
     fun process(op: CheckPropertyValue) : Info
     fun process(op: CheckRelationship) : Info

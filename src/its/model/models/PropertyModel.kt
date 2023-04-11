@@ -1,6 +1,7 @@
 package its.model.models
 
-import its.model.expressions.types.DataType
+import its.model.expressions.types.EnumValue
+import kotlin.reflect.KClass
 
 /**
  * Модель свойства в предметной области
@@ -13,7 +14,7 @@ import its.model.expressions.types.DataType
  */
 open class PropertyModel(
     val name: String,
-    val dataType: DataType?,
+    val dataType: KClass<*>,
     val enumName: String? = null,
     val isStatic: Boolean,
     val owners: List<String>? = null,
@@ -29,18 +30,18 @@ open class PropertyModel(
             "Некорректное имя свойства."
         }
         require(
-            dataType == DataType.Integer
-                    || dataType == DataType.Double
-                    || dataType == DataType.Boolean
-                    || dataType == DataType.String
-                    || dataType == DataType.Enum
+            dataType == Int::class
+                    || dataType == Double::class
+                    || dataType == Boolean::class
+                    || dataType == String::class
+                    || dataType == EnumValue::class
         ) {
             "Некорректный тип свойства $name."
         }
         require(owners == null || owners.isNotEmpty()) {
             "Свойством $name не обладает ни один класс."
         }
-        require(dataType == DataType.Integer || dataType == DataType.Double || valueRange == null) {
+        require(dataType == Int::class || dataType == Double::class || valueRange == null) {
             "У свойства $name не может быть диапазонов значений, т.к. оно имеет тип $dataType."
         }
     }
@@ -50,7 +51,7 @@ open class PropertyModel(
      * @param value Значение
      */
     fun isValueInRange(value: Int): Boolean {
-        if (dataType != DataType.Integer) return false
+        if (dataType != Int::class) return false
         if (valueRange == null) return true
 
         return valueRange.contains(value)
@@ -61,7 +62,7 @@ open class PropertyModel(
      * @param value Значение
      */
     fun isValueInRange(value: Double): Boolean {
-        if (dataType != DataType.Double) return false
+        if (dataType != Double::class) return false
         if (valueRange == null) return true
 
         return valueRange.contains(value)

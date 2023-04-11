@@ -1,6 +1,6 @@
 package its.model.nodes
 
-import its.model.expressions.Literal
+import its.model.expressions.literals.Literal
 import its.model.nodes.visitors.DecisionTreeBehaviour
 import org.w3c.dom.Element
 

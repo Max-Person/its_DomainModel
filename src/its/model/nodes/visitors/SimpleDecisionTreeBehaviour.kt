@@ -1,6 +1,6 @@
 package its.model.nodes.visitors
 
-import its.model.expressions.Literal
+import its.model.expressions.literals.Literal
 import its.model.nodes.*
 /**
  * Интерфейс, описывающий некоторое поведение, внедряемое в узлы дерева решений (подклассы [DecisionTreeNode])

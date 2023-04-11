@@ -1,21 +1,21 @@
 package its.model.expressions.literals
 
 import its.model.expressions.Operator
+import its.model.expressions.types.Obj
 import its.model.expressions.types.Types
 import its.model.expressions.visitors.LiteralBehaviour
 import kotlin.reflect.KClass
 
 /**
- * Boolean литерал
- * @param value Значение
+ * Object литерал
+ * @param name Имя объекта
  */
-class BooleanLiteral(value: Boolean) : ValueLiteral<Boolean>(value) {
+class ObjectRef(name: String) : ReferenceLiteral(name) {
 
-    override val resultDataType: KClass<Boolean>
-        get() = Types.Boolean
+    override val resultDataType: KClass<Obj>
+        get() = Types.Object
 
-
-    override fun clone(): Operator = BooleanLiteral(value)
+    override fun clone(): Operator = ObjectRef(name)
 
     override fun <I> use(behaviour: LiteralBehaviour<I>): I {
         return behaviour.process(this)

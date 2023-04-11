@@ -7,11 +7,12 @@ import com.github.drapostolos.typeparser.TypeParser
 import com.opencsv.CSVParserBuilder
 import com.opencsv.CSVReaderBuilder
 import its.model.expressions.types.ComparisonResult
-import its.model.expressions.types.DataType
+import its.model.expressions.types.Types.typeFromString
 import its.model.models.ContinuousRange
 import its.model.models.DiscreteRange
 import its.model.models.Range
 import its.model.models.RelationshipModel
+import java.lang.reflect.ParameterizedType
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -50,8 +51,8 @@ abstract class DictionaryBase<T : Any>(protected val storedType: KClass<T>) : It
 
         private val valueParser = TypeParser.newBuilder().setSplitStrategy { s: String, h: SplitStrategyHelper ->
             s.split(LIST_ITEMS_SEPARATOR)
-        }.registerParser(DataType::class.java) { s: String, h: ParserHelper ->
-            DataType.fromString(s)
+        }.registerParser(KClass::class.java) { s: String, h: ParserHelper ->
+            typeFromString(s)
         }.registerParser(RelationshipModel.ScaleType::class.java) { s: String, h: ParserHelper ->
             RelationshipModel.ScaleType.fromString(s)
         }.registerParser(RelationshipModel.RelationType::class.java) { s: String, h: ParserHelper ->
@@ -93,7 +94,7 @@ abstract class DictionaryBase<T : Any>(protected val storedType: KClass<T>) : It
             rows.forEach { row ->
                 val constructor = storedType.primaryConstructor?.javaConstructor!!
                 val args = constructor.genericParameterTypes.mapIndexed{ index, type ->
-                    valueParser.parseType(row[index].trim(), type)
+                    valueParser.parseType(row[index].trim(), if(type is ParameterizedType) type.rawType else type)
                 }
                 val value = constructor.newInstance(*args.toTypedArray())
 

@@ -3,7 +3,7 @@ package its.model.expressions
 import its.model.expressions.literals.*
 import its.model.expressions.operators.*
 import its.model.expressions.types.ComparisonResult
-import its.model.expressions.types.DataType
+import its.model.expressions.types.EnumValue
 import its.model.expressions.visitors.OperatorBehaviour
 import org.w3c.dom.Element
 import org.w3c.dom.Node
@@ -13,6 +13,7 @@ import java.io.IOException
 import java.io.StringReader
 import javax.xml.parsers.DocumentBuilderFactory
 import javax.xml.parsers.ParserConfigurationException
+import kotlin.reflect.KClass
 
 /**
  * Оператор
@@ -34,7 +35,7 @@ interface Operator {
     /**
      * Список типов данных аргументов
      */
-    val argsDataTypes: List<List<DataType>>
+    val argsDataTypes: List<List<KClass<*>>>
 
     /**
      * Является ли количество аргументов бесконечным
@@ -45,7 +46,7 @@ interface Operator {
     /**
      * Тип данных оператора
      */
-    val resultDataType: DataType?
+    val resultDataType: KClass<*> //Можно заменить * на Type для статической типизации, но не работает с GetPropertyValue
 
     /**
      * Создает копию объекта
@@ -135,7 +136,7 @@ interface Operator {
                     res
                 }
                 is BooleanLiteral -> {
-                    BooleanLiteral(!value.toBoolean())
+                    BooleanLiteral(!value)
                 }
                 else -> {
                     throw IllegalStateException("Отрицание типа $resultDataType невозможно.")
@@ -268,23 +269,23 @@ interface Operator {
                 }
 
                 "DecisionTreeVar" -> {
-                    return DecisionTreeVarLiteral(el.attributes.getNamedItem("name").nodeValue)
+                    return DecisionTreeVar(el.attributes.getNamedItem("name").nodeValue)
                 }
 
                 "Class" -> {
-                    return ClassLiteral(el.attributes.getNamedItem("name").nodeValue)
+                    return ClassRef(el.attributes.getNamedItem("name").nodeValue)
                 }
 
-                "Object" -> {
+                /*"Object" -> {
                     return ObjectLiteral(el.attributes.getNamedItem("name").nodeValue)
-                }
+                }*/
 
                 "Property" -> {
-                    return PropertyLiteral(el.attributes.getNamedItem("name").nodeValue)
+                    return PropertyRef(el.attributes.getNamedItem("name").nodeValue)
                 }
 
                 "Relationship" -> {
-                    return RelationshipLiteral(el.attributes.getNamedItem("name").nodeValue)
+                    return RelationshipRef(el.attributes.getNamedItem("name").nodeValue)
                 }
 
                 "ComparisonResult" -> {
@@ -308,18 +309,18 @@ interface Operator {
                 }
 
                 "Enum" -> {
-                    return EnumLiteral(
+                    return EnumLiteral(EnumValue(
+                        el.attributes.getNamedItem("owner").nodeValue,
                         el.attributes.getNamedItem("value").nodeValue,
-                        el.attributes.getNamedItem("owner").nodeValue
-                    )
+                    ))
                 }
 
                 "AssignToDecisionTreeVar" -> {
-                    return Assign(children)
+                    return AssignVariable(children)
                 }
 
                 "AssignToProperty" -> {
-                    return Assign(children)
+                    return AssignProperty(children)
                 }
 
                 "CheckClass" -> {
@@ -357,11 +358,7 @@ interface Operator {
                 }
 
                 "GetByRelationship" -> {
-                    return GetByRelationship(
-                        children,
-                        if (el.attributes.getNamedItem("varName") == null) null
-                        else el.attributes.getNamedItem("varName").nodeValue
-                    )
+                    return GetByRelationship(children)
                 }
 
                 "GetClass" -> {

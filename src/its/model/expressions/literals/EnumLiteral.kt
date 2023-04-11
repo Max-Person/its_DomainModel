@@ -1,50 +1,32 @@
 package its.model.expressions.literals
 
 import its.model.DomainModel
-import its.model.expressions.Literal
 import its.model.expressions.Operator
-import its.model.expressions.types.DataType
+import its.model.expressions.types.EnumValue
+import its.model.expressions.types.Types
 import its.model.expressions.visitors.LiteralBehaviour
+import kotlin.reflect.KClass
 
 /**
  * Enum литерал
  * @param value Значение
- * @param owner Имя enum, к которому относится данный элемент
  */
-class EnumLiteral(value: String, val owner: String) : Literal(value) {
+class EnumLiteral(value: EnumValue) : ValueLiteral<EnumValue>(value) {
 
     init {
         // Проверяем существование enum и наличие у него такого значения
-        require(DomainModel.enumsDictionary.exist(owner)) { "Enum $owner не объявлен в словаре." }
-        require(DomainModel.enumsDictionary.containsValue(owner, value) == true) {
-            "Enum $owner не содержит значения $value."
+        require(DomainModel.enumsDictionary.exist(value.ownerEnum)) { "Enum ${value.ownerEnum} не объявлен в словаре." }
+        require(DomainModel.enumsDictionary.containsValue(value) == true) {
+            "Enum ${value.ownerEnum} не содержит значения ${value.value}."
         }
     }
 
-    override val resultDataType: DataType
-        get() = DataType.Enum
+    override val resultDataType: KClass<EnumValue>
+        get() = Types.Enum
 
-    override fun clone(): Operator = EnumLiteral(value, owner)
+    override fun clone(): Operator = EnumLiteral(value)
 
     override fun <I> use(behaviour: LiteralBehaviour<I>): I {
         return behaviour.process(this)
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-        if (!super.equals(other)) return false
-
-        other as EnumLiteral
-
-        if (owner != other.owner) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = super.hashCode()
-        result = 31 * result + owner.hashCode()
-        return result
     }
 }

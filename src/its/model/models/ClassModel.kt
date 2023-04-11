@@ -1,7 +1,6 @@
 package its.model.models
 
 import its.model.expressions.Operator
-import its.model.expressions.types.DataType
 
 /**
  * Модель класса в предметной области
@@ -25,7 +24,7 @@ open class ClassModel(
         }
         calcExprXML?.let {
             val expr = Operator.fromXMLString(it)
-            require(expr?.resultDataType == DataType.Boolean) {
+            require(expr?.resultDataType == Boolean::class) {
                 "Выражение для вычисления класса $name должно иметь тип Boolean, но имеет тип ${expr?.resultDataType}."
             }
         }

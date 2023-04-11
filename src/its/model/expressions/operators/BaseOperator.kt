@@ -1,7 +1,7 @@
 package its.model.expressions.operators
 
 import its.model.expressions.Operator
-import its.model.expressions.types.DataType
+import its.model.expressions.types.Types.fits
 
 /**
  * Базовый оператор
@@ -24,37 +24,25 @@ abstract class BaseOperator(args: List<Operator>) : Operator {
      * @param args Аргументы
      */
     private fun checkArgs(args: List<Operator>) {
-        // Получаем список типов данных
-        val actual: MutableList<DataType> = ArrayList()
-        args.forEach {arg ->
-            val resDataType = arg.resultDataType
-
-            // Проверяем, что все операторы имеют возвращаемое значение
-            requireNotNull(resDataType) { "Аргумент без возвращаемого значения" }
-
-            actual.add(resDataType)
-        }
-
         var success = false
         // Для каждого набора типа данных
         argsDataTypes.forEach { expected ->
             // Если количество аргументов неограниченно
             if (isArgsCountUnlimited) {
                 // Проверяем, что кол-во полученных аргументов больше или равно ожидаемым
-                if (expected.size <= actual.size) {
+                if (expected.size <= args.size) {
                     var equals = true
                     // Сравниваем аргументы
                     var i = 0
                     var j = 0
-                    while (i < actual.size) {
+                    while (i < args.size) {
 
                         // Если дошли до последнего аргумента - сравниваем все полученные с последним ожидаемым
                         if (j > expected.size - 1) {
                             j = expected.size - 1
                         }
                         // Аргументы совпадают - если типы данных равны или могут быть преобразованы
-                        equals = equals && (actual[i] == expected[j]
-                                || actual[i].canCast(expected[j]))
+                        equals = equals && args[i].fits(expected[j])
                         ++i
                         ++j
                     }
@@ -62,13 +50,12 @@ abstract class BaseOperator(args: List<Operator>) : Operator {
                 }
             } else {
                 // Проверяем, что кол-во полученных аргументов равно ожидаемым
-                if (expected.size == actual.size) {
+                if (expected.size == args.size) {
                     var equals = true
                     // Сравниваем аргументы
-                    for (i in actual.indices) {
+                    for (i in args.indices) {
                         // Аргументы совпадают - если типы данных равны или могут быть преобразованы
-                        equals = equals && (actual[i] == expected[i]
-                                || actual[i].canCast(expected[i]))
+                        equals = equals && args[i].fits(expected[i])
                     }
                     success = success || equals
                 }

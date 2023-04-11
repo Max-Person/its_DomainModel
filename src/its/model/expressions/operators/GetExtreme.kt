@@ -1,7 +1,7 @@
 package its.model.expressions.operators
 
 import its.model.expressions.Operator
-import its.model.expressions.types.DataType
+import its.model.expressions.types.Types
 import its.model.expressions.visitors.OperatorBehaviour
 
 /**
@@ -13,10 +13,10 @@ class GetExtreme(
     val extremeVarName: String
 ): BaseOperator(args) {
 
-    override val argsDataTypes get() = listOf(listOf(DataType.Boolean, DataType.Boolean))
+    override val argsDataTypes get() = listOf(listOf(Types.Boolean, Types.Boolean))
 
 
-    override val resultDataType get() = DataType.Object
+    override val resultDataType get() = Types.Object
 
 
     override fun clone(): Operator {

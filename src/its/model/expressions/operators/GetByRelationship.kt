@@ -1,22 +1,23 @@
 package its.model.expressions.operators
 
 import its.model.expressions.Operator
-import its.model.expressions.types.DataType
+import its.model.expressions.literals.RelationshipRef
+import its.model.expressions.types.Types
 import its.model.expressions.visitors.OperatorBehaviour
 
 /**
  * Получить объект по отношению
  * TODO: еще bool условие
+ * TODO: проверять что отношение бинарное?
  */
 class GetByRelationship(
-    args: List<Operator>,
-    private val varName: String?
+    args: List<Operator>
 ) : BaseOperator(args) {
 
-    override val argsDataTypes get() = listOf(listOf(DataType.Object, DataType.Relationship))
+    override val argsDataTypes get() = listOf(listOf(Types.Object, RelationshipRef::class))
 
 
-    override val resultDataType get() = DataType.Object
+    override val resultDataType get() = Types.Object
 
 
     override fun clone(): Operator {
@@ -26,11 +27,11 @@ class GetByRelationship(
             newArgs.add(arg.clone())
         }
 
-        return GetByRelationship(newArgs, varName)
+        return GetByRelationship(newArgs)
     }
 
     override fun clone(newArgs: List<Operator>): Operator {
-        return GetByRelationship(newArgs, varName)
+        return GetByRelationship(newArgs)
     }
 
     override fun <I> use(behaviour: OperatorBehaviour<I>): I {

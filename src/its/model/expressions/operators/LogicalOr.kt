@@ -1,7 +1,7 @@
 package its.model.expressions.operators
 
 import its.model.expressions.Operator
-import its.model.expressions.types.DataType
+import its.model.expressions.types.Types
 import its.model.expressions.visitors.OperatorBehaviour
 
 /**
@@ -9,9 +9,9 @@ import its.model.expressions.visitors.OperatorBehaviour
  */
 class LogicalOr(args: List<Operator>): BaseOperator(args) {
 
-    override val argsDataTypes get() = listOf(listOf(DataType.Boolean, DataType.Boolean))
+    override val argsDataTypes get() = listOf(listOf(Types.Boolean, Types.Boolean))
 
-    override val resultDataType get() = DataType.Boolean
+    override val resultDataType get() = Types.Boolean
 
     override fun clone(): Operator {
         val newArgs = ArrayList<Operator>()

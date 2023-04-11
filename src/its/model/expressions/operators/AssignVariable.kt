@@ -1,19 +1,17 @@
 package its.model.expressions.operators
 
 import its.model.expressions.Operator
+import its.model.expressions.literals.DecisionTreeVar
 import its.model.expressions.types.Types
 import its.model.expressions.visitors.OperatorBehaviour
 
-class GetByCondition(
-    args: List<Operator>,
-    val varName: String
-) : BaseOperator(args) {
+class AssignVariable(args: List<Operator>) : BaseOperator(args){
 
-    override val argsDataTypes get() = listOf(listOf(Types.Boolean))
+    override val argsDataTypes
+        get() = listOf(listOf(DecisionTreeVar::class, Types.Object))
 
-
-    override val resultDataType get() = Types.Object
-
+    override val resultDataType
+        get() = Types.None
 
     override fun clone(): Operator {
         val newArgs = ArrayList<Operator>()
@@ -22,11 +20,11 @@ class GetByCondition(
             newArgs.add(arg.clone())
         }
 
-        return GetByCondition(newArgs, varName)
+        return AssignProperty(newArgs)
     }
 
     override fun clone(newArgs: List<Operator>): Operator {
-        return GetByCondition(newArgs, varName)
+        return AssignProperty(newArgs)
     }
 
     override fun <I> use(behaviour: OperatorBehaviour<I>): I {

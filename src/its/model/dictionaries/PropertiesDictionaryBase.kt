@@ -1,7 +1,7 @@
 package its.model.dictionaries
 
 import its.model.DomainModel
-import its.model.expressions.types.DataType
+import its.model.expressions.types.Types
 import its.model.models.PropertyModel
 import kotlin.reflect.KClass
 
@@ -38,7 +38,7 @@ abstract class PropertiesDictionaryBase<P : PropertyModel>(storedType: KClass<P>
     override fun validate() {
         values.forEach {
             it.validate()
-            require(it.dataType != DataType.Enum || it.enumName != null && DomainModel.enumsDictionary.exist(it.enumName)) {
+            require(it.dataType != Types.Enum || it.enumName != null && DomainModel.enumsDictionary.exist(it.enumName)) {
                 "Для свойства ${it.name} не указано имя перечисления, или оно не объявлено в словаре."
             }
             it.owners?.forEach { owner ->

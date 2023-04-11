@@ -1,5 +1,6 @@
 package its.model.dictionaries
 
+import its.model.expressions.types.EnumValue
 import its.model.models.EnumModel
 import kotlin.reflect.KClass
 
@@ -51,6 +52,7 @@ abstract class EnumsDictionaryBase<E : EnumModel>(storedType: KClass<E>) : Dicti
      * @param value Значение
      */
     fun containsValue(name: String, value: String) = get(name)?.containsValue(value)
+    fun containsValue(value: EnumValue) = containsValue(value.ownerEnum, value.value)
 
     /**
      * Получить список всех значений перечисления

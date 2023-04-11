@@ -1,7 +1,8 @@
 package its.model.expressions.operators
 
 import its.model.expressions.Operator
-import its.model.expressions.types.DataType
+import its.model.expressions.literals.RelationshipRef
+import its.model.expressions.types.Types
 import its.model.expressions.visitors.OperatorBehaviour
 
 /**
@@ -18,14 +19,14 @@ class CheckRelationship(args: List<Operator>) : BaseOperator(args) {
     internal var isNegative = false
 
     override val argsDataTypes get() = listOf(
-        listOf(DataType.Object, DataType.Relationship, DataType.Object)
+        listOf(Types.Object, RelationshipRef::class, Types.Object)
     )
 
 
     override val isArgsCountUnlimited: Boolean
         get() = true
 
-    override val resultDataType get() = DataType.Boolean
+    override val resultDataType get() = Types.Boolean
 
 
     override fun clone(): Operator {

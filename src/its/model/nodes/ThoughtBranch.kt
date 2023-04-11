@@ -1,16 +1,17 @@
 package its.model.nodes
 
-import its.model.expressions.types.DataType
+import its.model.expressions.types.Types.typeFromString
 import its.model.nodes.visitors.DecisionTreeBehaviour
 import org.w3c.dom.Element
+import kotlin.reflect.KClass
 
 class ThoughtBranch(
-    val type: DataType,
+    val type: KClass<*>,
     val parameterName: String? = null,
     val start: DecisionTreeNode,
 ) : DecisionTreeNode() {
     internal constructor(el : Element) : this(
-        DataType.fromString(el.getAttribute("type"))!!,
+        typeFromString(el.getAttribute("type"))!!,
         el.getAttribute("paramName").ifBlank { null },
         build(el.getChild())!!,
     ){

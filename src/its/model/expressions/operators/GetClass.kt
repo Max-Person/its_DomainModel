@@ -1,7 +1,7 @@
 package its.model.expressions.operators
 
 import its.model.expressions.Operator
-import its.model.expressions.types.DataType
+import its.model.expressions.types.Types
 import its.model.expressions.visitors.OperatorBehaviour
 
 /**
@@ -9,10 +9,10 @@ import its.model.expressions.visitors.OperatorBehaviour
  */
 class GetClass(args: List<Operator>) : BaseOperator(args) {
 
-    override val argsDataTypes get() = listOf(listOf(DataType.Object))
+    override val argsDataTypes get() = listOf(listOf(Types.Object))
 
 
-    override val resultDataType get() = DataType.Object
+    override val resultDataType get() = Types.Class
 
 
     override fun clone(): Operator {

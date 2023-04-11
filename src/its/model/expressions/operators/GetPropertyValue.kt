@@ -1,9 +1,9 @@
 package its.model.expressions.operators
 
 import its.model.DomainModel
-import its.model.expressions.Literal
 import its.model.expressions.Operator
-import its.model.expressions.types.DataType
+import its.model.expressions.literals.PropertyRef
+import its.model.expressions.types.Types
 import its.model.expressions.visitors.OperatorBehaviour
 
 /**
@@ -12,9 +12,9 @@ import its.model.expressions.visitors.OperatorBehaviour
 class GetPropertyValue(args: List<Operator>) : BaseOperator(args) {
 
     override val argsDataTypes
-        get() = listOf(listOf(DataType.Object, DataType.Property))
+        get() = listOf(listOf(Types.Object, PropertyRef::class))
 
-    override val resultDataType get() = DomainModel.propertiesDictionary.dataType((args[1] as Literal).value)
+    override val resultDataType get() = DomainModel.propertiesDictionary.dataType((args[1] as PropertyRef).name)!!
 
 
     override fun clone(): Operator {

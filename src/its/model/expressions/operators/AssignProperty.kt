@@ -1,26 +1,22 @@
 package its.model.expressions.operators
 
 import its.model.DomainModel
-import its.model.expressions.Literal
 import its.model.expressions.Operator
-import its.model.expressions.literals.DoubleLiteral
-import its.model.expressions.literals.EnumLiteral
-import its.model.expressions.literals.IntegerLiteral
-import its.model.expressions.literals.PropertyLiteral
-import its.model.expressions.types.DataType
+import its.model.expressions.literals.*
+import its.model.expressions.types.Types
 import its.model.expressions.visitors.OperatorBehaviour
 
 /**
  * Присваивание
  */
-class Assign(args: List<Operator>) : BaseOperator(args) {
+class AssignProperty(args: List<Operator>) : BaseOperator(args) {
 
     init {
         if (args.size == 3) {
             val arg2 = arg(2)
 
-            val propertyName = (arg(1) as PropertyLiteral).value
-            val newValueDataType = arg(2).resultDataType!!
+            val propertyName = (arg(1) as PropertyRef).name
+            val newValueDataType = arg(2).resultDataType
 
             require(DomainModel.propertiesDictionary.isStatic(propertyName) == false) {
                 "Свойство $propertyName не должно быть статическим."
@@ -35,31 +31,31 @@ class Assign(args: List<Operator>) : BaseOperator(args) {
             // FIXME?: проверять попадает ли в диапазон значение при arg2 is GetPropertyValue?
             when (arg2) {
                 is IntegerLiteral -> {
-                    require(DomainModel.propertiesDictionary.isValueInRange(propertyName, arg2.value.toInt()) == true) {
-                        "Значение ${arg2.value.toInt()} вне диапазона значений свойства $propertyName."
+                    require(DomainModel.propertiesDictionary.isValueInRange(propertyName, arg2.value) == true) {
+                        "Значение ${arg2.value} вне диапазона значений свойства $propertyName."
                     }
                 }
 
                 is DoubleLiteral -> {
-                    require(DomainModel.propertiesDictionary.isValueInRange(propertyName, arg2.value.toDouble()) == true) {
-                        "Значение ${arg2.value.toDouble()} вне диапазона значений свойства $propertyName."
+                    require(DomainModel.propertiesDictionary.isValueInRange(propertyName, arg2.value) == true) {
+                        "Значение ${arg2.value} вне диапазона значений свойства $propertyName."
                     }
                 }
 
                 is EnumLiteral -> {
-                    require(DomainModel.propertiesDictionary.enumName(propertyName)!! == arg2.owner) {
-                        "Тип перечисления ${DomainModel.propertiesDictionary.enumName(propertyName)} свойства $propertyName не соответствует типу перечисления ${arg2.owner} значения."
+                    require(DomainModel.propertiesDictionary.enumName(propertyName)!! == arg2.value.ownerEnum) {
+                        "Тип перечисления ${DomainModel.propertiesDictionary.enumName(propertyName)} свойства $propertyName не соответствует типу перечисления ${arg2.value.ownerEnum} значения."
                     }
                 }
 
                 is GetPropertyValue -> {
                     require(
                         DomainModel.propertiesDictionary.enumName(propertyName)!!
-                                == DomainModel.propertiesDictionary.enumName((arg2.arg(1) as PropertyLiteral).value)!!
+                                == DomainModel.propertiesDictionary.enumName((arg2.arg(1) as PropertyRef).name)!!
                     ) {
                         "Тип перечисления ${DomainModel.propertiesDictionary.enumName(propertyName)} свойства $propertyName не соответствует типу перечисления ${
                             DomainModel.propertiesDictionary.enumName(
-                                (arg2.arg(1) as PropertyLiteral).value
+                                (arg2.arg(1) as PropertyRef).name
                             )
                         } значения."
                     }
@@ -70,16 +66,15 @@ class Assign(args: List<Operator>) : BaseOperator(args) {
 
     override val argsDataTypes
         get() = listOf(
-            listOf(DataType.Object, DataType.Property, DataType.Integer),
-            listOf(DataType.Object, DataType.Property, DataType.Double),
-            listOf(DataType.Object, DataType.Property, DataType.Boolean),
-            listOf(DataType.Object, DataType.Property, DataType.String),
-            listOf(DataType.Object, DataType.Property, DataType.Enum),
-            listOf(DataType.DecisionTreeVar, DataType.Object)
+            listOf(Types.Object, PropertyRef::class, Types.Integer),
+            listOf(Types.Object, PropertyRef::class, Types.Double),
+            listOf(Types.Object, PropertyRef::class, Types.Boolean),
+            listOf(Types.Object, PropertyRef::class, Types.String),
+            listOf(Types.Object, PropertyRef::class, Types.Enum),
         )
 
     override val resultDataType
-        get() = null
+        get() = Types.None
 
     override fun clone(): Operator {
         val newArgs = ArrayList<Operator>()
@@ -88,11 +83,11 @@ class Assign(args: List<Operator>) : BaseOperator(args) {
             newArgs.add(arg.clone())
         }
 
-        return Assign(newArgs)
+        return AssignProperty(newArgs)
     }
 
     override fun clone(newArgs: List<Operator>): Operator {
-        return Assign(newArgs)
+        return AssignProperty(newArgs)
     }
 
     override fun <I> use(behaviour: OperatorBehaviour<I>): I {
