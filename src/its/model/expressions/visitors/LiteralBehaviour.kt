@@ -7,6 +7,7 @@ import its.model.expressions.literals.*
  * @param Info тип возвращаемого функциями поведения значения
  * @see Literal.use
  */
+//FIXME? наверное не нужно с введением TypeBehaviour и переработкой системы типов
 interface LiteralBehaviour<Info> {
     // -------------------- Для листьев дерева выражений ---------------------
     fun process(literal: BooleanLiteral): Info
