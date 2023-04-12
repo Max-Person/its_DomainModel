@@ -11,7 +11,7 @@ import its.model.expressions.Operator
 open class ClassModel(
     val name: String,
     val parent: String? = null,
-    val calcExprXML: String? = null
+    private val calcExprXML: String? = null
 ) {
 
     /**
@@ -29,6 +29,8 @@ open class ClassModel(
             }
         }
     }
+
+    val isCalculated get() = calcExprXML != null
 
     /**
      * Выражение для вычисления

@@ -18,7 +18,7 @@ abstract class RelationshipsDictionaryBase<R : RelationshipModel>(storedType: KC
      * key - имя отношения,
      * val - имена отношений порядковых шкал для этого отношения
      */
-    protected val scaleRelationships: MutableMap<String, List<String>> = HashMap()
+    protected val scaleRelationships: MutableMap<String, Map<RelationshipModel.ScaleRole, String>> = HashMap()
 
     // ++++++++++++++++++++++++++++++++ Инициализация ++++++++++++++++++++++++++++++
     // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -39,7 +39,7 @@ abstract class RelationshipsDictionaryBase<R : RelationshipModel>(storedType: KC
             it as R
         }
         addAll(scaleRelations)
-        scaleRelationships[added.name] = scaleRelations.map { it.name }
+        scaleRelationships[added.name] = scaleRelations.map {it.scaleRole!! to it.name }.toMap()
     }
 
     // ++++++++++++++++++++++++++++++++++++ Методы +++++++++++++++++++++++++++++++++
@@ -68,14 +68,14 @@ abstract class RelationshipsDictionaryBase<R : RelationshipModel>(storedType: KC
             }
             require(
                 it.scaleType == null
-                        || scaleRelationships[it.name] != null
-                        && scaleRelationships[it.name]?.size == 6
-                        && exist(scaleRelationships[it.name]!![0])
-                        && exist(scaleRelationships[it.name]!![1])
-                        && exist(scaleRelationships[it.name]!![2])
-                        && exist(scaleRelationships[it.name]!![3])
-                        && exist(scaleRelationships[it.name]!![4])
-                        && exist(scaleRelationships[it.name]!![5])
+                        || it.scaleRole != RelationshipModel.ScaleRole.Base
+                        || scaleRelationships[it.name]?.size == 6
+                        && exist(scaleRelationships[it.name]!![RelationshipModel.ScaleRole.Reverse]!!)
+                        && exist(scaleRelationships[it.name]!![RelationshipModel.ScaleRole.BaseTransitive]!!)
+                        && exist(scaleRelationships[it.name]!![RelationshipModel.ScaleRole.ReverseTransitive]!!)
+                        && exist(scaleRelationships[it.name]!![RelationshipModel.ScaleRole.Between]!!)
+                        && exist(scaleRelationships[it.name]!![RelationshipModel.ScaleRole.Closer]!!)
+                        && exist(scaleRelationships[it.name]!![RelationshipModel.ScaleRole.Further]!!)
             ) {
                 "Для отношения ${it.name} не указано одно из отношений порядковой шкалы или оно не объявлено в словаре."
             }

@@ -19,6 +19,26 @@ open class RelationshipModel(
     val relationType: RelationType? = null,
     flags: Int,
 ) {
+    var scaleRole = if(scaleType != null) ScaleRole.Base else null
+        private set
+    var scaleBase : RelationshipModel? = null
+        private set
+
+    protected constructor(
+        name: String,
+        parent: String? = null,
+        argsClasses: List<String>,
+        scaleType: ScaleType? = null,
+        scaleRelationshipsNames: List<String>? = null,
+        relationType: RelationType? = null,
+        flags: Int,
+        scaleRole: ScaleRole,
+        scaleBase: RelationshipModel
+    ) : this(name, parent, argsClasses, scaleType, scaleRelationshipsNames, relationType, flags) {
+        this.scaleRole = scaleRole
+        this.scaleBase = scaleBase
+    }
+
     val flags : Int
     init {
         if(flags == 0 && scaleType == ScaleType.Linear)
@@ -35,6 +55,9 @@ open class RelationshipModel(
      * *Важно:* Все элементы возвращаемого массива должны быть объектами реализующего класса (наследника)
      */
     open fun scaleRelationships():List<RelationshipModel>{
+        if(scaleRole != ScaleRole.Base)
+            return emptyList()
+
         when (scaleType) {
             ScaleType.Linear -> {
                 scaleRelationshipsNames!!
@@ -42,32 +65,50 @@ open class RelationshipModel(
                     RelationshipModel(
                         name = scaleRelationshipsNames[0],
                         argsClasses = argsClasses,
-                        flags = flags
+                        flags = flags,
+                        scaleType = scaleType,
+                        scaleRole = ScaleRole.Reverse,
+                        scaleBase = this,
                     ),
                     RelationshipModel(
                         name = scaleRelationshipsNames[1],
                         argsClasses = argsClasses,
-                        flags = 16
+                        flags = 16,
+                        scaleType = scaleType,
+                        scaleRole = ScaleRole.BaseTransitive,
+                        scaleBase = this,
                     ),
                     RelationshipModel(
                         name = scaleRelationshipsNames[2],
                         argsClasses = argsClasses,
-                        flags = 16
+                        flags = 16,
+                        scaleType = scaleType,
+                        scaleRole = ScaleRole.ReverseTransitive,
+                        scaleBase = this,
                     ),
                     RelationshipModel(
                         name = scaleRelationshipsNames[3],
                         argsClasses = argsClasses.plus(argsClasses[0]),
-                        flags = 0
+                        flags = 0,
+                        scaleType = scaleType,
+                        scaleRole = ScaleRole.Between,
+                        scaleBase = this,
                     ),
                     RelationshipModel(
                         name = scaleRelationshipsNames[4],
                         argsClasses = argsClasses.plus(argsClasses[0]),
-                        flags = 0
+                        flags = 0,
+                        scaleType = scaleType,
+                        scaleRole = ScaleRole.Closer,
+                        scaleBase = this,
                     ),
                     RelationshipModel(
                         name = scaleRelationshipsNames[5],
                         argsClasses = argsClasses.plus(argsClasses[0]),
-                        flags = 0
+                        flags = 0,
+                        scaleType = scaleType,
+                        scaleRole = ScaleRole.Further,
+                        scaleBase = this,
                     )
                 )
             }
@@ -94,6 +135,9 @@ open class RelationshipModel(
         require(argsClasses.size >= 2) {
             "Отношение $name имеет меньше двух аргументов."
         }
+        if(scaleRole != ScaleRole.Base)
+            return
+
         require(scaleType == null || argsClasses.size == 2 && argsClasses[0] == argsClasses[1]) {
             "Отношение порядковой шкалы может быть только бинарным и только между объектами одного класса."
         }
@@ -224,6 +268,17 @@ open class RelationshipModel(
                 else -> null
             }
         }
+    }
+
+    enum class ScaleRole{
+        Base,
+
+        Reverse,
+        BaseTransitive,
+        ReverseTransitive,
+        Between,
+        Closer,
+        Further,
     }
 
     companion object _static {

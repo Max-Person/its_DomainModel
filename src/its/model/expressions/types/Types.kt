@@ -1,6 +1,7 @@
 package its.model.expressions.types
 
 import its.model.expressions.Operator
+import its.model.models.ClassModel
 import org.apache.jena.rdf.model.Resource
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
@@ -10,10 +11,7 @@ data class Obj(
     val name: String,
     val resource: Resource,
 )
-data class Clazz(
-    val name: String,
-    val resource: Resource,
-)
+typealias Clazz = ClassModel
 
 data class EnumValue (
     val ownerEnum: String,
