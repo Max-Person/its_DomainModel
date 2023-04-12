@@ -14,6 +14,9 @@ class GetPropertyValue(args: List<Operator>) : BaseOperator(args) {
     override val argsDataTypes
         get() = listOf(listOf(Types.Object, PropertyRef::class))
 
+    val objectExpr get() = arg(0)
+    val propertyName get() = (arg(1) as PropertyRef).name
+
     override val resultDataType get() = DomainModel.propertiesDictionary.dataType((args[1] as PropertyRef).name)!!
 
 

@@ -22,6 +22,10 @@ class CheckRelationship(args: List<Operator>) : BaseOperator(args) {
         listOf(Types.Object, RelationshipRef::class, Types.Object)
     )
 
+    val subjectExpr get() = arg(0)
+    val relationshipName get() = (arg(1) as RelationshipRef).name
+    val objectExprs get() = args.subList(2, args.size)
+
 
     override val isArgsCountUnlimited: Boolean
         get() = true

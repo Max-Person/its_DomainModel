@@ -10,6 +10,10 @@ class AssignVariable(args: List<Operator>) : BaseOperator(args){
     override val argsDataTypes
         get() = listOf(listOf(DecisionTreeVar::class, Types.Object))
 
+    val variableName get() = (arg(0) as DecisionTreeVar).name
+    val valueExpr get() = arg(1)
+
+
     override val resultDataType
         get() = Types.None
 

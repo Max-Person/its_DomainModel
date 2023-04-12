@@ -16,6 +16,9 @@ class GetByRelationship(
 
     override val argsDataTypes get() = listOf(listOf(Types.Object, RelationshipRef::class))
 
+    val subjectExpr get() = arg(0)
+    val relationshipName get() = (arg(1) as RelationshipRef).name
+
 
     override val resultDataType get() = Types.Object
 

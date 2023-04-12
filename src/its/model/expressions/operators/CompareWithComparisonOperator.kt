@@ -87,6 +87,9 @@ class CompareWithComparisonOperator(
         listOf(Types.Enum, Types.Enum)
     )
 
+    val firstExpr get() = arg(0)
+    val secondExpr get() = arg(1)
+
 
     override val resultDataType get() = Types.Boolean
 

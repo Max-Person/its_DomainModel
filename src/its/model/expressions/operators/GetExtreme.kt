@@ -15,6 +15,9 @@ class GetExtreme(
 
     override val argsDataTypes get() = listOf(listOf(Types.Boolean, Types.Boolean))
 
+    val extremeConditionExpr get() = arg(0)
+    val selectorExpr get() = arg(1)
+
 
     override val resultDataType get() = Types.Object
 

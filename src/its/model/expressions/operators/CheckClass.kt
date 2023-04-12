@@ -16,6 +16,9 @@ class CheckClass(args: List<Operator>) : BaseOperator(args) {
 
     override val argsDataTypes get() = listOf(listOf(Types.Object, Types.Class))
 
+    val objectExpr get() = arg(0)
+    val classExpr get() = arg(1)
+
     override val resultDataType get() = Types.Boolean
 
     override fun clone(): Operator {

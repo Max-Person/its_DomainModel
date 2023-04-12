@@ -24,6 +24,10 @@ class CheckPropertyValue(args: List<Operator>) : BaseOperator(args) {
             listOf(Types.Object, PropertyRef::class, Types.Enum)
         )
 
+    val objectExpr get() = arg(0)
+    val propertyName get() = (arg(1) as PropertyRef).name
+    val valueExpr get() = arg(2)
+
     override val resultDataType get() = Types.Boolean
 
     override fun clone(): Operator {

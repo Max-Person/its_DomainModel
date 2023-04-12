@@ -11,6 +11,9 @@ class LogicalOr(args: List<Operator>): BaseOperator(args) {
 
     override val argsDataTypes get() = listOf(listOf(Types.Boolean, Types.Boolean))
 
+    val firstExpr get() = arg(0)
+    val secondExpr get() = arg(1)
+
     override val resultDataType get() = Types.Boolean
 
     override fun clone(): Operator {

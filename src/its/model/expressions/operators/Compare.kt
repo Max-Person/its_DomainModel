@@ -20,6 +20,9 @@ class Compare(args: List<Operator>) : BaseOperator(args) {
         listOf(Types.Enum, Types.Enum)
     )
 
+    val firstExpr get() = arg(0)
+    val secondExpr get() = arg(1)
+
     override val resultDataType get() = Types.ComparisonResult
 
     override fun clone(): Operator {

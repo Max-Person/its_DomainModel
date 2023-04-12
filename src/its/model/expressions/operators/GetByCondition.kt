@@ -11,6 +11,8 @@ class GetByCondition(
 
     override val argsDataTypes get() = listOf(listOf(Types.Boolean))
 
+    val conditionExpr get() = arg(0)
+
 
     override val resultDataType get() = Types.Object
 

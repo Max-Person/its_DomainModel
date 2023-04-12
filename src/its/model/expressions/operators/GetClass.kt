@@ -11,6 +11,8 @@ class GetClass(args: List<Operator>) : BaseOperator(args) {
 
     override val argsDataTypes get() = listOf(listOf(Types.Object))
 
+    val objectExpr get() = arg(0)
+
 
     override val resultDataType get() = Types.Class
 
