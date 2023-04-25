@@ -13,6 +13,7 @@ class FindActionNode(
     varName: String,
     varClass: String,
     val errorCategories: List<FindErrorCategory>,
+    val additionalVariables: List<AdditionalVarDeclaration>,
     override val next: Outcomes<String>,
 ) : LinkNode<String>(), DecisionTreeVarDeclaration {
     val variable: DecisionTreeVarModel
@@ -33,14 +34,38 @@ class FindActionNode(
         )
     }
 
+    class AdditionalVarDeclaration(
+        varName: String,
+        varClass: String,
+        val calcExpr: Operator,
+    ){
+        val variable : DecisionTreeVarModel
+        init {
+            variable = checkVar(varName, varClass)
+        }
+
+        constructor(el: Element) : this(
+            el.getAttribute("name"),
+            el.getAttribute("type"),
+            Operator.build(el.getSingleByWrapper("Expression")!!),
+        )
+    }
+
     init {
-        require(DomainModel.decisionTreeVarsDictionary.contains(varName)){
-            "Переменная $varName, используемая в дереве решений, не объявлена в словаре"
+        variable = checkVar(varName, varClass)
+    }
+
+    companion object _static {
+        @JvmStatic
+        private fun checkVar(varName: String, varClass: String) : DecisionTreeVarModel{
+            require(DomainModel.decisionTreeVarsDictionary.contains(varName)){
+                "Переменная $varName, используемая в дереве решений, не объявлена в словаре"
+            }
+            require(DomainModel.decisionTreeVarsDictionary.getClass(varName) == varClass){
+                "Переменная $varName, используемая в дереве решений, объявлена с классом, не совпадающим с объявлением в словаре"
+            }
+            return DomainModel.decisionTreeVarsDictionary.get(varName)!!
         }
-        require(DomainModel.decisionTreeVarsDictionary.getClass(varName) == varClass){
-            "Переменная $varName, используемая в дереве решений, объявлена с классом, не совпадающим с объявлением в словаре"
-        }
-        variable = DomainModel.decisionTreeVarsDictionary.get(varName)!!
     }
 
     internal constructor(el : Element) : this(
@@ -48,6 +73,7 @@ class FindActionNode(
         el.getChild("DecisionTreeVarDecl")!!.getAttribute("name"),
         el.getChild("DecisionTreeVarDecl")!!.getAttribute("type"),
         el.getChildren("FindError").map {errEl -> FindErrorCategory(errEl) }.sortedBy { category -> category.priority },
+        el.getChildren("AdditionalVarDecl").map {declEl -> AdditionalVarDeclaration(declEl) },
         getOutcomes(el) { it }
     ){
         collectAdditionalInfo(el)
