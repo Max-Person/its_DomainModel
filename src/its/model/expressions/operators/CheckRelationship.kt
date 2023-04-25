@@ -19,11 +19,11 @@ class CheckRelationship(args: List<Operator>) : BaseOperator(args) {
     internal var isNegative = false
 
     override val argsDataTypes get() = listOf(
-        listOf(Types.Object, RelationshipRef::class, Types.Object)
+        listOf(RelationshipRef::class, Types.Object, Types.Object)
     )
 
-    val subjectExpr get() = arg(0)
-    val relationshipName get() = (arg(1) as RelationshipRef).name
+    val relationshipName get() = (arg(0) as RelationshipRef).name
+    val subjectExpr get() = arg(1)
     val objectExprs get() = args.subList(2, args.size)
 
 
