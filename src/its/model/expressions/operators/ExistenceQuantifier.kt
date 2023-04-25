@@ -18,9 +18,10 @@ class ExistenceQuantifier(
      */
     internal var isNegative = false
 
-    override val argsDataTypes get() = listOf(listOf(Types.Boolean))
+    override val argsDataTypes get() = listOf(listOf(Types.Boolean, Types.Boolean))
 
-    val conditionExpr get() = arg(0)
+    val selectorExpr get() = arg(0)
+    val conditionExpr get() = arg(1)
 
     override val resultDataType get() = Types.Boolean
 
