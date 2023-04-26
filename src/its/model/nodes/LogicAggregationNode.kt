@@ -1,6 +1,6 @@
 package its.model.nodes
 
-import its.model.nodes.visitors.DecisionTreeBehaviour
+import its.model.nodes.visitors.LinkNodeBehaviour
 import org.w3c.dom.Element
 
 class LogicAggregationNode (
@@ -16,7 +16,7 @@ class LogicAggregationNode (
         collectAdditionalInfo(el)
     }
 
-    override fun <I> use(behaviour: DecisionTreeBehaviour<I>): I {
+    override fun <I> use(behaviour: LinkNodeBehaviour<I>): I {
         return behaviour.process(this)
     }
 }

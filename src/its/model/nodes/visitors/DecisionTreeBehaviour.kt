@@ -7,14 +7,9 @@ import its.model.nodes.*
  * @param Info тип возвращаемого функциями поведения значения
  * @see DecisionTreeNode.use
  */
-interface DecisionTreeBehaviour<Info> {
+interface DecisionTreeBehaviour<Info> : LinkNodeBehaviour<Info> {
     // ---------------------- Для узлов дерева решений ---------------------------
     fun process(node: BranchResultNode) : Info
-    fun process(node: CycleAggregationNode) : Info
-    fun process(node: FindActionNode) : Info
-    fun process(node: LogicAggregationNode) : Info
-    fun process(node: PredeterminingFactorsNode) : Info
-    fun process(node: QuestionNode) : Info
     fun process(node: StartNode) : Info
     fun process(branch: ThoughtBranch) : Info
     fun process(node: UndeterminedResultNode) : Info

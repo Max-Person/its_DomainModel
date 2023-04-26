@@ -1,5 +1,7 @@
 package its.model.nodes
 
+import its.model.nodes.visitors.DecisionTreeBehaviour
+import its.model.nodes.visitors.LinkNodeBehaviour
 import kotlin.reflect.KClass
 
 sealed class LinkNode<AnswerType : Any> : DecisionTreeNode() {
@@ -14,4 +16,9 @@ sealed class LinkNode<AnswerType : Any> : DecisionTreeNode() {
             }
             return clazz
         }
+
+    abstract fun <I> use(behaviour: LinkNodeBehaviour<I>) : I
+    override fun <I> use(behaviour: DecisionTreeBehaviour<I>): I {
+        return this.use(behaviour as LinkNodeBehaviour<I>)
+    }
 }
