@@ -1,13 +1,13 @@
 package its.model.nodes
 
-import its.model.expressions.literals.Literal
+import its.model.expressions.types.ParseValue.parseValueForBranchResult
 import its.model.nodes.visitors.DecisionTreeBehaviour
 import org.w3c.dom.Element
 
 class BranchResultNode(
-    val value: Literal
+    val value: Any
 ) : DecisionTreeNode(){
-    internal constructor(el : Element) : this(Literal.fromString(el.getAttribute("value"))){
+    internal constructor(el : Element) : this(el.getAttribute("value").parseValueForBranchResult()){
         collectAdditionalInfo(el)
     }
 

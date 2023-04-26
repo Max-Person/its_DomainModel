@@ -1,7 +1,7 @@
 package its.model.nodes
 
 import its.model.expressions.Operator
-import its.model.expressions.literals.Literal
+import its.model.expressions.types.ParseValue.parseValue
 import its.model.expressions.types.Types.typeFromString
 import its.model.nodes.visitors.DecisionTreeBehaviour
 import org.w3c.dom.Element
@@ -9,21 +9,15 @@ import kotlin.reflect.KClass
 
 class QuestionNode (
     val type: KClass<*>,
-    val enumOwner: String? = null,
     val isSwitch : Boolean = false,
     val expr: Operator,
-    override val next: Outcomes<Literal>
-): LinkNode<Literal>() {
+    override val next: Outcomes<Any>
+): LinkNode<Any>() {
     internal constructor(el : Element) : this(
         typeFromString(el.getAttribute("type"))!!,
-        el.getAttribute("enumOwner").ifBlank { null },
         el.getAttribute("isSwitch").toBoolean(),
         Operator.build(el.getSingleByWrapper("Expression")!!),
-        getOutcomes(el) { Literal.fromString(
-            it,
-            typeFromString(el.getAttribute("type"))!!,
-            el.getAttribute("enumOwner").ifBlank { null }
-        ) }
+        getOutcomes(el) { it.parseValue(typeFromString(el.getAttribute("type"))!!)}
     ){
         collectAdditionalInfo(el)
     }

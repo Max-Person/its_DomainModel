@@ -148,8 +148,8 @@ object Types{
     }
 
 
-    interface TypeBehaviour<Parameter, Returned> {
-        fun KClass<*>.exec(param: Parameter) : Returned{
+    abstract class  TypeBehaviour<Parameter, Returned> {
+        protected fun KClass<*>.exec(param: Parameter) : Returned{
             require(this.isValidType()){
                 "Recipient type ${this.simpleName} is not supported as a Type"
             }
@@ -168,13 +168,13 @@ object Types{
         }
 
 
-        fun forString(param: Parameter): Returned
-        fun forBoolean(param: Parameter): Returned
-        fun forInt(param: Parameter): Returned
-        fun forDouble(param: Parameter): Returned
-        fun forEnum(param: Parameter): Returned
-        fun forComparisonResult(param: Parameter): Returned
-        fun forClazz(param: Parameter): Returned
-        fun forObj(param: Parameter): Returned
+        protected abstract fun forString(param: Parameter): Returned
+        protected abstract fun forBoolean(param: Parameter): Returned
+        protected abstract fun forInt(param: Parameter): Returned
+        protected abstract fun forDouble(param: Parameter): Returned
+        protected abstract fun forEnum(param: Parameter): Returned
+        protected abstract fun forComparisonResult(param: Parameter): Returned
+        protected abstract fun forClazz(param: Parameter): Returned
+        protected abstract fun forObj(param: Parameter): Returned
     }
 }
