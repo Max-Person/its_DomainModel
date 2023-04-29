@@ -87,6 +87,10 @@ class FindActionNode(
         return selectorExpr
     }
 
+    fun allDeclaredVariables() : Set<String>{
+        return setOf(this.variable.name).plus(this.additionalVariables.map{it.variable.name})
+    }
+
     override fun <I> use(behaviour: LinkNodeBehaviour<I>): I {
         return behaviour.process(this)
     }
