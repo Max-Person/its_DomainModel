@@ -4,6 +4,9 @@ import its.model.dictionaries.*
 import its.model.models.*
 import its.model.nodes.DecisionTreeNode
 import its.model.nodes.StartNode
+import org.apache.jena.rdf.model.Model
+import org.apache.jena.rdf.model.ModelFactory
+import org.apache.jena.riot.RDFDataMgr
 
 class DomainModel<
         C : ClassModel,
@@ -16,7 +19,8 @@ class DomainModel<
     @JvmField val decisionTreeVarsDictionary: DecisionTreeVarsDictionaryBase<V>,
     @JvmField val enumsDictionary: EnumsDictionaryBase<E>,
     @JvmField val propertiesDictionary: PropertiesDictionaryBase<P>,
-    @JvmField val relationshipsDictionary: RelationshipsDictionaryBase<R>
+    @JvmField val relationshipsDictionary: RelationshipsDictionaryBase<R>,
+    @JvmField val domainRDF: Model = ModelFactory.createDefaultModel(),
         ) {
 
     @JvmField
@@ -63,6 +67,10 @@ class DomainModel<
         @JvmStatic
         val decisionTree
             get() = instance!!.decisionTree!!
+
+        @JvmStatic
+        val domainRDF
+            get() = instance!!.domainRDF
     }
 
 
@@ -72,12 +80,14 @@ class DomainModel<
         enumsDictionary.fromCSV(directory + "enums.csv")
         propertiesDictionary.fromCSV(directory + "properties.csv")
         relationshipsDictionary.fromCSV(directory + "relationships.csv")
+        domainRDF.read(RDFDataMgr.open(directory + "domain.ttl"), null, "TTL")
 
         classesDictionary.validate()
         decisionTreeVarsDictionary.validate()
         enumsDictionary.validate()
         propertiesDictionary.validate()
         relationshipsDictionary.validate()
+        //TODO валидировать rdf модель на соответствие словарям
 
         decisionTree = DecisionTreeNode.fromXMLFile(directory + "tree.xml")!!
     }
