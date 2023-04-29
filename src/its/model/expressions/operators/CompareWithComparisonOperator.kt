@@ -51,13 +51,13 @@ class CompareWithComparisonOperator(
                 return arrayOf(Less, Greater, Equal, LessEqual, GreaterEqual, NotEqual)
             }
 
-            fun valueOf(value: String) = when (value) {
+            fun valueOf(value: String) = when (value.uppercase()) {
                 "LESS" -> Less
                 "GREATER" -> Greater
-                "EQUAL" -> Equal
-                "LESS_EQUAL" -> LessEqual
-                "GREATER_EQUAL" -> Greater
-                "NOT_EQUAL" -> NotEqual
+                "EQ","EQUAL" -> Equal
+                "LESSEQ","LESSEQUAL","LESS_EQ","LESS_EQUAL" -> LessEqual
+                "GREATEREQ","GREATEREQUAL","GREATER_EQ","GREATER_EQUAL" -> Greater
+                "NOTEQ","NOTEQUAL","NOT_EQ","NOT_EQUAL" -> NotEqual
                 else -> null
             }
         }
@@ -69,12 +69,10 @@ class CompareWithComparisonOperator(
     internal var isNegative = false
 
     init {
-        require(!(
-                (arg(0).resultDataType == Types.String
-                        || arg(0).resultDataType == Types.Object)
-                        && (operator != ComparisonOperator.Equal
-                        || operator != ComparisonOperator.NotEqual)
-                )) { "Указанный оператор не совместим с этими типам данных" }
+        require(
+            operator == ComparisonOperator.Equal || operator == ComparisonOperator.NotEqual
+                    || !(firstExpr.resultDataType == Types.String || firstExpr.resultDataType == Types.Object || firstExpr.resultDataType == Types.Enum ||  firstExpr.resultDataType == Types.Class )
+        ) { "Указанный оператор не совместим с этими типам данных" }
     }
 
     override val argsDataTypes get() = listOf(
@@ -84,6 +82,7 @@ class CompareWithComparisonOperator(
         listOf(Types.Double, Types.Double),
         listOf(Types.String, Types.String),
         listOf(Types.Object, Types.Object),
+        listOf(Types.Class, Types.Class),
         listOf(Types.Enum, Types.Enum)
     )
 
