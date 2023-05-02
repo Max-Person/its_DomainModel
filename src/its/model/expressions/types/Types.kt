@@ -2,15 +2,15 @@ package its.model.expressions.types
 
 import its.model.expressions.Operator
 import its.model.models.ClassModel
-import org.apache.jena.rdf.model.Resource
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
 
-//TODO сделать какие нибудь полезные обертки мб
-data class Obj(
-    val name: String,
-    val resource: Resource,
-)
+interface Obj{
+    val name: String
+    val clazz: Clazz
+    val classInheritance: List<Clazz>
+    fun descriptionInfo(descriptionProperty: String): Any
+}
 typealias Clazz = ClassModel
 
 data class EnumValue (
