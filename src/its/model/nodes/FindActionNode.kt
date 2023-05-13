@@ -57,7 +57,7 @@ class FindActionNode(
 
     companion object _static {
         @JvmStatic
-        private fun checkVar(varName: String, varClass: String) : DecisionTreeVarModel{
+        fun checkVar(varName: String, varClass: String) : DecisionTreeVarModel{
             require(DomainModel.decisionTreeVarsDictionary.contains(varName)){
                 "Переменная $varName, используемая в дереве решений, не объявлена в словаре"
             }

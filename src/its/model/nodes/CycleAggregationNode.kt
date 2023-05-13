@@ -1,17 +1,23 @@
 package its.model.nodes
 
 import its.model.expressions.Operator
+import its.model.models.DecisionTreeVarModel
 import its.model.nodes.visitors.LinkNodeBehaviour
 import org.w3c.dom.Element
 
 class CycleAggregationNode (
     val logicalOp: LogicalOp,
     val selectorExpr: Operator,
-    private val varName: String,
-    private val varClass: String,
+    varName: String,
+    varClass: String,
     val thoughtBranch: ThoughtBranch,
     override val next: Outcomes<Boolean>,
 ) : LinkNode<Boolean>(){
+    val variable: DecisionTreeVarModel
+    init {
+        variable = FindActionNode.checkVar(varName, varClass)
+    }
+
     internal constructor(el : Element) : this(
         LogicalOp.fromString(el.getAttribute("operator"))!!,
         Operator.build(el.getSingleByWrapper("SelectorExpression")!!),
