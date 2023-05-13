@@ -59,7 +59,7 @@ open class RelationshipModel(
             return emptyList()
 
         when (scaleType) {
-            ScaleType.Linear -> {
+            ScaleType.Linear, ScaleType.Partial -> { //Убедиться что флаги корректны
                 scaleRelationshipsNames!!
                 return listOf(
                     RelationshipModel(
@@ -111,11 +111,6 @@ open class RelationshipModel(
                         scaleBase = this,
                     )
                 )
-            }
-
-            ScaleType.Partial -> {
-                TODO("Отношения частичного порядка")
-                return emptyList()
             }
 
             else -> {
