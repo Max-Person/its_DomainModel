@@ -101,6 +101,7 @@ sealed class DecisionTreeNode{
                 "FindActionNode" -> FindActionNode(el)
                 "LogicAggregationNode" -> LogicAggregationNode(el)
                 "CycleAggregationNode" -> CycleAggregationNode(el)
+                "WhileAggregationNode" -> WhileAggregationNode(el)
                 "PredeterminingFactorsNode" -> PredeterminingFactorsNode(el)
                 "UndeterminedNode" -> UndeterminedResultNode()
                 else -> null
@@ -121,6 +122,7 @@ sealed class DecisionTreeNode{
                 "FindActionNode" -> true
                 "LogicAggregationNode" -> true
                 "CycleAggregationNode" -> true
+                "WhileAggregationNode" -> true
                 "PredeterminingFactorsNode" -> true
                 "UndeterminedNode" -> true
                 else -> false

@@ -10,6 +10,7 @@ import its.model.nodes.*
  */
 interface SimpleDecisionTreeBehaviour<Info> : DecisionTreeBehaviour<Info> {
     override fun process(node: CycleAggregationNode) : Info {return process(node as LinkNode<Boolean>)}
+    override fun process(node: WhileAggregationNode) : Info {return process(node as LinkNode<Boolean>)}
     override fun process(node: FindActionNode) : Info       {return process(node as LinkNode<String>)}
     override fun process(node: LogicAggregationNode) : Info {return process(node as LinkNode<Boolean>)}
     override fun process(node: PredeterminingFactorsNode) : Info {return process(node as LinkNode<String>)}

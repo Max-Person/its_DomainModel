@@ -10,6 +10,7 @@ import its.model.nodes.*
 interface LinkNodeBehaviour<Info> {
     // ---------------------- Для узлов дерева решений ---------------------------
     fun process(node: CycleAggregationNode) : Info
+    fun process(node: WhileAggregationNode) : Info
     fun process(node: FindActionNode) : Info
     fun process(node: LogicAggregationNode) : Info
     fun process(node: PredeterminingFactorsNode) : Info
