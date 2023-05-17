@@ -276,9 +276,9 @@ interface Operator {
                     return ClassRef(el.attributes.getNamedItem("name").nodeValue)
                 }
 
-                /*"Object" -> {
-                    return ObjectLiteral(el.attributes.getNamedItem("name").nodeValue)
-                }*/
+                "Object" -> {
+                    return ObjectRef(el.attributes.getNamedItem("name").nodeValue)
+                }
 
                 "Property" -> {
                     return PropertyRef(el.attributes.getNamedItem("name").nodeValue)
