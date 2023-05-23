@@ -6,7 +6,8 @@ import its.model.nodes.DecisionTreeNode
 import its.model.nodes.StartNode
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.ModelFactory
-import org.apache.jena.riot.RDFDataMgr
+import java.io.File
+import java.net.URL
 
 open class DomainModel<
         C : ClassModel,
@@ -15,13 +16,22 @@ open class DomainModel<
         P: PropertyModel,
         R: RelationshipModel>
     (
-    @JvmField val classesDictionary: ClassesDictionaryBase<C>,
-    @JvmField val decisionTreeVarsDictionary: DecisionTreeVarsDictionaryBase<V>,
-    @JvmField val enumsDictionary: EnumsDictionaryBase<E>,
-    @JvmField val propertiesDictionary: PropertiesDictionaryBase<P>,
-    @JvmField val relationshipsDictionary: RelationshipsDictionaryBase<R>,
-    directory : String,
-        ) {
+        @JvmField val classesDictionary: ClassesDictionaryBase<C>,
+        @JvmField val decisionTreeVarsDictionary: DecisionTreeVarsDictionaryBase<V>,
+        @JvmField val enumsDictionary: EnumsDictionaryBase<E>,
+        @JvmField val propertiesDictionary: PropertiesDictionaryBase<P>,
+        @JvmField val relationshipsDictionary: RelationshipsDictionaryBase<R>,
+        directoryUrl: URL,
+    ) {
+
+    constructor(
+        classesDictionary: ClassesDictionaryBase<C>,
+        decisionTreeVarsDictionary: DecisionTreeVarsDictionaryBase<V>,
+        enumsDictionary: EnumsDictionaryBase<E>,
+        propertiesDictionary: PropertiesDictionaryBase<P>,
+        relationshipsDictionary: RelationshipsDictionaryBase<R>,
+        directoryPath: String
+    ) : this(classesDictionary, decisionTreeVarsDictionary, enumsDictionary, propertiesDictionary, relationshipsDictionary, File(directoryPath).toURI().toURL())
 
     @JvmField
     val domainRDF: Model = ModelFactory.createDefaultModel()
@@ -36,12 +46,12 @@ open class DomainModel<
 
         instance = this
 
-        classesDictionary.fromCSV(directory + "classes.csv")
-        decisionTreeVarsDictionary.fromCSV(directory + "vars.csv")
-        enumsDictionary.fromCSV(directory + "enums.csv")
-        propertiesDictionary.fromCSV(directory + "properties.csv")
-        relationshipsDictionary.fromCSV(directory + "relationships.csv")
-        domainRDF.read(RDFDataMgr.open(directory + "domain.ttl"), null, "TTL")
+        classesDictionary.fromCSV((directoryUrl + "classes.csv").openStream().bufferedReader())
+        decisionTreeVarsDictionary.fromCSV((directoryUrl + "vars.csv").openStream().bufferedReader())
+        enumsDictionary.fromCSV((directoryUrl + "enums.csv").openStream().bufferedReader())
+        propertiesDictionary.fromCSV((directoryUrl + "properties.csv").openStream().bufferedReader())
+        relationshipsDictionary.fromCSV((directoryUrl + "relationships.csv").openStream().bufferedReader())
+        domainRDF.read((directoryUrl + "domain.ttl").openStream().buffered(), null, "TTL")
 
         classesDictionary.validate()
         decisionTreeVarsDictionary.validate()
@@ -50,7 +60,7 @@ open class DomainModel<
         relationshipsDictionary.validate()
         //TODO валидировать rdf модель на соответствие словарям
 
-        decisionTree = DecisionTreeNode.fromXMLFile(directory + "tree.xml")!!
+        decisionTree = DecisionTreeNode.fromXMLFile((directoryUrl  + "tree.xml").toURI().toString())!!
     }
 
     companion object _static{
@@ -84,5 +94,16 @@ open class DomainModel<
         @JvmStatic
         val domainRDF
             get() = instance!!.domainRDF
+
+        @JvmStatic
+        protected operator fun URL.plus(s : String) : URL {
+            return URL(
+                this.protocol,
+                this.host,
+                this.port,
+                this.path + (if(this.path.endsWith("/")) "" else "/") + s + (if(this.query.isNullOrBlank()) "" else "?" + this.query),
+                null
+            )
+        }
     }
 }

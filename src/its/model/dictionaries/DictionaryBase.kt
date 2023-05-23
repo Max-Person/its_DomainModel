@@ -12,10 +12,8 @@ import its.model.models.ContinuousRange
 import its.model.models.DiscreteRange
 import its.model.models.Range
 import its.model.models.RelationshipModel
+import java.io.Reader
 import java.lang.reflect.ParameterizedType
-import java.nio.charset.StandardCharsets
-import java.nio.file.Files
-import java.nio.file.Paths
 import kotlin.reflect.KClass
 import kotlin.reflect.full.primaryConstructor
 import kotlin.reflect.jvm.javaConstructor
@@ -81,13 +79,12 @@ abstract class DictionaryBase<T : Any>(protected val storedType: KClass<T>) : It
      * *Важно:* функции инициализации не могут быть вызваны повторно на одном объекте
      * @param path путь к файлу словаря
      */
-    fun fromCSV(path: String) : DictionaryBase<T> {
+    fun fromCSV(reader: Reader) : DictionaryBase<T> {
         require(!isInit){
             "Функция инициализации словаря не может быть вызвана повторно"
         }
 
-        val bufferedReader = Files.newBufferedReader(Paths.get(path), StandardCharsets.UTF_8)
-        val csvReader = CSVReaderBuilder(bufferedReader).withCSVParser(csvParser).build()
+        val csvReader = CSVReaderBuilder(reader).withCSVParser(csvParser).build()
         csvReader.use { reader ->
             val rows = reader.readAll()
 
