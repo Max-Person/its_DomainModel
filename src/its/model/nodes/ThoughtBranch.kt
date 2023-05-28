@@ -2,6 +2,7 @@ package its.model.nodes
 
 import its.model.expressions.types.Types.typeFromString
 import its.model.nodes.visitors.DecisionTreeBehaviour
+import its.model.nullCheck
 import org.w3c.dom.Element
 import kotlin.reflect.KClass
 
@@ -11,9 +12,9 @@ class ThoughtBranch(
     val start: DecisionTreeNode,
 ) : DecisionTreeNode() {
     internal constructor(el : Element) : this(
-        typeFromString(el.getAttribute("type"))!!,
+        typeFromString(el.getAttribute("type")).nullCheck("ThoughtBranch has to have a valid 'type' attribute"),
         el.getAttribute("paramName").ifBlank { null },
-        build(el.getChild())!!,
+        build(el.getChild()).nullCheck("No nodes can be built from tag ${el.getChild()?.tagName}"),
     ){
         collectAdditionalInfo(el)
     }

@@ -36,3 +36,8 @@ open class InfoMap<I: Info<K, V>, K, V>(val info : Set<I>) : Map<K, V> {
         return info.isEmpty()
     }
 }
+
+fun <V> V?.nullCheck(message: String) : V{
+    if(this == null) throw IllegalArgumentException(message)
+    return this
+}

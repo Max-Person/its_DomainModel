@@ -1,6 +1,7 @@
 package its.model.nodes
 
 import its.model.nodes.visitors.DecisionTreeBehaviour
+import its.model.nullCheck
 import org.w3c.dom.Element
 
 class StartNode(
@@ -9,7 +10,7 @@ class StartNode(
 ) : DecisionTreeNode() {
     internal constructor(el : Element) : this(
         el.getSeveralByWrapper("InputVariables").associate { it.getAttribute("name") to it.getAttribute("type") },
-        ThoughtBranch(el.getChild("ThoughtBranch")!!),
+        ThoughtBranch(el.getChild("ThoughtBranch").nullCheck("StartNode has to have an associated ThoughtBranch")),
     ){
         collectAdditionalInfo(el)
     }

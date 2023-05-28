@@ -85,11 +85,12 @@ abstract class DictionaryBase<T : Any>(protected val storedType: KClass<T>) : It
         }
 
         val csvReader = CSVReaderBuilder(reader).withCSVParser(csvParser).build()
+        val constructor = storedType.primaryConstructor?.javaConstructor!!
         csvReader.use { reader ->
             val rows = reader.readAll()
 
             rows.forEach { row ->
-                val constructor = storedType.primaryConstructor?.javaConstructor!!
+                require(row.size >= constructor.parameterCount){"${this.javaClass.simpleName}'s rows must have at least ${constructor.parameterCount} fields (row ${rows.indexOf(row)})"}
                 val args = constructor.genericParameterTypes.mapIndexed{ index, type ->
                     valueParser.parseType(row[index].trim(), if(type is ParameterizedType) type.rawType else type)
                 }

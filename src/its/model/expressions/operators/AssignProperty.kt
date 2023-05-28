@@ -19,7 +19,7 @@ class AssignProperty(args: List<Operator>) : BaseOperator(args) {
             val newValueDataType = arg(2).resultDataType
 
             require(DomainModel.propertiesDictionary.isStatic(propertyName) == false) {
-                "Свойство $propertyName не должно быть статическим."
+                "Статическому свойству $propertyName нельзя присваивать значения."
             }
             require(DomainModel.propertiesDictionary.dataType(propertyName) == newValueDataType) {
                 "Тип данных $newValueDataType не соответствует типу ${DomainModel.propertiesDictionary.dataType(propertyName)} свойства $propertyName."

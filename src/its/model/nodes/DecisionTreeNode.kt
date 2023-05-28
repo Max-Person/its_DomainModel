@@ -130,6 +130,10 @@ sealed class DecisionTreeNode{
         }
     }
 
+    override fun toString(): String {
+        return this.additionalInfo["alias"] ?: this.additionalInfo["label"] ?: super.toString()
+    }
+
     /**
      * Применяет поведение [behaviour] к данному узлу
      * @param behaviour применяемое поведение

@@ -72,7 +72,7 @@ class CompareWithComparisonOperator(
         require(
             operator == ComparisonOperator.Equal || operator == ComparisonOperator.NotEqual
                     || !(firstExpr.resultDataType == Types.String || firstExpr.resultDataType == Types.Object || firstExpr.resultDataType == Types.Enum ||  firstExpr.resultDataType == Types.Class )
-        ) { "Указанный оператор не совместим с этими типам данных" }
+        ) { "Оператор сравнения величины ($operator) не совместим с нечисловыми типами данных (${firstExpr.resultDataType.simpleName})" }
     }
 
     override val argsDataTypes get() = listOf(

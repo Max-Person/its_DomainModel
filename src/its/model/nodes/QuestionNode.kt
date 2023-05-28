@@ -4,6 +4,7 @@ import its.model.expressions.Operator
 import its.model.expressions.types.ParseValue.parseValue
 import its.model.expressions.types.Types.typeFromString
 import its.model.nodes.visitors.LinkNodeBehaviour
+import its.model.nullCheck
 import org.w3c.dom.Element
 import kotlin.reflect.KClass
 
@@ -14,10 +15,10 @@ class QuestionNode (
     override val next: Outcomes<Any>
 ): LinkNode<Any>() {
     internal constructor(el : Element) : this(
-        typeFromString(el.getAttribute("type"))!!,
+        typeFromString(el.getAttribute("type")).nullCheck("QuestionNode has to have a valid 'type' attribute"),
         el.getAttribute("isSwitch").toBoolean(),
-        Operator.build(el.getSingleByWrapper("Expression")!!),
-        getOutcomes(el) { it.parseValue(typeFromString(el.getAttribute("type"))!!)}
+        Operator.build(el.getSingleByWrapper("Expression").nullCheck("QuestionNode has to have an 'Expression' child tag")),
+        getOutcomes(el) { it.parseValue(typeFromString(el.getAttribute("type")).nullCheck("QuestionNode's outcomes' values should match its type"))}
     ){
         collectAdditionalInfo(el)
     }

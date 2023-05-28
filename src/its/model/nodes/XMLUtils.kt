@@ -1,5 +1,6 @@
 package its.model.nodes
 
+import its.model.nullCheck
 import org.w3c.dom.Element
 import org.w3c.dom.Node
 
@@ -36,11 +37,11 @@ internal fun Element.getOutcome(outcomeVal : String) : Element?{
 }
 
 internal fun Element.getSeveralByWrapper(wrapper : String) : List<Element>{
-    return getChild(wrapper)!!.getChildren()
+    return getChild(wrapper).nullCheck("No wrapper tag '$wrapper' was found inside element $this").getChildren()
 }
 
 internal fun Element.getSingleByWrapper(wrapper : String) : Element? {
-    return getChild(wrapper)!!.getChild()
+    return getChild(wrapper).nullCheck("No wrapper tag '$wrapper' was found inside element $this").getChild()
 }
 
 private const val ADDITIONAL_INFO_PREFIX = "_"

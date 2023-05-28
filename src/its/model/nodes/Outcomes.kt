@@ -2,6 +2,7 @@ package its.model.nodes
 
 import its.model.Info
 import its.model.InfoMap
+import its.model.nullCheck
 import org.w3c.dom.Element
 
 open class Outcome<KeyType>(
@@ -12,7 +13,7 @@ open class Outcome<KeyType>(
     internal constructor(el : Element, keyFromString : (str :String) -> KeyType)
             : this(
         keyFromString(el.getAttribute("value")),
-        DecisionTreeNode.build(el.getChildren().first{DecisionTreeNode.canBuildFrom(it)})!!,
+        DecisionTreeNode.build(el.getChildren().first{DecisionTreeNode.canBuildFrom(it)}).nullCheck("No nodes can be built from tags ${el.getChildren().map{it.tagName}}"),
         el.getAdditionalInfo(),
     )
 
@@ -37,7 +38,7 @@ class PredeterminingOutcome(
     internal constructor(el : Element)
             : this(
         el.getAttribute("value"),
-        DecisionTreeNode.build(el.getChildren().first { DecisionTreeNode.canBuildFrom(it) })!!,
+        DecisionTreeNode.build(el.getChildren().first { DecisionTreeNode.canBuildFrom(it) }).nullCheck("No nodes can be built from tags ${el.getChildren().map{it.tagName}}"),
         el.getAdditionalInfo(),
         if(el.getChild("ThoughtBranch") != null) ThoughtBranch(el.getChild("ThoughtBranch")!!) else null,
     )

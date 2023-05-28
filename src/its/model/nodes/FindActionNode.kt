@@ -4,6 +4,7 @@ import its.model.DomainModel
 import its.model.expressions.Operator
 import its.model.models.DecisionTreeVarModel
 import its.model.nodes.visitors.LinkNodeBehaviour
+import its.model.nullCheck
 import org.w3c.dom.Element
 
 
@@ -28,10 +29,14 @@ class FindActionNode(
         val additionalInfo : Map<String, String> = mapOf()
     ){
         constructor(el: Element) : this(
-            el.getAttribute("priority").toInt(),
-            Operator.build(el.getSingleByWrapper("Expression")!!),
+            el.getAttribute("priority").toIntOrNull().nullCheck("Find Error Category has to have a valid int 'prioroty' attribute"),
+            Operator.build(el.getSingleByWrapper("Expression").nullCheck("Find Error Category has to have an 'Expression' child tag")),
             el.getAdditionalInfo()
         )
+
+        override fun toString(): String {
+            return this.additionalInfo["alias"] ?: this.additionalInfo["label"] ?: super.toString()
+        }
     }
 
     class AdditionalVarDeclaration(
@@ -52,6 +57,7 @@ class FindActionNode(
     }
 
     init {
+        next.keys.forEach{ require( it == "none" || it == "found"){"FindActionNode cannot have an outcome with a value $it"}}
         variable = checkVar(varName, varClass)
     }
 
@@ -70,8 +76,8 @@ class FindActionNode(
 
     internal constructor(el : Element) : this(
         Operator.build(el.getSingleByWrapper("Expression")!!),
-        el.getChild("DecisionTreeVarDecl")!!.getAttribute("name"),
-        el.getChild("DecisionTreeVarDecl")!!.getAttribute("type"),
+        el.getChild("DecisionTreeVarDecl").nullCheck("FindActionNode has to have a 'DecisionTreeVarDecl' child tag").getAttribute("name"),
+        el.getChild("DecisionTreeVarDecl").nullCheck("FindActionNode has to have a 'DecisionTreeVarDecl' child tag").getAttribute("type"),
         el.getChildren("FindError").map {errEl -> FindErrorCategory(errEl) }.sortedBy { category -> category.priority },
         el.getChildren("AdditionalVarDecl").map {declEl -> AdditionalVarDeclaration(declEl) },
         getOutcomes(el) { it }
