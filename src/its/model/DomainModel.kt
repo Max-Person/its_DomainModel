@@ -36,8 +36,18 @@ open class DomainModel<
     @JvmField
     val domainRDF: Model = ModelFactory.createDefaultModel()
 
-    @JvmField
-    var decisionTree: StartNode? = null
+    private var decisionTrees = mutableMapOf<String, StartNode>()
+    val decisionTree: StartNode
+        @JvmName("_decisionTree")
+        get() {
+            require(decisionTrees.containsKey("")){"DomainModel does not have a default decisionTree. Use decisionTree(name) instead."}
+            return decisionTrees[""]!!
+        }
+    @JvmName("_decisionTree")
+    fun decisionTree(name: String) : StartNode{
+        require(decisionTrees.containsKey(name)){"DomainModel does not have a decisionTree named '$name'."}
+        return decisionTrees[name]!!
+    }
 
     init {
         require(instance == null){
@@ -60,7 +70,14 @@ open class DomainModel<
         relationshipsDictionary.validate()
         //TODO валидировать rdf модель на соответствие словарям
 
-        decisionTree = DecisionTreeNode.fromXMLFile((directoryUrl  + "tree.xml").toURI().toString())!!
+        val treeRegex = Regex("tree(_\\w+|)\\.xml")
+        directoryUrl.openStream().bufferedReader().lines().forEach {
+            if(treeRegex.matches(it)){
+                var (name) = treeRegex.find(it)!!.destructured
+                if(name.startsWith("_")) name = name.substring(1)
+                decisionTrees[name] = DecisionTreeNode.fromXMLFile((directoryUrl  + it).toURI().toString())!!
+            }
+        }
     }
 
     companion object _static{
@@ -89,7 +106,12 @@ open class DomainModel<
 
         @JvmStatic
         val decisionTree
-            get() = instance!!.decisionTree!!
+            @JvmStatic
+            @JvmName("decisionTree")
+            get() = instance!!.decisionTree
+
+        @JvmStatic
+        fun decisionTree(name: String) = instance!!.decisionTree(name)
 
         @JvmStatic
         val domainRDF
