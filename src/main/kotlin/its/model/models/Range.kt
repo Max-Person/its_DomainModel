@@ -4,6 +4,10 @@ sealed interface Range {
     fun contains(v: Number): Boolean
 }
 
+data object AnyNumber : Range {
+    override fun contains(v: Number): Boolean = true
+}
+
 class DiscreteRange(val values: List<Double>) : Range {
     override fun contains(v: Number): Boolean {
         return values.any { it.compareTo(v.toDouble()) == 0 }
