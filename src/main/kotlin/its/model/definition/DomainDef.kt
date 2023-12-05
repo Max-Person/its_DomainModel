@@ -65,4 +65,13 @@ sealed interface DomainRef {
      * Найти в домене [domain] определение, на которое ссылается эта ссылка, если оно есть
      */
     fun findIn(domain: Domain): Optional<DomainDefWithMeta>
+
+    fun findInOrUnkown(domain: Domain): DomainDefWithMeta {
+        val found = findIn(domain)
+        checkKnown(
+            found.isPresent,
+            "No definition for reference '$this' found in domain"
+        )
+        return found.get()
+    }
 }
