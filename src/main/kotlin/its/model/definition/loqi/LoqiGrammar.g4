@@ -14,18 +14,18 @@ topDecl : classDecl
 
 classDecl : CLASS id (':' id)? ('{' classMemberDecl* '}')? metadataSection? ;
 
-addClassDataDecl : 'values' 'for' CLASS id ('{' propertyValueStatement* '}')? ;
+addClassDataDecl : VALUES FOR CLASS id ('{' propertyValueStatement* '}')? ;
 
 classMemberDecl : propertyDecl
                 | propertyValueStatement
                 | relationshipDecl
                 ;
 
-propertyDecl : (CLASS | OBJ) 'prop' id ':' type metadataSection? ';'
-             | (CLASS | OBJ) 'prop' id (':' type)? '=' value metadataSection? ';'
+propertyDecl : (CLASS | OBJ) PROP id ':' type metadataSection? ';'
+             | (CLASS | OBJ) PROP id (':' type)? '=' value metadataSection? ';'
              ;
 
-relationshipDecl : 'rel' id '(' idList ')' (':' relationshipKind)? metadataSection? ';' ;
+relationshipDecl : REL id '(' idList ')' (':' relationshipKind)? metadataSection? ';' ;
 
 relationshipKind : scaleType
                  | scaleType? relationshipQuantifier
@@ -38,12 +38,12 @@ linkCount : INTEGER
           | '*'
           ;
 
-scaleType : 'linear'
-          | 'partial'
+scaleType : LINEAR
+          | PARTIAL
           ;
 
-relationshipDependency : relationshipDependencyType 'to' (id | relationshipRef);
-relationshipDependencyType : ('opposite' | 'transitive' | 'between' | 'closer' | 'further' ) ;
+relationshipDependency : relationshipDependencyType TO (id | relationshipRef);
+relationshipDependencyType : (OPPOSITE | TRANSITIVE | BETWEEN | CLOSER | FURTHER ) ;
 
 relationshipRef : id '->' id ;
 
@@ -51,7 +51,7 @@ propertyRef : id '.' id ;
 
 //Енамы ---------
 
-enumDecl : 'enum' id ('{' enumMemberList? '}')? metadataSection? ;
+enumDecl : ENUM id ('{' enumMemberList? '}')? metadataSection? ;
 
 enumMemberList : enumMemberDecl (',' enumMemberDecl)* ','? ;
 
@@ -71,11 +71,11 @@ relationshipLinkStatement : id '(' idList ')' ';' ;
 
 varDecl :  varLeftPart id;
 
-varLeftPart : 'var' idList '=' ;
+varLeftPart : VAR idList '=' ;
 
 // Метаданные ---------
 
-addMetaDecl: 'meta' 'for' metaRef metadataSection?;
+addMetaDecl: META FOR metaRef metadataSection?;
 
 metaRef : OBJ? id
         | CLASS id
@@ -91,7 +91,7 @@ metadataPropertyDecl : (id '.')? id ('=' value)? ';' ;
 
 // Прочее -----------------
 
-type : ID       //ссылка на Enum
+type : id       //ссылка на Enum
      | intType
      | doubleType
      | BOOL_TYPE
@@ -119,28 +119,17 @@ value : INTEGER
       | enumValueRef
       ;
 
-enumValueRef : ID ':' ID ;
+enumValueRef : id ':' id ;
 
 idList : id (',' id)* ','? ;
 
 id : ID ;
 
-// Ключевые слова
-
-CLASS : 'class' ;
-OBJ : 'obj' ;
-ENUM : 'enum' ;
-
-INT_TYPE : 'int' ;
-DOUBLE_TYPE : 'double' ;
-BOOL_TYPE : 'bool' ;
-STRING_TYPE : 'string' ;
-
+//-------------ЛЕКСЕР---------------
 
 //Литералы
 
-INTEGER : DECIMAL
-        ;
+INTEGER : DECIMAL ;
 
 DECIMAL : ( '0' | [1-9] Digit* ) ;
 
@@ -149,8 +138,8 @@ DOUBLE : (Digit+ '.' Digit* | '.' Digit+) ExponentPart?
        | DECIMAL [dD]
        ;
 
-BOOLEAN : 'true'
-        | 'false'
+BOOLEAN : TRUE
+        | FALSE
         ;
 
 STRING : '"""' (~[\\] | EscapeSequence)*? '"""'
@@ -159,15 +148,55 @@ STRING : '"""' (~[\\] | EscapeSequence)*? '"""'
        | '\'' (~['\\\r\n] | EscapeSequence)* '\''
        ;
 
-ID : Letter LetterOrDigit* ;
+// Ключевые слова
+
+CLASS : 'class' ;
+OBJ : 'obj' ;
+ENUM : 'enum' ;
+PROP : 'prop' ;
+REL : 'rel' ;
+
+VALUES : 'values' ;
+META : 'meta' ;
+
+FOR : 'for' ;
+TO : 'to' ;
+
+LINEAR : 'linear' ;
+PARTIAL : 'partial' ;
+
+OPPOSITE : 'opposite' ;
+TRANSITIVE : 'transitive' ;
+BETWEEN : 'between' ;
+CLOSER : 'closer' ;
+FURTHER : 'further' ;
+
+VAR : 'var' ;
+
+INT_TYPE : 'int' ;
+DOUBLE_TYPE : 'double' ;
+BOOL_TYPE : 'bool' ;
+STRING_TYPE : 'string' ;
+
+TRUE : 'true' ;
+FALSE : 'false' ;
+
+//Идентификаторы
+
+ID : Letter LetterOrDigit*      //См. LoqiStringUtils#isSimpleName
+   | '`' NonWhiteSpace+ '`'     //Экранированный идентификатор позволяет что угодно, кроме пробелов
+   ;
 
 // Whitespace and comments
 
-WS:                 [ \t\r\n\u000C]+ -> channel(HIDDEN);
+WS:                 WhiteSpace+      -> channel(HIDDEN);
 COMMENT:            '/*' .*? '*/'    -> channel(HIDDEN);
 LINE_COMMENT:       '//' ~[\r\n]*    -> channel(HIDDEN);
 
 // Fragments
+
+fragment WhiteSpace : [ \t\r\n\u000C] ;
+fragment NonWhiteSpace : ~[ \t\r\n\u000C] ;
 
 fragment EscapeSequence
     : '\\' [btnfr"'\\]
@@ -181,9 +210,7 @@ fragment LetterOrDigit
     ;
 
 fragment Letter
-    : [a-zA-Z$_] // these are the "java letters" below 0x7F
-    | ~[\u0000-\u007F\uD800-\uDBFF] // covers all characters above 0x7F which are not a surrogate
-    | [\uD800-\uDBFF] [\uDC00-\uDFFF] // covers UTF-16 surrogate pairs encodings for U+10000 to U+10FFFF
+    : [a-zA-Z$_]
     ;
 
 fragment Digit

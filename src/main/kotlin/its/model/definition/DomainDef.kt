@@ -48,8 +48,11 @@ sealed class DomainDef : DomainElement(), Cloneable {
         )
     }
 
+    /**
+     * Является ли валидным именем - не пустое и не содержит пробелов и бэктиков
+     */
     private fun String.isValidName(): Boolean {
-        return isNotBlank() //TODO
+        return isNotBlank() && !this.contains("[\\s`]".toRegex())
     }
 }
 

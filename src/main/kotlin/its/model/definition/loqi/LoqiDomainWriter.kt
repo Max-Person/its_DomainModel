@@ -2,7 +2,8 @@ package its.model.definition.loqi
 
 import its.model.definition.*
 import its.model.definition.LinkQuantifier.Companion.ANY_COUNT
-import its.model.definition.loqi.EscapeSequenceUtils.insertEscapes
+import its.model.definition.loqi.LoqiStringUtils.insertEscapes
+import its.model.definition.loqi.LoqiStringUtils.isSimpleLoqiName
 import its.model.models.*
 import java.io.Writer
 
@@ -77,7 +78,7 @@ class LoqiDomainWriter private constructor(
     }
 
     private fun EnumDef.writeEnum() {
-        write("enum $name")
+        write("enum ${name.toLoqiName()}")
         if (values.isNotEmpty()) {
             writeln(" {")
             indent()
@@ -94,7 +95,7 @@ class LoqiDomainWriter private constructor(
     }
 
     private fun EnumValueDef.writeEnumValue() {
-        write(name)
+        write(name.toLoqiName())
         if (!hasOption(LoqiWriteOptions.SEPARATE_METADATA)) {
             metadata.writeMetadata()
         }
@@ -106,8 +107,8 @@ class LoqiDomainWriter private constructor(
                 || declaredRelationships.isNotEmpty()
                 || (!hasOption(LoqiWriteOptions.SEPARATE_CLASS_PROPERTY_VALUES)
                 && definedPropertyValues.isNotEmpty())
-        write("$CLASS $name")
-        parentName.ifPresent { write(" : $it") }
+        write("$CLASS ${name.toLoqiName()}")
+        parentName.ifPresent { write(" : ${it.toLoqiName()}") }
         if (hasBody) {
             writeln(" {")
             indent()
@@ -152,7 +153,7 @@ class LoqiDomainWriter private constructor(
 
     private fun writeSeparateClassPropertyValues(reference: ClassRef, values: Collection<PropertyValueStatement<*>>) {
         if (values.isEmpty()) return
-        writeln("values for $reference {")
+        writeln("values for ${reference.toLoqiString()} {")
         indent()
         values.forEach {
             it.writePropertyValue()
@@ -168,7 +169,7 @@ class LoqiDomainWriter private constructor(
             PropertyDef.PropertyKind.CLASS -> CLASS
             PropertyDef.PropertyKind.OBJECT -> OBJ
         }
-        write("$kindString prop $name: ${type.toLoqi()}")
+        write("$kindString prop ${name.toLoqiName()}: ${type.toLoqi()}")
         if (!hasOption(LoqiWriteOptions.SEPARATE_CLASS_PROPERTY_VALUES)
             && owner.definedPropertyValues.get(name).isPresent
         ) {
@@ -182,11 +183,11 @@ class LoqiDomainWriter private constructor(
     }
 
     private fun PropertyValueStatement<*>.writePropertyValue() {
-        write("$propertyName = ${value.toLoqiValue()} ;")
+        write("${propertyName.toLoqiName()} = ${value.toLoqiValue()} ;")
     }
 
     private fun RelationshipDef.writeRelationship(owner: ClassDef) {
-        write("rel $name(${objectClassNames.joinToString(", ")})")
+        write("rel ${name.toLoqiName()}(${objectClassNames.map { it.toLoqiName() }.joinToString(", ")})")
         when (kind) {
             is BaseRelationshipKind -> if (isScalar || kind.quantifier.isPresent) {
                 write(" : ")
@@ -218,10 +219,10 @@ class LoqiDomainWriter private constructor(
     }
 
     private fun ObjectDef.writeObject() {
-        val variables = domain.variables.filter { it.valueObjectName == this.name }.map { it.name }
+        val variables = domain.variables.filter { it.valueObjectName == this.name }.map { it.name.toLoqiName() }
         if (variables.isNotEmpty()) writeln("var ${variables.joinToString(", ")} = ")
 
-        write("$OBJ $name : $className")
+        write("$OBJ ${name.toLoqiName()} : ${className.toLoqiName()}")
         if (definedPropertyValues.isNotEmpty()) {
             writeln(" {")
             indent()
@@ -243,7 +244,7 @@ class LoqiDomainWriter private constructor(
     }
 
     private fun RelationshipLinkStatement.writeRelationshipLink() {
-        write("$relationshipName(${objectNames.joinToString(",")}) ;")
+        write("${relationshipName.toLoqiName()}(${objectNames.map { it.toLoqiName() }.joinToString(",")}) ;")
     }
 
     private fun writeVariableSection() {
@@ -253,7 +254,7 @@ class LoqiDomainWriter private constructor(
         writeCommentDelimiter("separate variables")
         val objectsToVars = separateVariables.groupBy { it.valueObjectName }
         objectsToVars.forEach { (obj, vars) ->
-            writeln("var ${vars.map { it.name }.joinToString(", ")} = $obj")
+            writeln("var ${vars.map { it.name.toLoqiName() }.joinToString(", ")} = ${obj.toLoqiName()}")
         }
         newLine()
     }
@@ -298,7 +299,7 @@ class LoqiDomainWriter private constructor(
 
     private fun writeSeparateMetadata(ref: DomainRef, metadata: MetaData) {
         if (metadata.isEmpty()) return
-        write("meta for $ref")
+        write("meta for ${ref.toLoqiString()}")
         metadata.writeMetadata()
         skipLines()
     }
@@ -308,8 +309,8 @@ class LoqiDomainWriter private constructor(
         writeln(" [")
         indent()
         this.forEach { (property, value) ->
-            property.locCode.ifPresent { write("$it.") }
-            writeln("${property.name} = ${value.toLoqiValue()} ;")
+            property.locCode.ifPresent { write("${it.toLoqiName()}.") }
+            writeln("${property.name.toLoqiName()} = ${value.toLoqiValue()} ;")
         }
         unindent()
         write("]")
@@ -342,6 +343,21 @@ class LoqiDomainWriter private constructor(
 //            }
 //        }
 //    }
+
+    private fun String.toLoqiName(): String {
+        return if (!this.isSimpleLoqiName()) "`$this`" else this
+    }
+
+    private fun DomainRef.toLoqiString(): String {
+        return when (this) {
+            is ClassRef -> "class ${className.toLoqiName()}"
+            is EnumRef -> "enum ${enumName.toLoqiName()}"
+            is EnumValueRef -> "${enumName.toLoqiName()}:${valueName.toLoqiName()}"
+            is ObjectRef -> "obj ${objectName.toLoqiName()}"
+            is PropertyRef -> "${className.toLoqiName()}.${propertyName.toLoqiName()}"
+            is RelationshipRef -> "${className.toLoqiName()}->${relationshipName.toLoqiName()}"
+        }
+    }
 
     private fun writeCommentDelimiter(title: String) {
         val len = 60 + title.length % 2

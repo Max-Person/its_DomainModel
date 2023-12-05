@@ -2,8 +2,8 @@ package its.model.definition.loqi
 
 import its.model.definition.*
 import its.model.definition.LinkQuantifier.Companion.ANY_COUNT
-import its.model.definition.loqi.EscapeSequenceUtils.extractEscapes
 import its.model.definition.loqi.LoqiGrammarParser.*
+import its.model.definition.loqi.LoqiStringUtils.extractEscapes
 import its.model.models.*
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
@@ -66,11 +66,11 @@ class LoqiDomainBuilder private constructor(
 
     override fun visitClassDecl(ctx: ClassDeclContext) {
         val line = ctx.id(0).start.line
-        val name = ctx.id(0).text
+        val name = ctx.id(0).getName()
         var parentName = Optional.empty<String>()
 
         if (ctx.id().size > 1) { //Есть второй id - значит указан класс-родитель
-            parentName = Optional.of(ctx.id(1).text)
+            parentName = Optional.of(ctx.id(1).getName())
         }
 
         val clazz = domainOpAt(line) { domain.classes.add(ClassDef(name, parentName)) }
@@ -93,7 +93,7 @@ class LoqiDomainBuilder private constructor(
         val line = ctx.id().start.line
 
         val kind = if (ctx.OBJ() != null) PropertyDef.PropertyKind.OBJECT else PropertyDef.PropertyKind.CLASS
-        val name = ctx.id().text!!
+        val name = ctx.id().getName()
         val type = if (ctx.type() != null) ctx.type().getType() else ctx.value().getTypeAndValue().type
         val value = Optional.ofNullable(ctx.value()?.getTypeAndValue()?.value)
 
@@ -107,8 +107,8 @@ class LoqiDomainBuilder private constructor(
 
     private fun processRelationshipDecl(clazz: ClassDef, ctx: RelationshipDeclContext) {
         val line = ctx.id().start.line
-        val name = ctx.id().text
-        val objTypeNames = ctx.idList().id().map { it.text }
+        val name = ctx.id().getName()
+        val objTypeNames = ctx.idList().id().map { it.getName() }
         val kind = ctx.relationshipKind()?.getRelationshipKind(clazz.name) ?: BaseRelationshipKind()
 
         val relationship = domainOpAt(line) {
@@ -119,7 +119,7 @@ class LoqiDomainBuilder private constructor(
 
     private fun processPropertyValueStatement(clazz: ClassDef, ctx: PropertyValueStatementContext) {
         val line = ctx.value().start.line
-        val name = ctx.id().text
+        val name = ctx.id().getName()
         val value = ctx.value().getTypeAndValue().value
 
         domainOpAt(line) { clazz.definedPropertyValues.add(ClassPropertyValueStatement(clazz, name, value)) }
@@ -127,12 +127,12 @@ class LoqiDomainBuilder private constructor(
 
     override fun visitEnumDecl(ctx: EnumDeclContext) {
         val line = ctx.id().start.line
-        val name = ctx.id().text
+        val name = ctx.id().getName()
 
         val enum = domainOpAt(line) { domain.enums.add(EnumDef(name)) }
 
         for (enumValueDecl in ctx.enumMemberList()?.enumMemberDecl() ?: emptyList()) {
-            val tmpValue = EnumValueDef(enum.name, enumValueDecl.id().text)
+            val tmpValue = EnumValueDef(enum.name, enumValueDecl.id().getName())
             val value = domainOpAt(enumValueDecl.start.line) { enum.values.add(tmpValue) }
             value.fillMetadata(enumValueDecl.metadataSection())
         }
@@ -142,8 +142,8 @@ class LoqiDomainBuilder private constructor(
 
     override fun visitObjDecl(ctx: ObjDeclContext) {
         val line = ctx.id(0).start.line
-        val name = ctx.id(0).text
-        val className = ctx.id(1).text
+        val name = ctx.id(0).getName()
+        val className = ctx.id(1).getName()
 
         val obj = domainOpAt(line) { domain.objects.add(ObjectDef(name, className)) }
 
@@ -160,14 +160,14 @@ class LoqiDomainBuilder private constructor(
 
         if (ctx.varLeftPart() != null) {
             for (varId in ctx.varLeftPart().idList().id()) {
-                domainOpAt(varId.start.line) { domain.variables.add(VariableDef(varId.text, obj.name)) }
+                domainOpAt(varId.start.line) { domain.variables.add(VariableDef(varId.getName(), obj.name)) }
             }
         }
     }
 
     private fun processPropertyValueStatement(obj: ObjectDef, ctx: PropertyValueStatementContext) {
         val line = ctx.value().start.line
-        val name = ctx.id().text
+        val name = ctx.id().getName()
         val value = ctx.value().getTypeAndValue().value
 
         domainOpAt(line) { obj.definedPropertyValues.add(ObjectPropertyValueStatement(obj, name, value)) }
@@ -175,16 +175,16 @@ class LoqiDomainBuilder private constructor(
 
     private fun processRelationshipLinkStatement(obj: ObjectDef, ctx: RelationshipLinkStatementContext) {
         val line = ctx.id().start.line
-        val name = ctx.id().text
-        val objNames = ctx.idList().id().map { it.text }
+        val name = ctx.id().getName()
+        val objNames = ctx.idList().id().map { it.getName() }
 
         domainOpAt(line) { obj.relationshipLinks.add(RelationshipLinkStatement(obj, name, objNames)) }
     }
 
     override fun visitVarDecl(ctx: VarDeclContext) {
-        val valueObjectName = ctx.id().text
+        val valueObjectName = ctx.id().getName()
         for (id in ctx.varLeftPart().idList().id()) {
-            domainOpAt(id.start.line) { domain.variables.add(VariableDef(id.text, valueObjectName)) }
+            domainOpAt(id.start.line) { domain.variables.add(VariableDef(id.getName(), valueObjectName)) }
         }
     }
 
@@ -200,9 +200,9 @@ class LoqiDomainBuilder private constructor(
 
     override fun visitAddClassDataDecl(ctx: AddClassDataDeclContext) {
         val syntheticClass = syntheticClass() //Костыль, потому что стейтменты не существует без владельца
-        val ref = ClassRef(ctx.id().text)
+        val ref = ClassRef(ctx.id().getName())
         val statements = ctx.propertyValueStatement().map { propertyValue ->
-            val name = propertyValue.id().text
+            val name = propertyValue.id().getName()
             val value = propertyValue.value().getTypeAndValue().value
             ClassPropertyValueStatement(syntheticClass, name, value)
         }
@@ -215,17 +215,21 @@ class LoqiDomainBuilder private constructor(
 
     //---------Вспомогательные функции-----------------
 
+    private fun IdContext.getName(): String {
+        return ID().text.removeSurrounding("`")
+    }
+
     private val SYNTHETIC = "LOQI_SYNTHETIC"
     private fun syntheticObj() = ObjectDef(SYNTHETIC, SYNTHETIC)
     private fun syntheticClass() = ClassDef(SYNTHETIC)
 
     private fun MetaRefContext.getRef(): DomainRef {
-        if (CLASS() != null) return ClassRef(id().text)
-        else if (ENUM() != null) return EnumRef(id().text)
-        else if (propertyRef() != null) return PropertyRef(propertyRef().id(0).text, propertyRef().id(1).text)
+        if (CLASS() != null) return ClassRef(id().getName())
+        else if (ENUM() != null) return EnumRef(id().getName())
+        else if (propertyRef() != null) return PropertyRef(propertyRef().id(0).getName(), propertyRef().id(1).getName())
         else if (relationshipRef() != null) return relationshipRef().getRef()
         else if (enumValueRef() != null) return enumValueRef().getRef()
-        else return ObjectRef(id().text)
+        else return ObjectRef(id().getName())
     }
 
     private fun MetaOwner.fillMetadata(ctx: MetadataSectionContext?) {
@@ -233,10 +237,10 @@ class LoqiDomainBuilder private constructor(
         for (metadataPropertyDecl in ctx.metadataPropertyDecl()) {
             val locCode =
                 if (metadataPropertyDecl.id().size == 2)
-                    Optional.of(metadataPropertyDecl.id(0).text)
+                    Optional.of(metadataPropertyDecl.id(0).getName())
                 else
                     Optional.empty()
-            val propName = metadataPropertyDecl.id().last().text
+            val propName = metadataPropertyDecl.id().last().getName()
 
             val value = metadataPropertyDecl.value().getTypeAndValue().value
 
@@ -249,9 +253,9 @@ class LoqiDomainBuilder private constructor(
         if (doubleType() != null) return DoubleType(doubleType().doubleRange()?.getRange() ?: AnyNumber)
         if (BOOL_TYPE() != null) return BooleanType()
         if (STRING_TYPE() != null) return StringType()
-        if (ID() != null) return EnumType(
+        if (id() != null) return EnumType(
             domain,
-            ID().text
+            id().getName()
         ) //тип свойства, указанный как идентификатор, может быть только ссылкой на енам
         throw ThisShouldNotHappen()
     }
@@ -314,7 +318,7 @@ class LoqiDomainBuilder private constructor(
             val type = getRelationshipDependencyType(relationshipDependency().relationshipDependencyType().text)
             val ref =
                 if (relationshipDependency().id() != null)
-                    RelationshipRef(currentClassName, relationshipDependency().id().text)
+                    RelationshipRef(currentClassName, relationshipDependency().id().getName())
                 else
                     relationshipDependency().relationshipRef().getRef()
             return DependantRelationshipKind(type, ref)
@@ -325,9 +329,9 @@ class LoqiDomainBuilder private constructor(
         }
     }
 
-    private fun EnumValueRefContext.getRef() = EnumValueRef(ID(0).text, ID(1).text)
+    private fun EnumValueRefContext.getRef() = EnumValueRef(id(0).getName(), id(1).getName())
 
-    private fun RelationshipRefContext.getRef() = RelationshipRef(id(0).text, id(1).text)
+    private fun RelationshipRefContext.getRef() = RelationshipRef(id(0).getName(), id(1).getName())
 
     private fun getRelationshipDependencyType(string: String): DependantRelationshipKind.Type {
         return when (string) {
