@@ -223,7 +223,7 @@ class LoqiDomainWriter private constructor(
         if (variables.isNotEmpty()) writeln("var ${variables.joinToString(", ")} = ")
 
         write("$OBJ ${name.toLoqiName()} : ${className.toLoqiName()}")
-        if (definedPropertyValues.isNotEmpty()) {
+        if (definedPropertyValues.isNotEmpty() || relationshipLinks.isNotEmpty()) {
             writeln(" {")
             indent()
             definedPropertyValues.forEach {
