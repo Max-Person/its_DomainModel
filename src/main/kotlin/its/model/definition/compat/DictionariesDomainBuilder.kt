@@ -4,6 +4,7 @@ import com.opencsv.CSVParserBuilder
 import com.opencsv.CSVReaderBuilder
 import its.model.definition.*
 import its.model.definition.LinkQuantifier.Companion.ANY_COUNT
+import its.model.definition.Utils.plus
 import its.model.models.*
 import java.io.File
 import java.io.Reader
@@ -75,17 +76,6 @@ class DictionariesDomainBuilder private constructor(
          */
         @JvmStatic
         fun buildDomain(directoryPath: String) = buildDomain(File(directoryPath).toURI().toURL())
-
-        @JvmStatic
-        private operator fun URL.plus(s: String): URL {
-            return URL(
-                this.protocol,
-                this.host,
-                this.port,
-                this.path + (if (this.path.endsWith("/")) "" else "/") + s + (if (this.query.isNullOrBlank()) "" else "?" + this.query),
-                null
-            )
-        }
     }
 
     private fun <T> domainOpAt(line: Int = -1, dict: String = "", expr: Callable<T>): T {

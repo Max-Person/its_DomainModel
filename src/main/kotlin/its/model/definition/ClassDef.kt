@@ -132,6 +132,21 @@ class ClassDef(
                 || domain.objects.any { obj -> obj.className == this.name } //есть экземпляры
 
 
+    val allProperties: List<PropertyDef>
+        get() {
+            val list = mutableListOf<PropertyDef>()
+            getInheritanceLineage().forEach { list.addAll(it.declaredProperties) }
+            return list
+        }
+
+    val allRelationships: List<RelationshipDef>
+        get() {
+            val list = mutableListOf<RelationshipDef>()
+            getInheritanceLineage().forEach { list.addAll(it.declaredRelationships) }
+            return list
+        }
+
+
     /**
      * Получить значение свойства с учетом наследования
      * @throws DomainNonConformityException если такого свойства не существует

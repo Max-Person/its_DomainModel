@@ -191,6 +191,12 @@ class RelationshipDef(
      */
     val isNAry: Boolean
         get() = objectClassNames.size > 1
+
+    val isUnordered: Boolean
+        get() = objectClassNames.toSet().size == 1 && !(kind is DependantRelationshipKind && kind.type in setOf(
+            DependantRelationshipKind.Type.CLOSER,
+            DependantRelationshipKind.Type.FURTHER,
+        ))
 }
 
 class RelationshipContainer(clazz: ClassDef) : ChildDefContainer<RelationshipDef, ClassDef>(clazz)

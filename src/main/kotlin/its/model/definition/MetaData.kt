@@ -72,25 +72,20 @@ class MetaData(
 
 /**
  * Свойство в метаданных
+ * @param name Имя свойства
+ * @param locCode Код локализации свойства (для локализируемых)
  */
 data class MetadataProperty(
-    /**
-     * Код локализации свойства (для локализируемых)
-     */
+    val name: String,
     val locCode: Optional<String> = Optional.empty(),
-
-    /**
-     * Имя свойства
-     */
-    val name: String
 ) {
 
     constructor(string: String) : this(
+        if (string.split(".", limit = 2).size < 2) string
+        else string.split(".", limit = 2)[1],
+
         if (string.split(".", limit = 2).size < 2) Optional.empty()
         else Optional.of(string.split(".", limit = 2)[0]),
-
-        if (string.split(".", limit = 2).size < 2) string
-        else string.split(".", limit = 2)[1]
     )
 }
 

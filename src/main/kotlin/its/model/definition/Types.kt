@@ -35,13 +35,15 @@ class DoubleType(
 
 class StringType : Type<String>(String::class)
 
+
+typealias EnumValue = EnumValueRef
 class EnumType(
     val domain: Domain,
     val enumName: String,
-) : Type<EnumValueRef>(EnumValueRef::class) {
+) : Type<EnumValue>(EnumValue::class) {
     override fun fits(value: Any): Boolean {
         if (!super.fits(value)) return false
-        val enumValue = value as EnumValueRef
+        val enumValue = value as EnumValue
 
         val enumOpt = EnumRef(enumName).findIn(domain) as Optional<EnumDef>
         checkKnown(
