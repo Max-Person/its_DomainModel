@@ -67,11 +67,11 @@ class LoqiDomainWriter private constructor(
     private fun writeClassSection() {
         if (domain.classes.isEmpty()) return
         writeCommentDelimiter("static (class) section")
-        domain.enums.forEach {
+        domain.enums.sortedBy { it.name }.forEach {
             it.writeEnum()
             skipLines()
         }
-        domain.classes.forEach {
+        domain.classes.sortedBy { it.parentName.orElse("!") + it.name }.forEach {
             it.writeClass()
             skipLines()
         }
@@ -212,7 +212,7 @@ class LoqiDomainWriter private constructor(
     private fun writeObjectSection() {
         if (domain.objects.isEmpty()) return
         writeCommentDelimiter("object section")
-        domain.objects.forEach {
+        domain.objects.sortedBy { it.className + it.name }.forEach {
             it.writeObject()
             skipLines()
         }
@@ -244,7 +244,7 @@ class LoqiDomainWriter private constructor(
     }
 
     private fun RelationshipLinkStatement.writeRelationshipLink() {
-        write("${relationshipName.toLoqiName()}(${objectNames.map { it.toLoqiName() }.joinToString(",")}) ;")
+        write("${relationshipName.toLoqiName()}(${objectNames.map { it.toLoqiName() }.joinToString(", ")}) ;")
     }
 
     private fun writeVariableSection() {
