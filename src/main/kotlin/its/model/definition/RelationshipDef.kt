@@ -114,8 +114,8 @@ class RelationshipDef(
                         )
 
                         RelationshipModel.ScaleType.Partial -> results.checkValid(
-                            kind.quantifier.isEmpty || kind.quantifier.get().subjCount == 1,
-                            "$description has to be quantified as one-to-many ( {1->...} ) as it is declared as $scaleType"
+                            kind.quantifier.isEmpty || kind.quantifier.get().objCount == 1,
+                            "$description has to be quantified as many-to-one ( {...->1} ) as it is declared as $scaleType"
                         )
                     }
                 }
