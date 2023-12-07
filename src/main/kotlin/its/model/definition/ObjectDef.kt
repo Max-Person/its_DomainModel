@@ -8,69 +8,28 @@ import java.util.*
 class ObjectDef(
     override val name: String,
     val className: String,
-) : DomainDefWithMeta<ObjectDef>(), MetaInheritor {
+) : ClassInheritorDef<ObjectDef>() {
 
-    override val inheritFrom
-        get() = Optional.of(clazz as MetaInheritor)
+    override val parentClassName: Optional<String>
+        get() = Optional.of(className)
+
     override val description = "object $name"
     override val reference = ObjectRef(name)
 
     /**
      * Значения свойств для данного объекта
      */
-    internal val definedPropertyValues = ObjectPropertyValueStatements(this)
+    override val definedPropertyValues = ObjectPropertyValueStatements(this)
 
     /**
      * Связи данного объекта с другими
      */
     val relationshipLinks = RelationshipLinkStatements(this)
 
-    /**
-     * Для валидации - получить класс этого объекта,
-     * или добавить сообщение о его неизвестности в [results]
-     */
-    internal fun getKnownClass(results: DomainValidationResults): Optional<ClassDef> {
-        val clazzOpt = domain.classes.get(className)
-        results.checkKnown(
-            clazzOpt.isPresent,
-            "No class definition '$className' found to be defined as $description's class"
-        )
-        return clazzOpt
-    }
-
-    /**
-     * Для валидации - получить известную цепочку классов объекта
-     * добавляя сообщение о неизвестных родителях в [results], если такие есть
-     */
-    internal fun getKnownInheritanceLineage(results: DomainValidationResults): List<ClassDef> {
-        return getKnownClass(results).map { it.getKnownInheritanceLineage(results) }.orElse(emptyList())
-    }
-
-    /**
-     * Валидация - найти определение свойства по имени; любые ошибки кладутся в [results]
-     */
-    internal fun findPropertyDef(propertyName: String, results: DomainValidationResults): Optional<PropertyDef> {
-        val clazz = getKnownClass(results)
-        if (clazz.isPresent) return clazz.get().findPropertyDef(propertyName, results)
-        return Optional.empty()
-    }
-
-    /**
-     * Валидация - найти определение отношения по имени; любые ошибки кладутся в [results]
-     */
-    internal fun findRelationshipDef(
-        propertyName: String,
-        results: DomainValidationResults
-    ): Optional<RelationshipDef> {
-        val clazz = getKnownClass(results)
-        if (clazz.isPresent) return clazz.get().findRelationshipDef(propertyName, results)
-        return Optional.empty()
-    }
-
     override fun validate(results: DomainValidationResults) {
         super.validate(results)
 
-        getKnownClass(results)
+        getKnownParentClass(results)
 
         definedPropertyValues.validate(results)
         relationshipLinks.validate(results)
@@ -98,34 +57,18 @@ class ObjectDef(
      * Класс данного объекта
      */
     val clazz: ClassDef
-        get() = getKnownClass(DomainValidationResultsThrowImmediately()).get()
-
-    /**
-     * Получить цепочку классов объекта
-     */
-    fun getInheritanceLineage() = getKnownInheritanceLineage(DomainValidationResultsThrowImmediately())
+        get() = parentClass.get()
 
     /**
      * Является ли экземпляром класса
+     *
+     * (alias для [inheritsFrom])
      */
-    fun isInstance(className: String) = getInheritanceLineage().any { it.name == className }
-    fun isInstance(classDef: ClassDef) = getInheritanceLineage().contains(classDef)
-
+    fun isInstanceOf(className: String) = inheritsFrom(className)
     /**
-     * Получить значение свойства с учетом наследования
-     * @throws DomainNonConformityException если такого свойства не существует
+     * @see isInstanceOf
      */
-    fun getPropertyValue(propertyName: String): Any {
-        checkConforming(
-            findPropertyDef(propertyName, DomainValidationResultsThrowImmediately()).isPresent,
-            "No property $propertyName exists for $description"
-        )
-        for (clazz in getInheritanceLineage()) {
-            val found = definedPropertyValues.get(propertyName)
-            if (found.isPresent) return found.get()
-        }
-        throw ThisShouldNotHappen()
-    }
+    fun isInstanceOf(classDef: ClassDef) = inheritsFrom(classDef)
 }
 
 class ObjectContainer(domain: Domain) : RootDefContainer<ObjectDef>(domain)

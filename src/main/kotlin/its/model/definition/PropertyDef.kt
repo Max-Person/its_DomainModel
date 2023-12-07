@@ -18,6 +18,14 @@ class PropertyDef(
     enum class PropertyKind {
         CLASS,
         OBJECT,
+        ;
+
+        fun fits(valueOwner: ClassInheritorDef<*>): Boolean {
+            return when (this) {
+                CLASS -> valueOwner is ClassDef
+                OBJECT -> valueOwner is ObjectDef
+            }
+        }
     }
 
     /**

@@ -23,10 +23,10 @@ class MetaData(
         return if (declaredValues.containsKey(key)) {
             Optional.of(declaredValues[key]!!)
         } else if (
-            owner is MetaInheritor
-            && owner.inheritFrom.isPresent
+            owner is ClassInheritorDef<*>
+            && owner.parentClass.isPresent
         ) {
-            owner.inheritFrom.get().metadata.get(key)
+            owner.parentClass.get().metadata.get(key)
         } else {
             Optional.empty<Any>()
         }
@@ -106,11 +106,4 @@ sealed class DomainDefWithMeta<Self : DomainDefWithMeta<Self>> : DomainDef<Self>
         super.addMerge(other)
         this.metadata.addAll(other.metadata)
     }
-}
-
-interface MetaInheritor : MetaOwner {
-    /**
-     * Из какого элемента наследовать метаданные
-     */
-    val inheritFrom: Optional<MetaInheritor>
 }

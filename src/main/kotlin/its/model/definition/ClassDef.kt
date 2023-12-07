@@ -8,10 +8,11 @@ import java.util.*
 class ClassDef(
     override val name: String,
     val parentName: Optional<String> = Optional.empty(),
-) : DomainDefWithMeta<ClassDef>(), MetaInheritor {
+) : ClassInheritorDef<ClassDef>() {
 
-    override val inheritFrom
-        get() = parent as Optional<MetaInheritor>
+    override val parentClassName: Optional<String>
+        get() = parentName
+
     override val description = "class $name"
     override val reference = ClassRef(name)
 
@@ -28,65 +29,8 @@ class ClassDef(
     /**
      * Значения для свойств, указанные в данном классе
      */
-    internal val definedPropertyValues = ClassPropertyValueStatements(this)
+    override val definedPropertyValues = ClassPropertyValueStatements(this)
 
-    /**
-     * Для валидации - получить родителя класса,
-     * или добавить сообщение о его неизвестности в [results]
-     */
-    internal fun getKnownParent(results: DomainValidationResults): Optional<ClassDef> {
-        if (!parentName.isPresent) return Optional.empty()
-
-        val clazzOpt = domain.classes.get(parentName.get())
-        results.checkKnown(
-            clazzOpt.isPresent,
-            "No class definition '${parentName.get()}' found to be defined as $name's parent class"
-        )
-        return clazzOpt
-    }
-
-    /**
-     * Для валидации - получить известную цепочку родителей класса, включая его самого,
-     * добавляя сообщение о неизвестных родителях в [results], если такие есть
-     */
-    internal fun getKnownInheritanceLineage(results: DomainValidationResults): List<ClassDef> {
-        val lineage = mutableListOf<ClassDef>()
-        var p = Optional.of(this)
-        while (p.isPresent) {
-            lineage.add(p.get())
-            p = p.get().getKnownParent(results)
-            if (p.isPresent && p.get() === this) {
-                results.invalid("$description is a supertype of itself (lineage is ${lineage.map { it.name }})")
-                break
-            }
-        }
-        return lineage
-    }
-
-    /**
-     * Валидация - найти определение свойства по имени; любые ошибки кладутся в [results]
-     */
-    internal fun findPropertyDef(propertyName: String, results: DomainValidationResults): Optional<PropertyDef> {
-        for (clazz in getKnownInheritanceLineage(results)) {
-            val found = clazz.declaredProperties.get(propertyName)
-            if (found.isPresent) return found
-        }
-        return Optional.empty()
-    }
-
-    /**
-     * Валидация - найти определение отношения по имени; любые ошибки кладутся в [results]
-     */
-    internal fun findRelationshipDef(
-        relationshipName: String,
-        results: DomainValidationResults
-    ): Optional<RelationshipDef> {
-        for (clazz in getKnownInheritanceLineage(results)) {
-            val found = clazz.declaredRelationships.get(relationshipName)
-            if (found.isPresent) return found
-        }
-        return Optional.empty()
-    }
 
     override fun validate(results: DomainValidationResults) {
         super.validate(results)
@@ -120,15 +64,16 @@ class ClassDef(
     //---Операции (на валидном домене)---
 
     /**
-     * Родитель этого класса
+     * Является ли подтипом класса
+     *
+     * (alias для [inheritsFrom])
      */
-    val parent: Optional<ClassDef>
-        get() = getKnownParent(DomainValidationResultsThrowImmediately())
+    fun isSubclassOf(className: String) = inheritsFrom(className)
 
     /**
-     * Получить цепочку родителей класса, **включая его самого**
+     * @see isSubclassOf
      */
-    fun getInheritanceLineage() = getKnownInheritanceLineage(DomainValidationResultsThrowImmediately())
+    fun isSubclassOf(classDef: ClassDef) = inheritsFrom(classDef)
 
     /**
      * Прямые классы-наследники данного класса
@@ -148,38 +93,6 @@ class ClassDef(
     val isConcrete: Boolean
         get() = domain.classes.none { clazz -> clazz.parentName.map { it == this.name }.orElse(false) } //Нет детей
                 || domain.objects.any { obj -> obj.className == this.name } //есть экземпляры
-
-
-    val allProperties: List<PropertyDef>
-        get() {
-            val list = mutableListOf<PropertyDef>()
-            getInheritanceLineage().forEach { list.addAll(it.declaredProperties) }
-            return list
-        }
-
-    val allRelationships: List<RelationshipDef>
-        get() {
-            val list = mutableListOf<RelationshipDef>()
-            getInheritanceLineage().forEach { list.addAll(it.declaredRelationships) }
-            return list
-        }
-
-
-    /**
-     * Получить значение свойства с учетом наследования
-     * @throws DomainNonConformityException если такого свойства не существует
-     */
-    fun getPropertyValue(propertyName: String): Any {
-        checkConforming(
-            findPropertyDef(propertyName, DomainValidationResultsThrowImmediately()).isPresent,
-            "No property $propertyName exists for $description"
-        )
-        for (clazz in getInheritanceLineage()) {
-            val found = definedPropertyValues.get(propertyName)
-            if (found.isPresent) return found.get()
-        }
-        throw ThisShouldNotHappen()
-    }
 
 }
 

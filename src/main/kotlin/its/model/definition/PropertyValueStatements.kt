@@ -5,22 +5,14 @@ import java.util.*
 /**
  * Утверждение о значении свойства
  */
-abstract class PropertyValueStatement<Owner>(
+class PropertyValueStatement<Owner : ClassInheritorDef<Owner>>(
     override val owner: Owner,
     val propertyName: String,
     val value: Any,
-) : Statement<Owner>() where Owner : DomainDef<Owner> {
+) : Statement<Owner>() {
+    override fun copyForOwner(owner: Owner) = PropertyValueStatement(owner, propertyName, value)
 
     override val description = "statement ${owner.name}.$propertyName = $value"
-
-    //FIXME подумать над тем, не вынести ли это в интерфейс для классов и объектов
-    protected abstract fun Owner.getPropertyValues(): PropertyValueStatements<Owner>
-    protected abstract fun Owner.findPropertyDef(
-        propertyName: String,
-        results: DomainValidationResults
-    ): Optional<PropertyDef>
-
-    protected abstract fun PropertyDef.PropertyKind.fits(owner: Owner): Boolean
 
     override fun validate(results: DomainValidationResults) {
         //Существование свойства
@@ -42,7 +34,7 @@ abstract class PropertyValueStatement<Owner>(
         try {
             //Соответствие типа значению
             results.checkValid(
-                property.type.fits(value),
+                property.type.fits(value, domain),
                 "Type of ${property.description} (${property.type}) does not " +
                         "fit the value '$value' defined in ${owner.description}"
             )
@@ -55,47 +47,13 @@ abstract class PropertyValueStatement<Owner>(
     }
 }
 
-class ClassPropertyValueStatement(
-    owner: ClassDef,
-    propertyName: String,
-    value: Any,
-) : PropertyValueStatement<ClassDef>(owner, propertyName, value) {
-    override fun ClassDef.getPropertyValues() = definedPropertyValues
-    override fun ClassDef.findPropertyDef(
-        propertyName: String,
-        results: DomainValidationResults
-    ): Optional<PropertyDef> {
-        return findPropertyDef(propertyName, results)
-    }
-
-    override fun PropertyDef.PropertyKind.fits(owner: ClassDef) = this == PropertyDef.PropertyKind.CLASS
-
-    override fun copyForOwner(owner: ClassDef) = ClassPropertyValueStatement(owner, propertyName, value)
-}
+typealias ClassPropertyValueStatement = PropertyValueStatement<ClassDef>
+typealias ObjectPropertyValueStatement = PropertyValueStatement<ObjectDef>
 
 
-class ObjectPropertyValueStatement(
-    owner: ObjectDef,
-    propertyName: String,
-    value: Any,
-) : PropertyValueStatement<ObjectDef>(owner, propertyName, value) {
-    override fun ObjectDef.getPropertyValues() = definedPropertyValues
-    override fun ObjectDef.findPropertyDef(
-        propertyName: String,
-        results: DomainValidationResults
-    ): Optional<PropertyDef> {
-        return findPropertyDef(propertyName, results)
-    }
-
-    override fun PropertyDef.PropertyKind.fits(owner: ObjectDef) = this == PropertyDef.PropertyKind.OBJECT
-
-    override fun copyForOwner(owner: ObjectDef) = ObjectPropertyValueStatement(owner, propertyName, value)
-}
-
-
-abstract class PropertyValueStatements<Owner>(
+class PropertyValueStatements<Owner : ClassInheritorDef<Owner>>(
     owner: Owner,
-) : Statements<Owner, PropertyValueStatement<Owner>>(owner) where Owner : DomainDef<Owner> {
+) : Statements<Owner, PropertyValueStatement<Owner>>(owner) {
     protected val map = mutableMapOf<String, PropertyValueStatement<Owner>>()
     override fun iterator() = map.values.iterator()
     override fun addToInner(statement: PropertyValueStatement<Owner>) {
@@ -113,6 +71,27 @@ abstract class PropertyValueStatements<Owner>(
         return Optional.ofNullable(map[propertyName])
     }
 
+    override fun validate(results: DomainValidationResults) {
+        super.validate(results)
+
+        if (owner is ClassDef && !owner.isConcrete) return
+        //Определяет все нужные свойства
+        val topDownLineage = owner.getKnownInheritanceLineage(results).reversed()
+        val undefinedClassProperties = mutableSetOf<PropertyDef>()
+        for (clazz in topDownLineage) {
+            undefinedClassProperties.addAll(clazz.declaredProperties.filter { it.kind.fits(owner) })
+            undefinedClassProperties.removeIf {
+                it.kind.fits(clazz) && clazz.definedPropertyValues.get(it.name).isPresent
+            }
+        }
+        for (undefinedProperty in undefinedClassProperties) {
+            results.checkKnown(
+                get(undefinedProperty.name).isPresent,
+                "${owner.description} does not define a value for ${undefinedProperty.description}"
+            )
+        }
+    }
+
     override val size: Int
         get() = map.size
 
@@ -124,46 +103,5 @@ abstract class PropertyValueStatements<Owner>(
     override fun isEmpty() = map.isEmpty()
 }
 
-
-class ClassPropertyValueStatements(
-    owner: ClassDef
-) : PropertyValueStatements<ClassDef>(owner) {
-    override fun validate(results: DomainValidationResults) {
-        super.validate(results)
-
-        if (!owner.isConcrete) return
-        //Определяет все нужные свойства
-        val topDownLineage = owner.getKnownInheritanceLineage(results).minusElement(owner).reversed()
-        val undefinedClassProperties = mutableSetOf<PropertyDef>()
-        for (clazz in topDownLineage) {
-            undefinedClassProperties.addAll(clazz.declaredProperties.filter { it.kind == PropertyDef.PropertyKind.CLASS })
-            undefinedClassProperties.removeIf { clazz.definedPropertyValues.get(it.name).isPresent }
-        }
-        for (undefinedProperty in undefinedClassProperties) {
-            results.checkKnown(
-                get(undefinedProperty.name).isPresent,
-                "${owner.description} does not define a value for ${undefinedProperty.description}"
-            )
-        }
-    }
-}
-
-class ObjectPropertyValueStatements(
-    owner: ObjectDef
-) : PropertyValueStatements<ObjectDef>(owner) {
-    override fun validate(results: DomainValidationResults) {
-        super.validate(results)
-
-        //Определяет все нужные свойства
-        val lineage = owner.getKnownInheritanceLineage(results)
-        for (clazz in lineage) {
-            val objProperties = clazz.declaredProperties.filter { it.kind == PropertyDef.PropertyKind.OBJECT }
-            for (undefinedProperty in objProperties) {
-                results.checkKnown(
-                    get(undefinedProperty.name).isPresent,
-                    "${owner.description} does not define a value for ${undefinedProperty.description}"
-                )
-            }
-        }
-    }
-}
+typealias ClassPropertyValueStatements = PropertyValueStatements<ClassDef>
+typealias ObjectPropertyValueStatements = PropertyValueStatements<ObjectDef>
