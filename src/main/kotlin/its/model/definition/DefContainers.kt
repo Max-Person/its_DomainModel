@@ -5,7 +5,7 @@ import java.util.*
 /**
  * Хранилище определений в домене
  */
-sealed class DefContainer<T : DomainDef> : DomainElement(), Collection<T> {
+sealed class DefContainer<T : DomainDef<T>> : DomainElement(), Collection<T> {
     private val values: MutableMap<String, T> = mutableMapOf()
     override fun iterator() = values.values.iterator()
 
@@ -48,12 +48,12 @@ sealed class DefContainer<T : DomainDef> : DomainElement(), Collection<T> {
         val added = if (belongsToDomain.isPresent && belongsToDomain.get() == domain) {
             def
         } else {
-            def.copyForDomain(domain) as T
+            def.copyForDomain(domain)
         }
         added.validateAndThrowInvalid()
 
         //добавление
-        if (added is DomainDefWithMeta) {
+        if (added is DomainDefWithMeta<*>) {
             domain.separateMetadata.claimIfPresent(added)
         }
         values[added.name] = added
@@ -97,11 +97,12 @@ sealed class DefContainer<T : DomainDef> : DomainElement(), Collection<T> {
     }
 }
 
-sealed class RootDefContainer<T : DomainDef>(override val domain: Domain) : DefContainer<T>() {
+sealed class RootDefContainer<T : DomainDef<T>>(override val domain: Domain) : DefContainer<T>() {
     override fun KEY_REPEAT_MESSAGE(def: T) = "Domain already contains definition for ${def.description}"
 }
 
-sealed class ChildDefContainer<T : DomainDef, Owner : DomainDef>(private val owner: Owner) : DefContainer<T>() {
+sealed class ChildDefContainer<T : DomainDef<T>, Owner : DomainDef<Owner>>(private val owner: Owner) :
+    DefContainer<T>() {
     override val domain: Domain
         get() = owner.domain
 

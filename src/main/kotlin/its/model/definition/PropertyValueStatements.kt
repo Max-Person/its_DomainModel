@@ -9,7 +9,7 @@ abstract class PropertyValueStatement<Owner>(
     override val owner: Owner,
     val propertyName: String,
     val value: Any,
-) : Statement<Owner>() where Owner : DomainDef {
+) : Statement<Owner>() where Owner : DomainDef<Owner> {
 
     override val description = "statement ${owner.name}.$propertyName = $value"
 
@@ -95,7 +95,7 @@ class ObjectPropertyValueStatement(
 
 abstract class PropertyValueStatements<Owner>(
     owner: Owner,
-) : Statements<Owner, PropertyValueStatement<Owner>>(owner) where Owner : DomainDef {
+) : Statements<Owner, PropertyValueStatement<Owner>>(owner) where Owner : DomainDef<Owner> {
     protected val map = mutableMapOf<String, PropertyValueStatement<Owner>>()
     override fun iterator() = map.values.iterator()
     override fun addToInner(statement: PropertyValueStatement<Owner>) {

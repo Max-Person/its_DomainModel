@@ -8,7 +8,7 @@ import java.util.*
 class ObjectDef(
     override val name: String,
     val className: String,
-) : DomainDefWithMeta(), MetaInheritor {
+) : DomainDefWithMeta<ObjectDef>(), MetaInheritor {
 
     override val inheritFrom
         get() = Optional.of(clazz as MetaInheritor)
@@ -80,16 +80,14 @@ class ObjectDef(
 
     override fun plainCopy() = ObjectDef(name, className)
 
-    override fun mergeEquals(other: DomainDef): Boolean {
+    override fun mergeEquals(other: ObjectDef): Boolean {
         if (!super.mergeEquals(other)) return false
-        other as ObjectDef
         return name == other.name
                 && className == other.className
     }
 
-    override fun addMerge(other: DomainDef) {
+    override fun addMerge(other: ObjectDef) {
         super.addMerge(other)
-        other as ObjectDef
         definedPropertyValues.addAll(other.definedPropertyValues)
         relationshipLinks.addAll(other.relationshipLinks)
     }
@@ -134,8 +132,8 @@ class ObjectContainer(domain: Domain) : RootDefContainer<ObjectDef>(domain)
 
 class ObjectRef(
     val objectName: String,
-) : DomainRef {
-    override fun findIn(domain: Domain) = domain.objects.get(objectName) as Optional<DomainDefWithMeta>
+) : DomainRef<ObjectDef> {
+    override fun findIn(domain: Domain) = domain.objects.get(objectName)
     override fun toString() = "object $objectName"
 
     override fun equals(other: Any?): Boolean {

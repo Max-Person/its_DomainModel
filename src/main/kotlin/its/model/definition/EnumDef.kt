@@ -7,7 +7,7 @@ import java.util.*
  */
 class EnumDef(
     override val name: String,
-) : DomainDefWithMeta() {
+) : DomainDefWithMeta<EnumDef>() {
 
     override val description = "enum $name"
     override val reference = EnumRef(name)
@@ -21,15 +21,13 @@ class EnumDef(
 
     override fun plainCopy() = EnumDef(name)
 
-    override fun mergeEquals(other: DomainDef): Boolean {
+    override fun mergeEquals(other: EnumDef): Boolean {
         if (!super.mergeEquals(other)) return false
-        other as EnumDef
         return name == other.name
     }
 
-    override fun addMerge(other: DomainDef) {
+    override fun addMerge(other: EnumDef) {
         super.addMerge(other)
-        other as EnumDef
         values.addAllMerge(other.values)
     }
 
@@ -39,8 +37,8 @@ class EnumContainer(domain: Domain) : RootDefContainer<EnumDef>(domain)
 
 class EnumRef(
     val enumName: String,
-) : DomainRef {
-    override fun findIn(domain: Domain) = domain.enums.get(enumName) as Optional<DomainDefWithMeta>
+) : DomainRef<EnumDef> {
+    override fun findIn(domain: Domain) = domain.enums.get(enumName)
     override fun toString() = "enum $enumName"
 
     override fun equals(other: Any?): Boolean {

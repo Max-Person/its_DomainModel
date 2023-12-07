@@ -70,7 +70,7 @@ class EnumType(
         if (!super.fits(value)) return false
         val enumValue = value as EnumValue
 
-        val enumOpt = EnumRef(enumName).findIn(inDomain) as Optional<EnumDef>
+        val enumOpt = EnumRef(enumName).findIn(inDomain)
         checkKnown(
             enumOpt.isPresent,
             "No enum definition '${enumName}' found to check if a value fits to a enum type"

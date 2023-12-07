@@ -5,13 +5,13 @@ import java.util.*
 /**
  * Именованное определение внутри домена
  */
-sealed class DomainDef : DomainElement(), Cloneable {
+sealed class DomainDef<Self : DomainDef<Self>> : DomainElement(), Cloneable {
     /**
      * Имя данного определения
      */
     abstract val name: String
     override fun toString() = description
-    internal abstract val reference: DomainRef
+    internal abstract val reference: DomainRef<Self>
 
     private var _domain: Domain? = null
     internal val belongsToDomain: Optional<Domain>
@@ -36,9 +36,9 @@ sealed class DomainDef : DomainElement(), Cloneable {
      * Создать глубокую копию данного определения;
      * Копия не принадлежит ни к какому домену и полностью повторяет состояние данного определения
      */
-    fun deepCopy() = plainCopy().also { it.addMerge(this) }
+    fun deepCopy() = plainCopy().also { it.addMerge(this as Self) }
 
-    internal fun copyForDomain(domain: Domain) = plainCopy().also { it.domain = domain; it.addMerge(this) }
+    internal fun copyForDomain(domain: Domain) = plainCopy().also { it.domain = domain; it.addMerge(this as Self) }
 
     /**
      * Создать базовую копию данного определения;
@@ -46,13 +46,13 @@ sealed class DomainDef : DomainElement(), Cloneable {
      * кроме основных зарактеристик (параметров основного конструктора)
      * @return копия - определение того же типа, что и данное, такое что `copy.mergeEquals(this) == true`
      */
-    abstract fun plainCopy(): DomainDef
+    abstract fun plainCopy(): Self
 
     /**
      * Являются ли определения одинаковыми по основным характеристикам - возможно ли слияние между ними
      * @see addMerge
      */
-    open fun mergeEquals(other: DomainDef): Boolean {
+    open fun mergeEquals(other: Self): Boolean {
         return this.reference == other.reference
     }
 
@@ -61,7 +61,7 @@ sealed class DomainDef : DomainElement(), Cloneable {
      * Должно использоваться, только если `this.mergeEquals(other) == true`
      * @see mergeEquals
      */
-    open fun addMerge(other: DomainDef) {
+    open fun addMerge(other: Self) {
         preventMisuse(
             this.mergeEquals(other),
             "'addMerge()' should only be called if both defs are 'merge equal'. Use 'mergeEquals' to check"
@@ -85,15 +85,14 @@ sealed class DomainDef : DomainElement(), Cloneable {
 
 /**
  * Ссылка на определение в домене - минимальная необходимая информация, чтобы найти данный элемент
- * TODO? Добавить дженерик-типизацию для того, на что оно ссылается
  */
-sealed interface DomainRef {
+sealed interface DomainRef<Def : DomainDef<Def>> {
     /**
      * Найти в домене [domain] определение, на которое ссылается эта ссылка, если оно есть
      */
-    fun findIn(domain: Domain): Optional<DomainDefWithMeta>
+    fun findIn(domain: Domain): Optional<Def>
 
-    fun findInOrUnkown(domain: Domain): DomainDefWithMeta {
+    fun findInOrUnkown(domain: Domain): Def {
         val found = findIn(domain)
         checkKnown(
             found.isPresent,

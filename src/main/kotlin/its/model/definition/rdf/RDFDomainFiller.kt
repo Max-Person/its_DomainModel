@@ -164,7 +164,7 @@ class RDFDomainFiller protected constructor(
     }
 
 
-    private fun fillMeta(def: DomainDefWithMeta, resource: Resource, nonMetaProperties: Set<Property>) {
+    private fun fillMeta(def: DomainDefWithMeta<*>, resource: Resource, nonMetaProperties: Set<Property>) {
         //Считаем метаданными все, кроме уже известных и использованных свойств
         val assumedMetaRdfStatements = resource.listProperties().filterKeep {
             val prop = it.predicate

@@ -5,7 +5,7 @@ import java.util.*
 class VariableDef(
     override val name: String,
     val valueObjectName: String,
-) : DomainDef() {
+) : DomainDef<VariableDef>() {
     override val description = "variable $name"
     override val reference = VariableRef(name)
 
@@ -37,8 +37,8 @@ class VariableContainer(domain: Domain) : RootDefContainer<VariableDef>(domain)
 
 class VariableRef(
     val varName: String,
-) : DomainRef {
-    override fun findIn(domain: Domain) = domain.variables.get(varName) as Optional<DomainDefWithMeta>
+) : DomainRef<VariableDef> {
+    override fun findIn(domain: Domain) = domain.variables.get(varName)
     override fun toString() = "variable $varName"
 
     override fun equals(other: Any?): Boolean {

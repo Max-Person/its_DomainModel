@@ -100,11 +100,10 @@ interface MetaOwner {
     val description: String
 }
 
-sealed class DomainDefWithMeta : DomainDef(), MetaOwner {
+sealed class DomainDefWithMeta<Self : DomainDefWithMeta<Self>> : DomainDef<Self>(), MetaOwner {
     override val metadata = MetaData(this)
-    override fun addMerge(other: DomainDef) {
+    override fun addMerge(other: Self) {
         super.addMerge(other)
-        other as DomainDefWithMeta
         this.metadata.addAll(other.metadata)
     }
 }

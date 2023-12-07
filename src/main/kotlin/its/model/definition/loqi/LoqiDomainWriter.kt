@@ -297,7 +297,7 @@ class LoqiDomainWriter private constructor(
         }
     }
 
-    private fun writeSeparateMetadata(ref: DomainRef, metadata: MetaData) {
+    private fun writeSeparateMetadata(ref: DomainRef<*>, metadata: MetaData) {
         if (metadata.isEmpty()) return
         write("meta for ${ref.toLoqiString()}")
         metadata.writeMetadata()
@@ -348,7 +348,7 @@ class LoqiDomainWriter private constructor(
         return if (!this.isSimpleLoqiName()) "`$this`" else this
     }
 
-    private fun DomainRef.toLoqiString(): String {
+    private fun DomainRef<*>.toLoqiString(): String {
         return when (this) {
             is ClassRef -> "class ${className.toLoqiName()}"
             is EnumRef -> "enum ${enumName.toLoqiName()}"
@@ -356,6 +356,7 @@ class LoqiDomainWriter private constructor(
             is ObjectRef -> "obj ${objectName.toLoqiName()}"
             is PropertyRef -> "${className.toLoqiName()}.${propertyName.toLoqiName()}"
             is RelationshipRef -> "${className.toLoqiName()}->${relationshipName.toLoqiName()}"
+            is VariableRef -> throw ThisShouldNotHappen()
         }
     }
 

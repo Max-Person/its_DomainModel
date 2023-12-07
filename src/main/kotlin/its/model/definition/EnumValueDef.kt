@@ -8,7 +8,7 @@ import java.util.*
 class EnumValueDef(
     val enumName: String,
     override val name: String,
-) : DomainDefWithMeta() {
+) : DomainDefWithMeta<EnumValueDef>() {
 
     override val description = "enum value $enumName:$name"
     override val reference = EnumValueRef(enumName, name)
@@ -17,9 +17,8 @@ class EnumValueDef(
 
     override fun plainCopy() = EnumValueDef(enumName, name)
 
-    override fun mergeEquals(other: DomainDef): Boolean {
+    override fun mergeEquals(other: EnumValueDef): Boolean {
         if (!super.mergeEquals(other)) return false
-        other as EnumValueDef
         return enumName == other.enumName
                 && name == other.name
     }
@@ -37,11 +36,11 @@ class EnumValueContainer(enum: EnumDef) : ChildDefContainer<EnumValueDef, EnumDe
 class EnumValueRef(
     val enumName: String,
     val valueName: String,
-) : DomainRef {
-    override fun findIn(domain: Domain): Optional<DomainDefWithMeta> {
-        val enumOpt = EnumRef(enumName).findIn(domain) as Optional<EnumDef>
+) : DomainRef<EnumValueDef> {
+    override fun findIn(domain: Domain): Optional<EnumValueDef> {
+        val enumOpt = EnumRef(enumName).findIn(domain)
         if (!enumOpt.isPresent) return Optional.empty()
-        return enumOpt.get().values.get(valueName) as Optional<DomainDefWithMeta>
+        return enumOpt.get().values.get(valueName)
     }
 
     override fun toString() = "$enumName:$valueName"

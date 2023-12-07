@@ -228,7 +228,7 @@ class LoqiDomainBuilder private constructor(
     private fun syntheticObj() = ObjectDef(SYNTHETIC, SYNTHETIC)
     private fun syntheticClass(name: String) = ClassDef(name, Optional.of(SYNTHETIC))
 
-    private fun MetaRefContext.getRef(): DomainRef {
+    private fun MetaRefContext.getRef(): DomainRef<*> {
         if (CLASS() != null) return ClassRef(id().getName())
         else if (ENUM() != null) return EnumRef(id().getName())
         else if (propertyRef() != null) return PropertyRef(propertyRef().id(0).getName(), propertyRef().id(1).getName())

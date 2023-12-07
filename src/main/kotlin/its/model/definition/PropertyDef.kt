@@ -10,7 +10,7 @@ class PropertyDef(
     override val name: String,
     val type: Type<*>,
     val kind: PropertyKind,
-) : DomainDefWithMeta() {
+) : DomainDefWithMeta<PropertyDef>() {
 
     override val description = "${kind.toString().lowercase()} property $declaringClassName.$name"
     override val reference = PropertyRef(declaringClassName, name)
@@ -42,8 +42,8 @@ class PropertyDef(
         //Существование енама
         if (type is EnumType) {
             results.checkKnown(
-                domain.enums.get((type as EnumType).enumName).isPresent,
-                "No enum definition '${(type as EnumType).enumName}' found"
+                domain.enums.get(type.enumName).isPresent,
+                "No enum definition '${type.enumName}' found"
             )
         }
 
@@ -68,9 +68,8 @@ class PropertyDef(
 
     override fun plainCopy() = PropertyDef(declaringClassName, name, type, kind)
 
-    override fun mergeEquals(other: DomainDef): Boolean {
+    override fun mergeEquals(other: PropertyDef): Boolean {
         if (!super.mergeEquals(other)) return false
-        other as PropertyDef
         return declaringClassName == other.declaringClassName
                 && name == other.name
                 && type == other.type
@@ -92,11 +91,11 @@ class PropertyContainer(clazz: ClassDef) : ChildDefContainer<PropertyDef, ClassD
 class PropertyRef(
     val className: String,
     val propertyName: String,
-) : DomainRef {
-    override fun findIn(domain: Domain): Optional<DomainDefWithMeta> {
-        val classOpt = ClassRef(className).findIn(domain) as Optional<ClassDef>
+) : DomainRef<PropertyDef> {
+    override fun findIn(domain: Domain): Optional<PropertyDef> {
+        val classOpt = ClassRef(className).findIn(domain)
         if (!classOpt.isPresent) return Optional.empty()
-        return classOpt.get().declaredProperties.get(propertyName) as Optional<DomainDefWithMeta>
+        return classOpt.get().declaredProperties.get(propertyName)
     }
 
     override fun toString() = "$className.$propertyName"

@@ -3,7 +3,7 @@ package its.model.definition
 /**
  * Утверждение об элементе домена
  */
-abstract class Statement<Owner : DomainDef> : DomainElement() {
+abstract class Statement<Owner : DomainDef<Owner>> : DomainElement() {
     abstract val owner: Owner
     override val domain: Domain
         get() = owner.domain
@@ -16,7 +16,7 @@ abstract class Statement<Owner : DomainDef> : DomainElement() {
 /**
  * Набор однотипных утверждений, принадлежащих одному элементу домена
  */
-abstract class Statements<Owner : DomainDef, S : Statement<Owner>>(
+abstract class Statements<Owner : DomainDef<Owner>, S : Statement<Owner>>(
     protected val owner: Owner,
 ) : DomainElement(), Collection<S> {
     override fun toString() = description

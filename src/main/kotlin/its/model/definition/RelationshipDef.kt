@@ -11,7 +11,7 @@ class RelationshipDef(
     override val name: String,
     val objectClassNames: List<String>,
     val kind: RelationshipKind = BaseRelationshipKind(),
-) : DomainDefWithMeta() {
+) : DomainDefWithMeta<RelationshipDef>() {
 
     override val description = "relationship ${subjectClassName}->$name(${objectClassNames.joinToString(", ")})"
     override val reference = RelationshipRef(subjectClassName, name)
@@ -38,7 +38,7 @@ class RelationshipDef(
 
     internal fun getKnownBaseRelationship(results: DomainValidationResults): Optional<RelationshipDef> {
         if (kind !is DependantRelationshipKind) return Optional.empty()
-        val baseRelOpt = kind.baseRelationshipRef.findIn(domain) as Optional<RelationshipDef>
+        val baseRelOpt = kind.baseRelationshipRef.findIn(domain)
         results.checkKnown(
             baseRelOpt.isPresent,
             "No relationship definition '${kind.baseRelationshipRef}' " +
@@ -170,9 +170,8 @@ class RelationshipDef(
 
     override fun plainCopy() = RelationshipDef(subjectClassName, name, objectClassNames, kind)
 
-    override fun mergeEquals(other: DomainDef): Boolean {
+    override fun mergeEquals(other: RelationshipDef): Boolean {
         if (!super.mergeEquals(other)) return false
-        other as RelationshipDef
         return subjectClassName == other.subjectClassName
                 && name == other.name
                 && objectClassNames == other.objectClassNames
@@ -217,11 +216,11 @@ class RelationshipContainer(clazz: ClassDef) : ChildDefContainer<RelationshipDef
 class RelationshipRef(
     val className: String,
     val relationshipName: String,
-) : DomainRef {
-    override fun findIn(domain: Domain): Optional<DomainDefWithMeta> {
-        val classOpt = ClassRef(className).findIn(domain) as Optional<ClassDef>
+) : DomainRef<RelationshipDef> {
+    override fun findIn(domain: Domain): Optional<RelationshipDef> {
+        val classOpt = ClassRef(className).findIn(domain)
         if (!classOpt.isPresent) return Optional.empty()
-        return classOpt.get().declaredRelationships.get(relationshipName) as Optional<DomainDefWithMeta>
+        return classOpt.get().declaredRelationships.get(relationshipName)
     }
 
     override fun toString() = "$className->$relationshipName"
