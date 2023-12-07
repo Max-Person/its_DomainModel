@@ -16,6 +16,23 @@ class EnumDef(
      * Значения данного перечисления
      */
     val values = EnumValueContainer(this)
+
+    //----------------------------------
+
+    override fun plainCopy() = EnumDef(name)
+
+    override fun mergeEquals(other: DomainDef): Boolean {
+        if (!super.mergeEquals(other)) return false
+        other as EnumDef
+        return name == other.name
+    }
+
+    override fun addMerge(other: DomainDef) {
+        super.addMerge(other)
+        other as EnumDef
+        values.addAllMerge(other.values)
+    }
+
 }
 
 class EnumContainer(domain: Domain) : RootDefContainer<EnumDef>(domain)

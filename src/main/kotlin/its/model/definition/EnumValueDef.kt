@@ -13,6 +13,17 @@ class EnumValueDef(
     override val description = "enum value $enumName:$name"
     override val reference = EnumValueRef(enumName, name)
 
+    //----------------------------------
+
+    override fun plainCopy() = EnumValueDef(enumName, name)
+
+    override fun mergeEquals(other: DomainDef): Boolean {
+        if (!super.mergeEquals(other)) return false
+        other as EnumValueDef
+        return enumName == other.enumName
+                && name == other.name
+    }
+
 }
 
 class EnumValueContainer(enum: EnumDef) : ChildDefContainer<EnumValueDef, EnumDef>(enum)

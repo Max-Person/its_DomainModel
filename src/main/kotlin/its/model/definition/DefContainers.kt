@@ -12,41 +12,69 @@ sealed class DefContainer<T : DomainDef> : DomainElement(), Collection<T> {
     protected abstract fun KEY_REPEAT_MESSAGE(def: T): String
 
     /**
-     * Добавить определение
+     * Добавить определение (при добавлении определение валидируется)
+     * @throws DomainDefinitionException если такое определение уже есть, или если возникли ошибки валидации
+     * @see addMerge
      */
-    open fun add(def: T): T {
-        val belongsToDomain = def.belongsToDomain
-        val added = if (belongsToDomain.isPresent && belongsToDomain.get() != domain) {
-            def.copyForDomain(domain) as T
-        } else {
-            def.domain = domain
-            def
+    fun add(def: T) = add(def, false)
+
+    /**
+     * Добавить определение (при добавлении определение валидируется);
+     * Также пытается слить одинаковые определения
+     * (пример: два класса с одним именем становятся одним, со свойствами из обоих)
+     * @throws DomainDefinitionException если возникли ошибки валидации при слитии или добавлении
+     * @see DomainDef.addMerge
+     */
+    fun addMerge(def: T) = add(def, true)
+
+    private fun add(def: T, tryMerging: Boolean): T {
+        val existingOpt = get(def.name)
+        if (existingOpt.isPresent) {
+            val existing = existingOpt.get()
+            if (tryMerging && existing.mergeEquals(def)) {
+                existing.addMerge(def)
+                return existing
+            } else {
+                invalid(KEY_REPEAT_MESSAGE(def))
+            }
         }
 
+        return addNew(def)
+    }
+
+    protected open fun addNew(def: T): T {
+        //Приведение к нужному хранимому виду
+        val belongsToDomain = def.belongsToDomain
+        val added = if (belongsToDomain.isPresent && belongsToDomain.get() == domain) {
+            def
+        } else {
+            def.copyForDomain(domain) as T
+        }
+        added.validateAndThrowInvalid()
+
+        //добавление
         if (added is DomainDefWithMeta) {
             domain.separateMetadata.claimIfPresent(added)
         }
-        added.validateAndThrowInvalid()
-        checkValid(
-            !values.containsKey(def.name),
-            KEY_REPEAT_MESSAGE(def)
-        )
         values[added.name] = added
         return added
     }
+
+    /**
+     * @see add
+     */
+    fun addAll(other: DefContainer<T>) = other.forEach { add(it) }
+
+    /**
+     * @see addMerge
+     */
+    fun addAllMerge(other: DefContainer<T>) = other.forEach { addMerge(it) }
 
     /**
      * Получить определение по имени
      */
     fun get(name: String): Optional<T> {
         return Optional.ofNullable(values[name])
-    }
-
-    /**
-     * TODO Скопировать информацию в другой контейнер
-     */
-    fun copyTo(other: DefContainer<T>) {
-
     }
 
     override fun validate(results: DomainValidationResults) {

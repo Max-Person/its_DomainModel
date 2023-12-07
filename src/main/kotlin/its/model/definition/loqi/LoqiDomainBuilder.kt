@@ -199,17 +199,22 @@ class LoqiDomainBuilder private constructor(
     }
 
     override fun visitAddClassDataDecl(ctx: AddClassDataDeclContext) {
-        val syntheticClass = syntheticClass() //Костыль, потому что стейтменты не существует без владельца
         val ref = ClassRef(ctx.id().getName())
-        val statements = ctx.propertyValueStatement().map { propertyValue ->
+        val syntheticClass = syntheticClass(ref.className) //Костыль, потому что стейтменты не существует без владельца
+
+        ctx.propertyValueStatement().forEach { propertyValue ->
             val name = propertyValue.id().getName()
             val value = propertyValue.value().getTypeAndValue().value
-            ClassPropertyValueStatement(syntheticClass, name, value)
+            domainOpAt(propertyValue.start.line) {
+                syntheticClass.definedPropertyValues.add(ClassPropertyValueStatement(syntheticClass, name, value))
+            }
         }
 
-        if (statements.isEmpty()) return //пустые стейтменты игнорируем
+        if (syntheticClass.definedPropertyValues.isEmpty()) return //пустые стейтменты игнорируем
 
-        domainOpAt(ctx.id().start.line) { domain.separateClassPropertyValues.add(ref, statements) }
+        domainOpAt(ctx.id().start.line) {
+            domain.separateClassPropertyValues.add(ref, syntheticClass.definedPropertyValues)
+        }
     }
 
 
@@ -221,7 +226,7 @@ class LoqiDomainBuilder private constructor(
 
     private val SYNTHETIC = "LOQI_SYNTHETIC"
     private fun syntheticObj() = ObjectDef(SYNTHETIC, SYNTHETIC)
-    private fun syntheticClass() = ClassDef(SYNTHETIC)
+    private fun syntheticClass(name: String) = ClassDef(name, Optional.of(SYNTHETIC))
 
     private fun MetaRefContext.getRef(): DomainRef {
         if (CLASS() != null) return ClassRef(id().getName())
@@ -251,12 +256,9 @@ class LoqiDomainBuilder private constructor(
     private fun TypeContext.getType(): Type<*> {
         if (intType() != null) return IntegerType(intType().intRange()?.getRange() ?: AnyNumber)
         if (doubleType() != null) return DoubleType(doubleType().doubleRange()?.getRange() ?: AnyNumber)
-        if (BOOL_TYPE() != null) return BooleanType()
-        if (STRING_TYPE() != null) return StringType()
-        if (id() != null) return EnumType(
-            domain,
-            id().getName()
-        ) //тип свойства, указанный как идентификатор, может быть только ссылкой на енам
+        if (BOOL_TYPE() != null) return BooleanType
+        if (STRING_TYPE() != null) return StringType
+        if (id() != null) return EnumType(id().getName()) //тип свойства, указанный как идентификатор, может быть только ссылкой на енам
         throw ThisShouldNotHappen()
     }
 
@@ -293,11 +295,11 @@ class LoqiDomainBuilder private constructor(
     private fun ValueContext.getTypeAndValue(): TypeAndValue<*> {
         if (INTEGER() != null) return TypeAndValue(IntegerType(), INTEGER().text.toInt())
         if (DOUBLE() != null) return TypeAndValue(DoubleType(), DOUBLE().text.toDouble())
-        if (BOOLEAN() != null) return TypeAndValue(BooleanType(), BOOLEAN().text.toBoolean())
-        if (STRING() != null) return TypeAndValue(StringType(), STRING().text.extract())
+        if (BOOLEAN() != null) return TypeAndValue(BooleanType, BOOLEAN().text.toBoolean())
+        if (STRING() != null) return TypeAndValue(StringType, STRING().text.extract())
         if (enumValueRef() != null) {
             val enumValue = enumValueRef().getRef()
-            return TypeAndValue(EnumType(domain, enumValue.enumName), enumValue)
+            return TypeAndValue(EnumType(enumValue.enumName), enumValue)
         }
         throw ThisShouldNotHappen()
     }

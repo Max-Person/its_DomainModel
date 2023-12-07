@@ -19,7 +19,23 @@ sealed interface RelationshipKind {
 class BaseRelationshipKind(
     val scaleType: Optional<RelationshipModel.ScaleType> = Optional.empty(),
     val quantifier: Optional<LinkQuantifier> = Optional.empty(),
-) : RelationshipKind
+) : RelationshipKind {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as BaseRelationshipKind
+
+        if (scaleType != other.scaleType) return false
+        if (quantifier != other.quantifier) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return Objects.hash(this::class, scaleType, quantifier)
+    }
+}
 
 /**
  * Квантификатор отношения (какое кол-во связей допустимо)
@@ -64,5 +80,21 @@ class DependantRelationshipKind(
         BETWEEN,
         CLOSER,
         FURTHER,
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as DependantRelationshipKind
+
+        if (type != other.type) return false
+        if (baseRelationshipRef != other.baseRelationshipRef) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return Objects.hash(this::class, type, baseRelationshipRef)
     }
 }

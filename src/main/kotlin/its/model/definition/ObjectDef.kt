@@ -76,6 +76,24 @@ class ObjectDef(
         relationshipLinks.validate(results)
     }
 
+    //----------------------------------
+
+    override fun plainCopy() = ObjectDef(name, className)
+
+    override fun mergeEquals(other: DomainDef): Boolean {
+        if (!super.mergeEquals(other)) return false
+        other as ObjectDef
+        return name == other.name
+                && className == other.className
+    }
+
+    override fun addMerge(other: DomainDef) {
+        super.addMerge(other)
+        other as ObjectDef
+        definedPropertyValues.addAll(other.definedPropertyValues)
+        relationshipLinks.addAll(other.relationshipLinks)
+    }
+
     //---Операции (на валидном домене)---
 
     /**

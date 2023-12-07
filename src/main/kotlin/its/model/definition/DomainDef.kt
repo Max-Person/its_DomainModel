@@ -11,6 +11,7 @@ sealed class DomainDef : DomainElement(), Cloneable {
      */
     abstract val name: String
     override fun toString() = description
+    internal abstract val reference: DomainRef
 
     private var _domain: Domain? = null
     internal val belongsToDomain: Optional<Domain>
@@ -32,13 +33,39 @@ sealed class DomainDef : DomainElement(), Cloneable {
         }
 
     /**
-     * Скопировать это определение для сохранения в другом домене [domain]
-     * TODO переопределить это во всех наследниках
+     * Создать глубокую копию данного определения;
+     * Копия не принадлежит ни к какому домену и полностью повторяет состояние данного определения
      */
-    internal open fun copyForDomain(domain: Domain): DomainDef {
-        val copy = super.clone() as DomainDef
-        copy._domain = domain
-        return copy
+    fun deepCopy() = plainCopy().also { it.addMerge(this) }
+
+    internal fun copyForDomain(domain: Domain) = plainCopy().also { it.domain = domain; it.addMerge(this) }
+
+    /**
+     * Создать базовую копию данного определения;
+     * Копия не принадлежит ни к какому домену, и не содержит никакого состояния данного определения,
+     * кроме основных зарактеристик (параметров основного конструктора)
+     * @return копия - определение того же типа, что и данное, такое что `copy.mergeEquals(this) == true`
+     */
+    abstract fun plainCopy(): DomainDef
+
+    /**
+     * Являются ли определения одинаковыми по основным характеристикам - возможно ли слияние между ними
+     * @see addMerge
+     */
+    open fun mergeEquals(other: DomainDef): Boolean {
+        return this.reference == other.reference
+    }
+
+    /**
+     * Добавить информацию из [other] в данное определение.
+     * Должно использоваться, только если `this.mergeEquals(other) == true`
+     * @see mergeEquals
+     */
+    open fun addMerge(other: DomainDef) {
+        preventMisuse(
+            this.mergeEquals(other),
+            "'addMerge()' should only be called if both defs are 'merge equal'. Use 'mergeEquals' to check"
+        )
     }
 
     override fun validate(results: DomainValidationResults) {

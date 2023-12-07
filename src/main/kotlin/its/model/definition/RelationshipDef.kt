@@ -166,6 +166,19 @@ class RelationshipDef(
         }
     }
 
+    //----------------------------------
+
+    override fun plainCopy() = RelationshipDef(subjectClassName, name, objectClassNames, kind)
+
+    override fun mergeEquals(other: DomainDef): Boolean {
+        if (!super.mergeEquals(other)) return false
+        other as RelationshipDef
+        return subjectClassName == other.subjectClassName
+                && name == other.name
+                && objectClassNames == other.objectClassNames
+                && kind == other.kind
+    }
+
     //---Операции (на валидном домене)---
 
     /**

@@ -335,12 +335,12 @@ class DictionariesDomainBuilder private constructor(
 
     private fun getPropertyType(typeDecr: String, enumName: String? = null, range: String? = null): Type<*> {
         return when (typeDecr.uppercase()) {
-            "STRING" -> StringType()
-            "BOOL", "BOOLEAN" -> BooleanType()
+            "STRING" -> StringType
+            "BOOL", "BOOLEAN" -> BooleanType
             "INT", "INTEGER" -> IntegerType(range.toRange())
             "DOUBLE" -> DoubleType(range.toRange())
 //            "COMPARISON", "COMPARISONRESULT", "COMPARISON_RESULT" -> EnumType(domain, "ComparisonResult") //FIXME
-            "ENUM" -> EnumType(domain, enumName!!)
+            "ENUM" -> EnumType(enumName!!)
             else -> throw IllegalArgumentException("Cannot parse '$this' into a valid property type")
         }
     }

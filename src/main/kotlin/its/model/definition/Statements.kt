@@ -31,6 +31,8 @@ abstract class Statements<Owner : DomainDef, S : Statement<Owner>>(
         return copy
     }
 
+    fun addAll(statements: Collection<S>) = statements.forEach { add(it) }
+
     protected abstract fun addToInner(statement: S)
 
     override fun validate(results: DomainValidationResults) {

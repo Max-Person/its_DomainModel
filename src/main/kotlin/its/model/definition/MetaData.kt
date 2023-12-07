@@ -102,7 +102,11 @@ interface MetaOwner {
 
 sealed class DomainDefWithMeta : DomainDef(), MetaOwner {
     override val metadata = MetaData(this)
-    internal abstract val reference: DomainRef
+    override fun addMerge(other: DomainDef) {
+        super.addMerge(other)
+        other as DomainDefWithMeta
+        this.metadata.addAll(other.metadata)
+    }
 }
 
 interface MetaInheritor : MetaOwner {

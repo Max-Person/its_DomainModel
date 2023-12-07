@@ -99,9 +99,12 @@ abstract class PropertyValueStatements<Owner>(
     protected val map = mutableMapOf<String, PropertyValueStatement<Owner>>()
     override fun iterator() = map.values.iterator()
     override fun addToInner(statement: PropertyValueStatement<Owner>) {
+        val existing = get(statement.propertyName)
         checkValid(
-            !map.containsKey(statement.propertyName),
-            "${owner.description} already defines a value for property '${statement.propertyName}'"
+            existing.map { it.value == statement.value }.orElse(true),
+            "cannot add ${statement.description}, " +
+                    "because ${owner.description} already defines a value '${existing.map { it.value }}'" +
+                    "for property '${statement.propertyName}'"
         )
         map[statement.propertyName] = statement
     }

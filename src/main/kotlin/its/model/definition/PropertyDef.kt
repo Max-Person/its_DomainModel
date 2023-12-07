@@ -6,10 +6,10 @@ import java.util.*
  * Определение свойства сущностей в домене
  */
 class PropertyDef(
-    var declaringClassName: String,
+    val declaringClassName: String,
     override val name: String,
-    var type: Type<*>,
-    var kind: PropertyKind,
+    val type: Type<*>,
+    val kind: PropertyKind,
 ) : DomainDefWithMeta() {
 
     override val description = "${kind.toString().lowercase()} property $declaringClassName.$name"
@@ -63,6 +63,20 @@ class PropertyDef(
 
         //уникальность не проверяется т.к. PropertyContainer ее гарантирует
     }
+
+    //----------------------------------
+
+    override fun plainCopy() = PropertyDef(declaringClassName, name, type, kind)
+
+    override fun mergeEquals(other: DomainDef): Boolean {
+        if (!super.mergeEquals(other)) return false
+        other as PropertyDef
+        return declaringClassName == other.declaringClassName
+                && name == other.name
+                && type == other.type
+                && kind == other.kind
+    }
+
 
     //---Операции (на валидном домене)---
 

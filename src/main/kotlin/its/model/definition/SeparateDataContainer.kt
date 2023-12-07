@@ -13,8 +13,20 @@ abstract class SeparateDataContainer<Key : DomainRef, Value : Any>(
      */
     fun add(key: Key, value: Value) {
         val owner = key.findIn(domain)
-        owner.ifPresentOrElse({ attachValue(it, value) }, { map[key] = value })
+        owner.ifPresentOrElse({ attachValue(it, value) }, {
+            if (map.containsKey(key)) {
+                map[key] = mergeValues(map[key]!!, value)
+            } else {
+                map[key] = value
+            }
+        })
     }
+
+    protected open fun mergeValues(old: Value, new: Value): Value {
+        return new
+    }
+
+    fun addAll(other: Map<Key, Value>) = other.forEach { (k, v) -> add(k, v) }
 
     /**
      * Забрать из контейнера и прикрепить данные, принадлежащие владельцу [domainDef], если такие есть
@@ -49,11 +61,18 @@ abstract class SeparateDataContainer<Key : DomainRef, Value : Any>(
 
 class SeparateClassPropertyValuesContainer(
     domain: Domain
-) : SeparateDataContainer<ClassRef, List<ClassPropertyValueStatement>>(domain) {
+) : SeparateDataContainer<ClassRef, ClassPropertyValueStatements>(domain) {
 
-    override fun attachValue(domainDef: DomainDefWithMeta, value: List<ClassPropertyValueStatement>) {
+    override fun mergeValues(
+        old: ClassPropertyValueStatements,
+        new: ClassPropertyValueStatements
+    ): ClassPropertyValueStatements {
+        return old.also { it.addAll(new) }
+    }
+
+    override fun attachValue(domainDef: DomainDefWithMeta, value: ClassPropertyValueStatements) {
         if (domainDef !is ClassDef) return
-        value.forEach { statement -> domainDef.definedPropertyValues.add(statement) }
+        domainDef.definedPropertyValues.addAll(value)
     }
 
     override fun validate(results: DomainValidationResults) {
@@ -66,6 +85,10 @@ class SeparateClassPropertyValuesContainer(
 class SeparateMetadataContainer(
     domain: Domain
 ) : SeparateDataContainer<DomainRef, MetaData>(domain) {
+    override fun mergeValues(old: MetaData, new: MetaData): MetaData {
+        return old.also { it.addAll(new) }
+    }
+
     override fun attachValue(domainDef: DomainDefWithMeta, value: MetaData) {
         checkValid(
             domainDef.metadata.isEmpty(),

@@ -8,12 +8,29 @@ import kotlin.reflect.KClass
 sealed class Type<T : Any>(
     private val valueClass: KClass<T>,
 ) {
-    open fun fits(value: Any): Boolean {
+    open fun fits(value: Any, inDomain: Domain): Boolean {
+        return fits(value)
+    }
+
+    protected open fun fits(value: Any): Boolean {
         return valueClass.isInstance(value)
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as Type<*>
+
+        return valueClass == other.valueClass
+    }
+
+    override fun hashCode(): Int {
+        return Objects.hash(this::class, valueClass)
     }
 }
 
-class BooleanType : Type<Boolean>(Boolean::class)
+object BooleanType : Type<Boolean>(Boolean::class)
 
 sealed class NumericType<T : Number>(
     valueClass: KClass<T>,
@@ -22,6 +39,15 @@ sealed class NumericType<T : Number>(
 
     override fun fits(value: Any): Boolean {
         return super.fits(value) && range.contains(value as Number)
+    }
+
+    override fun equals(other: Any?): Boolean {
+        return super.equals(other)
+                && range == (other as NumericType<*>).range
+    }
+
+    override fun hashCode(): Int {
+        return Objects.hash(super.hashCode(), range)
     }
 }
 
@@ -33,19 +59,18 @@ class DoubleType(
     range: Range = AnyNumber,
 ) : NumericType<Double>(Double::class, range)
 
-class StringType : Type<String>(String::class)
+object StringType : Type<String>(String::class)
 
 
 typealias EnumValue = EnumValueRef
 class EnumType(
-    val domain: Domain,
     val enumName: String,
 ) : Type<EnumValue>(EnumValue::class) {
-    override fun fits(value: Any): Boolean {
+    override fun fits(value: Any, inDomain: Domain): Boolean {
         if (!super.fits(value)) return false
         val enumValue = value as EnumValue
 
-        val enumOpt = EnumRef(enumName).findIn(domain) as Optional<EnumDef>
+        val enumOpt = EnumRef(enumName).findIn(inDomain) as Optional<EnumDef>
         checkKnown(
             enumOpt.isPresent,
             "No enum definition '${enumName}' found to check if a value fits to a enum type"
@@ -53,6 +78,11 @@ class EnumType(
 
         val enum = enumOpt.get()
         return enum.name == enumValue.enumName && enum.values.get(enumValue.valueName).isPresent
+    }
+
+    override fun equals(other: Any?): Boolean {
+        return super.equals(other)
+                && enumName == (other as EnumType).enumName
     }
 }
 

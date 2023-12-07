@@ -7,7 +7,7 @@ import java.util.*
  */
 class ClassDef(
     override val name: String,
-    var parentName: Optional<String> = Optional.empty(),
+    val parentName: Optional<String> = Optional.empty(),
 ) : DomainDefWithMeta(), MetaInheritor {
 
     override val inheritFrom
@@ -99,6 +99,26 @@ class ClassDef(
         definedPropertyValues.validate(results)
     }
 
+    //----------------------------------
+
+    override fun plainCopy() = ClassDef(name, parentName)
+
+    override fun mergeEquals(other: DomainDef): Boolean {
+        if (!super.mergeEquals(other)) return false
+        other as ClassDef
+        return name == other.name
+                && parentName == other.parentName
+    }
+
+    override fun addMerge(other: DomainDef) {
+        super.addMerge(other)
+        other as ClassDef
+        declaredProperties.addAllMerge(other.declaredProperties)
+        declaredRelationships.addAllMerge(other.declaredRelationships)
+
+        definedPropertyValues.addAll(other.definedPropertyValues)
+    }
+
     //---Операции (на валидном домене)---
 
     /**
@@ -166,8 +186,8 @@ class ClassDef(
 }
 
 class ClassContainer(domain: Domain) : RootDefContainer<ClassDef>(domain) {
-    override fun add(def: ClassDef): ClassDef {
-        return super.add(def).also { domain.separateClassPropertyValues.claimIfPresent(it) }
+    override fun addNew(def: ClassDef): ClassDef {
+        return super.addNew(def).also { domain.separateClassPropertyValues.claimIfPresent(it) }
     }
 }
 
