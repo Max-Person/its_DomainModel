@@ -1,5 +1,7 @@
 package its.model.expressions
 
+import its.model.expressions.literals.*
+import its.model.expressions.operators.*
 import its.model.expressions.types.ComparisonResult
 import its.model.expressions.types.EnumValue
 import its.model.expressions.visitors.OperatorBehaviour
@@ -7,8 +9,6 @@ import org.w3c.dom.Element
 import org.w3c.dom.Node
 import org.xml.sax.InputSource
 import org.xml.sax.SAXException
-import its.model.expressions.literals.*
-import its.model.expressions.operators.*
 import java.io.IOException
 import java.io.StringReader
 import javax.xml.parsers.DocumentBuilderFactory
@@ -336,6 +336,10 @@ interface Operator {
                     return AssignProperty(children)
                 }
 
+                "AddRelationshipLink" -> {
+                    return AddRelationshipLink(children)
+                }
+
                 "CheckClass" -> {
                     return CheckClass(children)
                 }
@@ -400,6 +404,21 @@ interface Operator {
 
                 "LogicalNot" -> {
                     return LogicalNot(children)
+                }
+
+                "Block" -> {
+                    return Block(children)
+                }
+
+                "IfThen" -> {
+                    return IfThen(children)
+                }
+
+                "With" -> {
+                    return With(
+                        el.attributes.getNamedItem("varName").nodeValue,
+                        children,
+                    )
                 }
             }
             throw IllegalArgumentException("Неизвестный тип узла ${el.nodeName}.")

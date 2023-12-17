@@ -71,6 +71,9 @@ object Types {
     @JvmStatic
     val None = Unit::class
 
+    @JvmStatic
+    val Any = Any::class
+
 
     /**
      * Может ли этот тип быть преобразован в другой
@@ -79,7 +82,7 @@ object Types {
      */
     @JvmStatic
     fun KClass<*>.canCast(to: KClass<*>): Boolean {
-        return this == to //Сейчас так, потому что ушли от системы DataType
+        return to == Any || this == to //Сейчас так, потому что ушли от системы DataType
     }
 
     @JvmStatic
