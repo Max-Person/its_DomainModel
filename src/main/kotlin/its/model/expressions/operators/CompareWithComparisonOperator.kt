@@ -52,12 +52,12 @@ class CompareWithComparisonOperator(
             }
 
             fun valueOf(value: String) = when (value.uppercase()) {
-                "LESS" -> Less
-                "GREATER" -> Greater
+                "LESS", "LT" -> Less
+                "GREATER", "GT" -> Greater
                 "EQ", "EQUAL" -> Equal
-                "LESSEQ", "LESSEQUAL", "LESS_EQ", "LESS_EQUAL" -> LessEqual
-                "GREATEREQ", "GREATEREQUAL", "GREATER_EQ", "GREATER_EQUAL" -> Greater
-                "NOTEQ", "NOTEQUAL", "NOT_EQ", "NOT_EQUAL" -> NotEqual
+                "LESSEQ", "LE", "LESSEQUAL", "LESS_EQ", "LESS_EQUAL" -> LessEqual
+                "GREATEREQ", "GE", "GREATEREQUAL", "GREATER_EQ", "GREATER_EQUAL" -> Greater
+                "NOTEQ", "NE", "NOTEQUAL", "NOT_EQ", "NOT_EQUAL" -> NotEqual
                 else -> null
             }
         }
