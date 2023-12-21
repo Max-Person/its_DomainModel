@@ -1,6 +1,7 @@
 package its.model.models
 
 import its.model.expressions.Operator
+import its.model.expressions.xml.ExpressionXMLBuilder
 
 /**
  * Модель класса в предметной области
@@ -22,12 +23,6 @@ open class ClassModel(
         require(name.isNotBlank()) {
             "Некорректное имя класса."
         }
-        calcExprXML?.let {
-            val expr = Operator.fromXMLString(it)
-            require(expr?.resultDataType == Boolean::class) {
-                "Выражение для вычисления класса $name должно иметь тип Boolean, но имеет тип ${expr?.resultDataType}."
-            }
-        }
     }
 
     val isCalculated get() = calcExprXML != null
@@ -36,5 +31,5 @@ open class ClassModel(
      * Выражение для вычисления
      */
     val calcExpr
-        get() = if (calcExprXML != null) Operator.fromXMLString(calcExprXML) else null
+        get() = if (calcExprXML != null) ExpressionXMLBuilder.fromXMLString(calcExprXML) else null
 }

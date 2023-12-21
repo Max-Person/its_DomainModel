@@ -1,5 +1,10 @@
 package its.model.nodes
 
+import its.model.DomainModel
+import its.model.expressions.ExpressionContext
+import its.model.expressions.ExpressionValidationResults
+import its.model.expressions.Operator
+import its.model.expressions.xml.ExpressionXMLBuilder
 import its.model.nodes.visitors.DecisionTreeBehaviour
 import org.w3c.dom.Element
 import org.xml.sax.InputSource
@@ -126,6 +131,22 @@ sealed class DecisionTreeNode {
                 "PredeterminingFactorsNode" -> true
                 "UndeterminedNode" -> true
                 else -> false
+            }
+        }
+
+        //FIXME временное
+        @JvmStatic
+        protected fun Operator.Companion.build(el: Element, variables: Map<String, String> = mapOf()): Operator {
+            val context = ExpressionContext(
+                variables.toMutableMap(),
+                DomainModel.decisionTreeVarsDictionary.associate { it.name to it.className }.toMutableMap()
+            )
+            return ExpressionXMLBuilder.build(el).apply {
+                validateAndGetType(
+                    DomainModel.domain,
+                    ExpressionValidationResults(true),
+                    context,
+                )
             }
         }
     }

@@ -1,6 +1,5 @@
 package its.model.definition
 
-import its.model.models.RelationshipModel
 import java.util.*
 
 /**
@@ -16,6 +15,10 @@ class RelationshipDef(
     override val description = "relationship ${subjectClassName}->$name(${objectClassNames.joinToString(", ")})"
     override val reference = RelationshipRef(subjectClassName, name)
 
+    /**
+     * Для валидации - получить известный класс-субъект отношения
+     * или добавить сообщение о его неизвестности в [results]
+     */
     internal fun getKnownSubjectClass(results: DomainValidationResults): Optional<ClassDef> {
         val clazzOpt = domain.classes.get(subjectClassName)
         results.checkKnown(
@@ -25,6 +28,10 @@ class RelationshipDef(
         return clazzOpt
     }
 
+    /**
+     * Для валидации - получить известные классы-объекты отношения
+     * или добавить сообщение о его неизвестности в [results]
+     */
     internal fun getKnownObjectClasses(results: DomainValidationResults): List<Optional<ClassDef>> {
         return objectClassNames.map { className ->
             val clazzOpt = domain.classes.get(className)
@@ -36,6 +43,10 @@ class RelationshipDef(
         }
     }
 
+    /**
+     * Для валидации - если текущее отношение имеет тип [DependantRelationshipKind],
+     * то получить отношение, от которого зависит текущее, или добавить сообщение о его неизвестности в [results]
+     */
     internal fun getKnownBaseRelationship(results: DomainValidationResults): Optional<RelationshipDef> {
         if (kind !is DependantRelationshipKind) return Optional.empty()
         val baseRelOpt = kind.baseRelationshipRef.findIn(domain)
@@ -47,6 +58,10 @@ class RelationshipDef(
         return baseRelOpt
     }
 
+    /**
+     * Для валидации - получить известную цепочку зависимостей отношения (включая его самого)
+     * добавляя сообщение о неизвестных отношениях в [results], если такие есть
+     */
     internal fun getKnownDependencyLineage(results: DomainValidationResults): List<RelationshipDef> {
         val lineage = mutableListOf<RelationshipDef>()
         var p = Optional.of(this)
@@ -108,12 +123,12 @@ class RelationshipDef(
 
                     //Соответсвие кватификаторов заданному типу шкалы
                     when (scaleType) {
-                        RelationshipModel.ScaleType.Linear -> results.checkValid(
+                        BaseRelationshipKind.ScaleType.Linear -> results.checkValid(
                             kind.quantifier.isEmpty || kind.quantifier.get() == LinkQuantifier.OneToOne(),
                             "$description has to be quantified as one-to-one ( {1->1} ) as it is declared as $scaleType"
                         )
 
-                        RelationshipModel.ScaleType.Partial -> results.checkValid(
+                        BaseRelationshipKind.ScaleType.Partial -> results.checkValid(
                             kind.quantifier.isEmpty || kind.quantifier.get().objCount == 1,
                             "$description has to be quantified as many-to-one ( {...->1} ) as it is declared as $scaleType"
                         )
@@ -181,6 +196,18 @@ class RelationshipDef(
     //---Операции (на валидном домене)---
 
     /**
+     * Класс-субъект отношения
+     */
+    val subjectClass: ClassDef
+        get() = getKnownSubjectClass(DomainValidationResultsThrowImmediately()).get()
+
+    /**
+     * Классы-объекты отношения
+     */
+    val objectClasses: List<ClassDef>
+        get() = getKnownObjectClasses(DomainValidationResultsThrowImmediately()).map { it.get() }
+
+    /**
      * Задает ли отношение шкалу
      */
     val isScalar: Boolean
@@ -204,11 +231,46 @@ class RelationshipDef(
     val isNAry: Boolean
         get() = objectClassNames.size > 1
 
+    /**
+     * Является ли отношение неупорядоченным
+     */
     val isUnordered: Boolean
         get() = objectClassNames.toSet().size == 1 && !(kind is DependantRelationshipKind && kind.type in setOf(
             DependantRelationshipKind.Type.CLOSER,
             DependantRelationshipKind.Type.FURTHER,
         ))
+
+    /**
+     * Отношение, от которого зависит текущее (если текущее имеет тип [DependantRelationshipKind])
+     */
+    val baseRelationship: Optional<RelationshipDef>
+        get() = getKnownBaseRelationship(DomainValidationResultsThrowImmediately())
+
+    /**
+     * Фактический квантификатор (с учетом зависимостей и шкалы)
+     */
+    val effectiveQuantifier: LinkQuantifier
+        get() {
+            when (kind) {
+                is BaseRelationshipKind -> {
+                    if (kind.quantifier.isPresent) return kind.quantifier.get()
+                    if (kind.scaleType.isPresent) {
+                        val scaleType = kind.scaleType.get()
+                        return when (scaleType) {
+                            BaseRelationshipKind.ScaleType.Linear -> LinkQuantifier.OneToOne()
+                            BaseRelationshipKind.ScaleType.Partial -> LinkQuantifier.ManyToOne()
+                        }
+                    }
+                    return LinkQuantifier.ManyToMany()
+                }
+
+                is DependantRelationshipKind -> {
+                    if (kind.type == DependantRelationshipKind.Type.OPPOSITE)
+                        return baseRelationship.get().effectiveQuantifier.reversed
+                    return LinkQuantifier.ManyToMany()
+                }
+            }
+        }
 }
 
 class RelationshipContainer(clazz: ClassDef) : ChildDefContainer<RelationshipDef, ClassDef>(clazz)

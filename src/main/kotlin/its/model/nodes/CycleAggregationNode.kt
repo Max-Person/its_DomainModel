@@ -26,7 +26,11 @@ class CycleAggregationNode(
             .nullCheck("CycleAggregationNode has to have a valid 'operator' attribute"),
         Operator.build(
             el.getSingleByWrapper("SelectorExpression")
-                .nullCheck("CycleAggregationNode has to have a 'SelectorExpression' child tag")
+                .nullCheck("CycleAggregationNode has to have a 'SelectorExpression' child tag"),
+            mapOf(
+                el.getChild("DecisionTreeVarDecl")!!.getAttribute("name")
+                        to el.getChild("DecisionTreeVarDecl")!!.getAttribute("type")
+            )
         ),
         el.getChild("DecisionTreeVarDecl")
             .nullCheck("CycleAggregationNode has to have a 'DecisionTreeVarDecl' child tag").getAttribute("name"),

@@ -3,9 +3,8 @@ package its.model.definition.compat
 import com.opencsv.CSVParserBuilder
 import com.opencsv.CSVReaderBuilder
 import its.model.definition.*
-import its.model.definition.LinkQuantifier.Companion.ANY_COUNT
 import its.model.definition.Utils.plus
-import its.model.models.*
+import its.model.definition.types.*
 import java.io.File
 import java.io.Reader
 import java.net.URL
@@ -358,16 +357,16 @@ class DictionariesDomainBuilder private constructor(
             val boundaries = continuous[0].toDouble() to continuous[1].toDouble()
             return ContinuousRange(boundaries)
         } else {
-            val discrete = this.split(LIST_ITEMS_SEPARATOR).map { it.toDouble() }
+            val discrete = this.split(LIST_ITEMS_SEPARATOR).map { it.toDouble() }.toSet()
             return DiscreteRange(discrete)
         }
     }
 
-    private fun String?.getScaleType(): Optional<RelationshipModel.ScaleType> {
+    private fun String?.getScaleType(): Optional<BaseRelationshipKind.ScaleType> {
         if (this.isNullOrBlank()) return Optional.empty()
         return when (this.lowercase()) {
-            "linear" -> Optional.of(RelationshipModel.ScaleType.Linear)
-            "partial" -> Optional.of(RelationshipModel.ScaleType.Partial)
+            "linear" -> Optional.of(BaseRelationshipKind.ScaleType.Linear)
+            "partial" -> Optional.of(BaseRelationshipKind.ScaleType.Partial)
             else -> throw IllegalArgumentException("Cannot parse '$this' into a valid relationship scale type")
         }
     }
@@ -375,8 +374,8 @@ class DictionariesDomainBuilder private constructor(
     private fun String?.getLinkQuantifier(): Optional<LinkQuantifier> {
         if (this.isNullOrBlank()) return Optional.empty()
         return when (this.lowercase()) {
-            "onetoone" -> Optional.of(LinkQuantifier(1, 1))
-            "onetomany" -> Optional.of(LinkQuantifier(1, ANY_COUNT))
+            "onetoone" -> Optional.of(LinkQuantifier.OneToOne())
+            "onetomany" -> Optional.of(LinkQuantifier.OneToMany())
             else -> throw IllegalArgumentException("Cannot parse '$this' into a valid relationship link quantifier")
         }
     }

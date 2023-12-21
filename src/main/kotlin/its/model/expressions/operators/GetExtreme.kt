@@ -1,39 +1,60 @@
 package its.model.expressions.operators
 
+import its.model.definition.Domain
+import its.model.definition.types.BooleanType
+import its.model.definition.types.ObjectType
+import its.model.definition.types.Type
+import its.model.expressions.ExpressionContext
+import its.model.expressions.ExpressionValidationResults
 import its.model.expressions.Operator
-import its.model.expressions.types.Types
 import its.model.expressions.visitors.OperatorBehaviour
+import java.util.*
 
 /**
- * Выбор экстремального объекта
+ * Получить объект по условию экстремума
+ *
+ * Возвращает [ObjectType], выбрасывает ошибку если подходящих объектов нет, или их несколько
+ * @param className тип контекстных переменных [varName] и [extremeVarName]
+ * @param varName имя контекстной переменная, задающей ссылку на проверяемый объект в условии выборки [conditionExpr]
+ * @param conditionExpr условие выборки, предъявляемое к объекту ([BooleanType])
+ * @param extremeVarName имя контекстной переменной, задающая ссылку на проверяемый объект в условии экстремума [extremeConditionExpr]
+ * @param extremeConditionExpr условие экстремума, предъявляемое к объекту ([BooleanType])
  */
 class GetExtreme(
-    args: List<Operator>,
+    val className: String,
     val varName: String,
-    val extremeVarName: String
-) : BaseOperator(args) {
+    val conditionExpr: Operator,
+    val extremeVarName: String,
+    val extremeConditionExpr: Operator,
+) : Operator() {
 
-    override val argsDataTypes get() = listOf(listOf(Types.Boolean, Types.Boolean))
+    override val children: List<Operator>
+        get() = listOf(conditionExpr)
 
-    val extremeConditionExpr get() = arg(0)
-    val selectorExpr get() = arg(1)
+    override fun validateAndGetType(
+        domain: Domain,
+        results: ExpressionValidationResults,
+        context: ExpressionContext
+    ): Type<*> {
+        TypedVariable(className, varName).checkValid(domain, results, context, this)
+        context.variableTypes[varName] = className
+        val conditionType = conditionExpr.validateAndGetType(domain, results, context)
+        context.variableTypes.remove(varName)
+        results.checkValid(
+            conditionType is BooleanType,
+            "Condition argument of $description should be of boolean type, but was '$conditionType'"
+        )
 
+        TypedVariable(className, extremeVarName).checkValid(domain, results, context, this)
+        context.variableTypes[extremeVarName] = className
+        val extremeConditionType = extremeConditionExpr.validateAndGetType(domain, results, context)
+        context.variableTypes.remove(extremeVarName)
+        results.checkValid(
+            extremeConditionType is BooleanType,
+            "Extreme condition argument of $description should be of boolean type, but was '$extremeConditionType'"
+        )
 
-    override val resultDataType get() = Types.Object
-
-
-    override fun clone(): Operator {
-        val newArgs = ArrayList<Operator>()
-
-        args.forEach { arg ->
-            newArgs.add(arg.clone())
-        }
-
-        return GetExtreme(newArgs, varName, extremeVarName)
-    }
-
-    override fun clone(newArgs: List<Operator>): Operator {
-        return GetExtreme(newArgs, varName, extremeVarName)
+        return ObjectType(className)
     }
 
     override fun <I> use(behaviour: OperatorBehaviour<I>): I {

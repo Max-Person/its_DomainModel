@@ -28,12 +28,13 @@ class FindActionNode(
         val selectorExpr: Operator,
         val additionalInfo: Map<String, String> = mapOf()
     ) {
-        constructor(el: Element) : this(
+        constructor(el: Element, className: String) : this(
             el.getAttribute("priority").toIntOrNull()
                 .nullCheck("Find Error Category has to have a valid int 'prioroty' attribute"),
             Operator.build(
                 el.getSingleByWrapper("Expression")
-                    .nullCheck("Find Error Category has to have an 'Expression' child tag")
+                    .nullCheck("Find Error Category has to have an 'Expression' child tag"),
+                mapOf("checked" to className),
             ),
             el.getAdditionalInfo()
         )
@@ -85,7 +86,8 @@ class FindActionNode(
             .getAttribute("name"),
         el.getChild("DecisionTreeVarDecl").nullCheck("FindActionNode has to have a 'DecisionTreeVarDecl' child tag")
             .getAttribute("type"),
-        el.getChildren("FindError").map { errEl -> FindErrorCategory(errEl) }
+        el.getChildren("FindError")
+            .map { errEl -> FindErrorCategory(errEl, el.getChild("DecisionTreeVarDecl")!!.getAttribute("type")) }
             .sortedBy { category -> category.priority },
         el.getChildren("AdditionalVarDecl").map { declEl -> AdditionalVarDeclaration(declEl) },
         getOutcomes(el) { it }

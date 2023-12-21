@@ -1,5 +1,7 @@
 package its.model
 
+import its.model.definition.Domain
+import its.model.definition.compat.DictionariesRDFDomainBuilder
 import its.model.nodes.DecisionTreeNode
 import its.model.nodes.StartNode
 import org.apache.jena.rdf.model.Model
@@ -43,6 +45,9 @@ open class DomainModel<
     @JvmField
     val domainRDF: Model = ModelFactory.createDefaultModel()
 
+    @get:JvmName("_domain")
+    val domain: Domain //FIXME временное, для проверки совместной работы
+
     private var decisionTrees = mutableMapOf<String, StartNode>()
     val decisionTree: StartNode
         @JvmName("_decisionTree")
@@ -77,6 +82,8 @@ open class DomainModel<
         propertiesDictionary.validate()
         relationshipsDictionary.validate()
         //TODO валидировать rdf модель на соответствие словарям
+
+        domain = DictionariesRDFDomainBuilder.buildDomain(directoryUrl)
 
         val treeRegex = Regex("tree(_\\w+|)\\.xml")
         directoryUrl.openStream().bufferedReader().lines().forEach {
@@ -124,6 +131,10 @@ open class DomainModel<
         @JvmStatic
         val domainRDF
             get() = instance!!.domainRDF
+
+        @JvmStatic
+        val domain
+            get() = instance!!.domain
 
         @JvmStatic
         protected operator fun URL.plus(s: String): URL {

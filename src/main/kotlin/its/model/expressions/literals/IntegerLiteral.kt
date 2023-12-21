@@ -1,18 +1,13 @@
 package its.model.expressions.literals
 
+import its.model.definition.types.IntegerType
 import its.model.expressions.Operator
-import its.model.expressions.types.Types
 import its.model.expressions.visitors.LiteralBehaviour
-import kotlin.reflect.KClass
 
 /**
- * Integer литерал
- * @param value Значение
+ * [IntegerType] литерал
  */
-class IntegerLiteral(value: Int) : ValueLiteral<Int>(value) {
-
-    override val resultDataType: KClass<Int>
-        get() = Types.Integer
+class IntegerLiteral(value: Int) : ValueLiteral<Int, IntegerType>(value, IntegerType(value)) {
 
     override fun clone(): Operator = IntegerLiteral(value)
 

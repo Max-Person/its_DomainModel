@@ -1,5 +1,7 @@
 package its.model.definition
 
+import its.model.definition.types.EnumType
+import its.model.definition.types.Type
 import java.util.*
 
 /**
@@ -50,7 +52,7 @@ class PropertyDef(
         //Существование енама
         if (type is EnumType) {
             results.checkKnown(
-                domain.enums.get(type.enumName).isPresent,
+                type.exists(domain),
                 "No enum definition '${type.enumName}' found"
             )
         }

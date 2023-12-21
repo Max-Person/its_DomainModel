@@ -1,5 +1,6 @@
 package its.model.definition
 
+import its.model.definition.types.EnumType
 import java.util.*
 
 /**
@@ -31,15 +32,17 @@ class PropertyValueStatement<Owner : ClassInheritorDef<Owner>>(
             "Cannot define ${property.description} in ${owner.description}"
         )
 
-        try {
+        if (property.type is EnumType && !property.type.exists(domain)) {
+            results.unknown(
+                "No enum definition '${property.type.enumName}' found to check if a value fits to a enum type"
+            )
+        } else {
             //Соответствие типа значению
             results.checkValid(
                 property.type.fits(value, domain),
                 "Type of ${property.description} (${property.type}) does not " +
                         "fit the value '$value' defined in ${owner.description}"
             )
-        } catch (e: DomainDefinitionException) { //type.fits может выкинуть исключение для неизвестного енама
-            results.add(e)
         }
 
         //Переопределение значений выше? Но можно сказать что это разрешено

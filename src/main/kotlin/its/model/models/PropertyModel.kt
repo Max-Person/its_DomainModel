@@ -1,5 +1,6 @@
 package its.model.models
 
+import its.model.definition.types.Range
 import its.model.expressions.types.EnumValue
 import kotlin.reflect.KClass
 

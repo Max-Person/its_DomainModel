@@ -4,7 +4,7 @@ import its.model.definition.*
 import its.model.definition.LinkQuantifier.Companion.ANY_COUNT
 import its.model.definition.loqi.LoqiGrammarParser.*
 import its.model.definition.loqi.LoqiStringUtils.extractEscapes
-import its.model.models.*
+import its.model.definition.types.*
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.tree.ParseTree
@@ -263,7 +263,7 @@ class LoqiDomainBuilder private constructor(
     }
 
     private fun IntRangeContext.getRange(): Range {
-        return if (intList() != null) DiscreteRange(intList().INTEGER().map { it.text.toDouble() })
+        return if (intList() != null) DiscreteRange(intList().INTEGER().map { it.text.toDouble() }.toSet())
         else {
             val start =
                 if (intRangeStart().INTEGER() != null) intRangeStart().INTEGER().text.toDouble()
@@ -278,7 +278,7 @@ class LoqiDomainBuilder private constructor(
     }
 
     private fun DoubleRangeContext.getRange(): Range {
-        return if (doubleList() != null) DiscreteRange(doubleList().DOUBLE().map { it.text.toDouble() })
+        return if (doubleList() != null) DiscreteRange(doubleList().DOUBLE().map { it.text.toDouble() }.toSet())
         else {
             val start =
                 if (doubleRangeStart().DOUBLE() != null) doubleRangeStart().DOUBLE().text.toDouble()
@@ -346,8 +346,8 @@ class LoqiDomainBuilder private constructor(
         }
     }
 
-    private fun getRelationshipScale(string: String): RelationshipModel.ScaleType {
-        return RelationshipModel.ScaleType.fromString(string) ?: throw ThisShouldNotHappen()
+    private fun getRelationshipScale(string: String): BaseRelationshipKind.ScaleType {
+        return BaseRelationshipKind.ScaleType.fromString(string) ?: throw ThisShouldNotHappen()
     }
 
     private fun RelationshipQuantifierContext.getQuantifier(): LinkQuantifier {

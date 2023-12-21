@@ -1,18 +1,13 @@
 package its.model.expressions.literals
 
+import its.model.definition.types.DoubleType
 import its.model.expressions.Operator
-import its.model.expressions.types.Types
 import its.model.expressions.visitors.LiteralBehaviour
-import kotlin.reflect.KClass
 
 /**
- * Double литерал
- * @param value Значение
+ * [DoubleType] литерал
  */
-class DoubleLiteral(value: Double) : ValueLiteral<Double>(value) {
-
-    override val resultDataType: KClass<Double>
-        get() = Types.Double
+class DoubleLiteral(value: Double) : ValueLiteral<Double, DoubleType>(value, DoubleType(value)) {
 
     override fun clone(): Operator = DoubleLiteral(value)
 

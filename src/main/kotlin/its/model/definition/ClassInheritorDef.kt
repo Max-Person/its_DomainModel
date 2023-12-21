@@ -105,6 +105,12 @@ sealed class ClassInheritorDef<Self : ClassInheritorDef<Self>> : DomainDefWithMe
         }
 
     /**
+     * Найти определение свойства по имени, с учетом наследования
+     */
+    fun findPropertyDef(propertyName: String) =
+        findPropertyDef(propertyName, DomainValidationResultsThrowImmediately())
+
+    /**
      * Все определенные для данной сущности отношения
      */
     val allRelationships: List<RelationshipDef>
@@ -113,6 +119,12 @@ sealed class ClassInheritorDef<Self : ClassInheritorDef<Self>> : DomainDefWithMe
             getInheritanceLineage().forEach { list.addAll(it.declaredRelationships) }
             return list
         }
+
+    /**
+     * Найти определение отношения по имени, с учетом наследования
+     */
+    fun findRelationshipDef(relationshipName: String) =
+        findRelationshipDef(relationshipName, DomainValidationResultsThrowImmediately())
 
     /**
      * Получить значение свойства с учетом наследования

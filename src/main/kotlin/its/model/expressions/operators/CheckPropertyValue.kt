@@ -1,47 +1,50 @@
 package its.model.expressions.operators
 
+import its.model.definition.Domain
+import its.model.definition.types.AnyType
+import its.model.definition.types.BooleanType
+import its.model.definition.types.ObjectType
+import its.model.definition.types.Type
+import its.model.expressions.ExpressionContext
+import its.model.expressions.ExpressionValidationResults
 import its.model.expressions.Operator
-import its.model.expressions.literals.PropertyRef
-import its.model.expressions.types.Types
 import its.model.expressions.visitors.OperatorBehaviour
 
 /**
- * Оператор проверки значения свойства объекта
+ * Проверить, имеет ли свойство объекта искомое значение
+ *
+ * Возвращает [BooleanType]
+ * @param objectExpr целевой объект ([ObjectType])
+ * @param propertyName имя свойства
+ * @param valueExpr проверяемое значение (Тип соответствующий типу свойства)
  */
-class CheckPropertyValue(args: List<Operator>) : BaseOperator(args) {
+class CheckPropertyValue(
+    val objectExpr: Operator,
+    val propertyName: String,
+    val valueExpr: Operator,
+) : Operator() {
 
-    /**
-     * Является ли оператор негативным (т.е. нужно ли отрицание при компиляции)
-     */
-    internal var isNegative = false
+    override val children: List<Operator>
+        get() = listOf(objectExpr, valueExpr)
 
-    override val argsDataTypes
-        get() = listOf(
-            listOf(Types.Object, PropertyRef::class, Types.Integer),
-            listOf(Types.Object, PropertyRef::class, Types.Double),
-            listOf(Types.Object, PropertyRef::class, Types.Boolean),
-            listOf(Types.Object, PropertyRef::class, Types.String),
-            listOf(Types.Object, PropertyRef::class, Types.Enum)
+    override fun validateAndGetType(
+        domain: Domain,
+        results: ExpressionValidationResults,
+        context: ExpressionContext
+    ): Type<*> {
+        val type = BooleanType
+        //т.к. CheckPropertyValue это синтаксический сахар, то валидация такая же как и у GetPropertyValue
+        val propertyType = GetPropertyValue(objectExpr, propertyName).validateAndGetType(domain, results, context)
+        if (propertyType is AnyType) return type
+
+        val valueType = valueExpr.validateAndGetType(domain, results, context)
+        results.checkConforming(
+            propertyType.castFits(valueType, domain),
+            "$description checks for a value of type $valueType in a property $propertyName, " +
+                    "which has a non-compatible type '$propertyType'"
         )
 
-    val objectExpr get() = arg(0)
-    val propertyName get() = (arg(1) as PropertyRef).name
-    val valueExpr get() = arg(2)
-
-    override val resultDataType get() = Types.Boolean
-
-    override fun clone(): Operator {
-        val newArgs = ArrayList<Operator>()
-
-        args.forEach { arg ->
-            newArgs.add(arg.clone())
-        }
-
-        return CheckPropertyValue(newArgs)
-    }
-
-    override fun clone(newArgs: List<Operator>): Operator {
-        return CheckPropertyValue(newArgs)
+        return type
     }
 
     override fun <I> use(behaviour: OperatorBehaviour<I>): I {

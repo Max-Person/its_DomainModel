@@ -5,6 +5,9 @@ import its.model.definition.Utils.permutations
 import its.model.definition.rdf.RDFUtils.POAS_PREF
 import its.model.definition.rdf.RDFUtils.RDFS_PREF
 import its.model.definition.rdf.RDFUtils.RDF_PREF
+import its.model.definition.types.EnumType
+import its.model.definition.types.EnumValue
+import its.model.definition.types.Type
 import org.apache.jena.rdf.model.*
 import java.io.File
 import java.util.*

@@ -4,7 +4,7 @@ import its.model.definition.*
 import its.model.definition.LinkQuantifier.Companion.ANY_COUNT
 import its.model.definition.loqi.LoqiStringUtils.insertEscapes
 import its.model.definition.loqi.LoqiStringUtils.isSimpleLoqiName
-import its.model.models.*
+import its.model.definition.types.*
 import java.io.Writer
 
 
@@ -384,6 +384,7 @@ class LoqiDomainWriter private constructor(
             is DoubleType -> "double${range.toLoqi(false)}"
             is IntegerType -> "int${range.toLoqi(true)}"
             is StringType -> "string"
+            else -> throw ThisShouldNotHappen()
         }
     }
 
@@ -413,10 +414,10 @@ class LoqiDomainWriter private constructor(
         return if (this == ANY_COUNT) "*" else this.toString()
     }
 
-    private fun RelationshipModel.ScaleType.toLoqi(): String {
+    private fun BaseRelationshipKind.ScaleType.toLoqi(): String {
         return when (this) {
-            RelationshipModel.ScaleType.Linear -> "linear"
-            RelationshipModel.ScaleType.Partial -> "partial"
+            BaseRelationshipKind.ScaleType.Linear -> "linear"
+            BaseRelationshipKind.ScaleType.Partial -> "partial"
         }
     }
 

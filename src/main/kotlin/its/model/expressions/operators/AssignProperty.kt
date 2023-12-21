@@ -1,101 +1,71 @@
 package its.model.expressions.operators
 
-import its.model.DomainModel
+import its.model.definition.Domain
+import its.model.definition.DomainValidationResultsThrowImmediately
+import its.model.definition.PropertyDef
+import its.model.definition.types.*
+import its.model.expressions.ExpressionContext
+import its.model.expressions.ExpressionValidationResults
 import its.model.expressions.Operator
-import its.model.expressions.literals.*
-import its.model.expressions.types.Types
 import its.model.expressions.visitors.OperatorBehaviour
 
 /**
- * Присваивание
+ * Присвоение значения свойству объекта
+ *
+ * Ничего не возвращает ([NoneType])
+ * @param objectExpr целевой объект ([ObjectType])
+ * @param propertyName имя свойства
+ * @param valueExpr присваиваемое значение свойства (Тип соответствующий типу свойства)
  */
-class AssignProperty(args: List<Operator>) : BaseOperator(args) {
+class AssignProperty(
+    val objectExpr: Operator,
+    val propertyName: String,
+    val valueExpr: Operator,
+) : Operator() {
 
-    init {
-        if (args.size == 3) {
-            val arg2 = arg(2)
+    override val children: List<Operator>
+        get() = listOf(objectExpr, valueExpr)
 
-            val propertyName = (arg(1) as PropertyRef).name
-            val newValueDataType = arg(2).resultDataType
-
-            require(DomainModel.propertiesDictionary.isStatic(propertyName) == false) {
-                "Статическому свойству $propertyName нельзя присваивать значения."
-            }
-            require(DomainModel.propertiesDictionary.dataType(propertyName) == newValueDataType) {
-                "Тип данных $newValueDataType не соответствует типу ${
-                    DomainModel.propertiesDictionary.dataType(
-                        propertyName
-                    )
-                } свойства $propertyName."
-            }
-            require(arg2 is Literal || arg2 is GetPropertyValue) {
-                "Нельзя присвоить свойству динамическое значение." // FIXME?: можно, но тогда не получится его контролировать
-            }
-
-            // FIXME?: проверять попадает ли в диапазон значение при arg2 is GetPropertyValue?
-            when (arg2) {
-                is IntegerLiteral -> {
-                    require(DomainModel.propertiesDictionary.isValueInRange(propertyName, arg2.value) == true) {
-                        "Значение ${arg2.value} вне диапазона значений свойства $propertyName."
-                    }
-                }
-
-                is DoubleLiteral -> {
-                    require(DomainModel.propertiesDictionary.isValueInRange(propertyName, arg2.value) == true) {
-                        "Значение ${arg2.value} вне диапазона значений свойства $propertyName."
-                    }
-                }
-
-                is EnumLiteral -> {
-                    require(DomainModel.propertiesDictionary.enumName(propertyName)!! == arg2.value.ownerEnum) {
-                        "Тип перечисления ${DomainModel.propertiesDictionary.enumName(propertyName)} свойства $propertyName не соответствует типу перечисления ${arg2.value.ownerEnum} значения."
-                    }
-                }
-
-                is GetPropertyValue -> {
-                    require(
-                        DomainModel.propertiesDictionary.enumName(propertyName)!!
-                                == DomainModel.propertiesDictionary.enumName((arg2.arg(1) as PropertyRef).name)!!
-                    ) {
-                        "Тип перечисления ${DomainModel.propertiesDictionary.enumName(propertyName)} свойства $propertyName не соответствует типу перечисления ${
-                            DomainModel.propertiesDictionary.enumName(
-                                (arg2.arg(1) as PropertyRef).name
-                            )
-                        } значения."
-                    }
-                }
-            }
+    override fun validateAndGetType(
+        domain: Domain,
+        results: ExpressionValidationResults,
+        context: ExpressionContext
+    ): Type<*> {
+        val type = BooleanType
+        val objType = objectExpr.validateAndGetType(domain, results, context)
+        if (objType !is ObjectType) {
+            results.invalid("Argument of $description should be an object, but was $objType")
+            return type
         }
-    }
+        if (!objType.exists(domain)) {
+            //Если невалидный класс, это кинется где-то ниже (где этот тип создавался)
+            return type
+        }
 
-    override val argsDataTypes
-        get() = listOf(
-            listOf(Types.Object, PropertyRef::class, Types.Integer),
-            listOf(Types.Object, PropertyRef::class, Types.Double),
-            listOf(Types.Object, PropertyRef::class, Types.Boolean),
-            listOf(Types.Object, PropertyRef::class, Types.String),
-            listOf(Types.Object, PropertyRef::class, Types.Enum),
+        val clazz = objType.findIn(domain)
+        val propertyOpt = clazz.findPropertyDef(propertyName)
+        if (propertyOpt.isEmpty) {
+            results.nonConforming(
+                "No property '$propertyName' exists for objects of type '${clazz.name}' " +
+                        "to be read via $description"
+            )
+            return type
+        }
+
+        val property = propertyOpt.get()
+        results.checkConforming(
+            property.kind == PropertyDef.PropertyKind.OBJECT,
+            "Cannot assign a value to a ${property.description}"
         )
 
-    val objectExpr get() = arg(0)
-    val propertyName get() = (arg(1) as PropertyRef).name
-    val valueExpr get() = arg(2)
+        val propertyType = property.type
+        val valueType = valueExpr.validateAndGetType(domain, results, context)
+        results.checkConforming(
+            propertyType.castFits(valueType, domain),
+            "Cannot assign a value of type $valueType to a property of type $propertyType"
+        )
 
-    override val resultDataType
-        get() = Types.None
-
-    override fun clone(): Operator {
-        val newArgs = ArrayList<Operator>()
-
-        args.forEach { arg ->
-            newArgs.add(arg.clone())
-        }
-
-        return AssignProperty(newArgs)
-    }
-
-    override fun clone(newArgs: List<Operator>): Operator {
-        return AssignProperty(newArgs)
+        return type
     }
 
     override fun <I> use(behaviour: OperatorBehaviour<I>): I {

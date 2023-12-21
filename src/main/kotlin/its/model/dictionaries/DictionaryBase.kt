@@ -6,11 +6,11 @@ import com.github.drapostolos.typeparser.SplitStrategyHelper
 import com.github.drapostolos.typeparser.TypeParser
 import com.opencsv.CSVParserBuilder
 import com.opencsv.CSVReaderBuilder
+import its.model.definition.types.ContinuousRange
+import its.model.definition.types.DiscreteRange
+import its.model.definition.types.Range
 import its.model.expressions.types.ComparisonResult
 import its.model.expressions.types.Types.typeFromString
-import its.model.models.ContinuousRange
-import its.model.models.DiscreteRange
-import its.model.models.Range
 import its.model.models.RelationshipModel
 import java.io.Reader
 import java.lang.reflect.ParameterizedType
@@ -66,7 +66,7 @@ abstract class DictionaryBase<T : Any>(protected val storedType: KClass<T>) : It
                     discrete[0].split(RANGE_SEPARATOR, ignoreCase = true, limit = 2)
                         .run { this[0].toDouble() to this[1].toDouble() })
             } else
-                return@registerParser DiscreteRange(discrete.map { it.toDouble() })
+                return@registerParser DiscreteRange(discrete.map { it.toDouble() }.toSet())
         }.setNullStringStrategy { s: String, nullStringStrategyHelper: NullStringStrategyHelper -> s.equals("") }
             .build()
 

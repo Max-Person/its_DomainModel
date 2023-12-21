@@ -1,25 +1,26 @@
 package its.model.expressions.literals
 
+import java.util.*
+
+/**
+ * Ссылочный литерал
+ */
 abstract class ReferenceLiteral(
     val name: String,
-) : Literal {
+) : Literal() {
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as ValueLiteral<*>
+        other as ReferenceLiteral
 
-        if (resultDataType != other.resultDataType) return false
-        if (name != other.value) return false
+        if (name != other.name) return false
 
         return true
     }
 
     override fun hashCode(): Int {
-        var result = name.hashCode()
-        result = 31 * result + javaClass.hashCode()
-        result = 31 * result + resultDataType.hashCode()
-        return result
+        return Objects.hash(this::class, name)
     }
 }

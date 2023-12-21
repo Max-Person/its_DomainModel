@@ -1,43 +1,43 @@
 package its.model.expressions.operators
 
+import its.model.definition.Domain
+import its.model.definition.types.BooleanType
+import its.model.definition.types.ComparisonType
+import its.model.definition.types.NumericType
+import its.model.definition.types.Type
+import its.model.expressions.ExpressionContext
+import its.model.expressions.ExpressionValidationResults
 import its.model.expressions.Operator
-import its.model.expressions.types.Types
 import its.model.expressions.visitors.OperatorBehaviour
 
 /**
- * Сравнение
- * TODO?: сравнение объектов на больше/меньше?
+ * Трехзначное сравнение (больше/меньше/равно)
+ *
+ * Возвращает [ComparisonType]
+ * @param firstExpr первое сравниваемое значение ([NumericType])
+ * @param secondExpr второе сравниваемое значение ([NumericType])
  */
-class Compare(args: List<Operator>) : BaseOperator(args) {
+class Compare(
+    val firstExpr: Operator,
+    val secondExpr: Operator,
+) : Operator() {
 
-    override val argsDataTypes
-        get() = listOf(
-            listOf(Types.Integer, Types.Double),
-            listOf(Types.Double, Types.Integer),
-            listOf(Types.Integer, Types.Integer),
-            listOf(Types.Double, Types.Double),
-            listOf(Types.String, Types.String),
-            listOf(Types.Object, Types.Object),
-            listOf(Types.Enum, Types.Enum)
+    override val children: List<Operator>
+        get() = listOf(firstExpr, secondExpr)
+
+    override fun validateAndGetType(
+        domain: Domain,
+        results: ExpressionValidationResults,
+        context: ExpressionContext
+    ): Type<*> {
+        val firstType = firstExpr.validateAndGetType(domain, results, context)
+        val secondType = secondExpr.validateAndGetType(domain, results, context)
+        results.checkValid(
+            firstType is NumericType && secondType is NumericType,
+            "$description is not compatible with non-numeric types " +
+                    "(trying to compare values of types '$firstType' and '$secondType')"
         )
-
-    val firstExpr get() = arg(0)
-    val secondExpr get() = arg(1)
-
-    override val resultDataType get() = Types.ComparisonResult
-
-    override fun clone(): Operator {
-        val newArgs = ArrayList<Operator>()
-
-        args.forEach { arg ->
-            newArgs.add(arg.clone())
-        }
-
-        return Compare(newArgs)
-    }
-
-    override fun clone(newArgs: List<Operator>): Operator {
-        return Compare(newArgs)
+        return ComparisonType
     }
 
     override fun <I> use(behaviour: OperatorBehaviour<I>): I {

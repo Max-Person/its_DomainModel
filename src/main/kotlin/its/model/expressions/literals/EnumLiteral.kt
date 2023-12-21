@@ -1,28 +1,41 @@
 package its.model.expressions.literals
 
-import its.model.DomainModel
+import its.model.definition.Domain
+import its.model.definition.types.EnumType
+import its.model.definition.types.EnumValue
+import its.model.definition.types.Type
+import its.model.expressions.ExpressionContext
+import its.model.expressions.ExpressionValidationResults
 import its.model.expressions.Operator
-import its.model.expressions.types.EnumValue
-import its.model.expressions.types.Types
 import its.model.expressions.visitors.LiteralBehaviour
 import kotlin.reflect.KClass
 
 /**
- * Enum литерал
- * @param value Значение
+ * [EnumType] литерал
  */
-class EnumLiteral(value: EnumValue) : ValueLiteral<EnumValue>(value) {
+class EnumLiteral(value: EnumValue) : ValueLiteral<EnumValue, EnumType>(value, EnumType(value.enumName)) {
 
-    init {
-        // Проверяем существование enum и наличие у него такого значения
-        require(DomainModel.enumsDictionary.exist(value.ownerEnum)) { "Enum ${value.ownerEnum} не объявлен в словаре." }
-        require(DomainModel.enumsDictionary.containsValue(value) == true) {
-            "Enum ${value.ownerEnum} не содержит значения ${value.value}."
+    override fun validateAndGetType(
+        domain: Domain,
+        results: ExpressionValidationResults,
+        context: ExpressionContext
+    ): Type<*> {
+        if (!type.exists(domain)) {
+            results.invalid(
+                "No enum '${value.enumName}' found in domain, " +
+                        "but it is used as an owner enum in $description"
+            )
+            return type
         }
-    }
 
-    override val resultDataType: KClass<EnumValue>
-        get() = Types.Enum
+        val enum = type.findIn(domain)
+        results.checkConforming(
+            enum.values.get(value.valueName).isPresent,
+            "Enum '${value.enumName}' does not contain a '${value.valueName}' value, " +
+                    "but it is used as one of its values in $description"
+        )
+        return type
+    }
 
     override fun clone(): Operator = EnumLiteral(value)
 

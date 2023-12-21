@@ -1,57 +1,68 @@
 package its.model.expressions.operators
 
+import its.model.definition.Domain
+import its.model.definition.types.*
+import its.model.expressions.ExpressionContext
+import its.model.expressions.ExpressionValidationResults
 import its.model.expressions.Operator
-import its.model.expressions.types.Types
 import its.model.expressions.visitors.OperatorBehaviour
 
 /**
  * Сравнение с явным указанием оператора
- * TODO?: сравнение объектов на больше/меньше?
+ *
+ * Возвращает [ComparisonType]
+ * @param firstExpr первое сравниваемое значение ([AnyType] для (не)равенств, иначе [NumericType])
+ * @param operator оператор сравнения
+ * @param secondExpr второе сравниваемое значение ([AnyType] для (не)равенств, иначе [NumericType])
  */
 class CompareWithComparisonOperator(
-    args: List<Operator>,
-    var operator: ComparisonOperator
-) : BaseOperator(args) {
+    val firstExpr: Operator,
+    val operator: ComparisonOperator,
+    val secondExpr: Operator,
+) : Operator() {
 
-    sealed class ComparisonOperator {
+    enum class ComparisonOperator {
 
         /**
          * Меньше
          */
-        object Less : ComparisonOperator()
+        Less,
 
         /**
          * Больше
          */
-        object Greater : ComparisonOperator()
+        Greater,
 
         /**
          * Равно
          */
-        object Equal : ComparisonOperator()
+        Equal,
 
         /**
          * Меньше или равно
          */
-        object LessEqual : ComparisonOperator()
+        LessEqual,
 
         /**
          * Больше или равно
          */
-        object GreaterEqual : ComparisonOperator()
+        GreaterEqual,
 
         /**
          * Не равно
          */
-        object NotEqual : ComparisonOperator()
+        NotEqual,
+
+        ;
+
+        val isEquality
+            get() = this == Equal || this == NotEqual
+
 
         companion object {
 
-            fun values(): Array<ComparisonOperator> {
-                return arrayOf(Less, Greater, Equal, LessEqual, GreaterEqual, NotEqual)
-            }
-
-            fun valueOf(value: String) = when (value.uppercase()) {
+            @JvmStatic
+            fun fromString(value: String) = when (value.uppercase()) {
                 "LESS" -> Less
                 "GREATER" -> Greater
                 "EQ", "EQUAL" -> Equal
@@ -63,49 +74,22 @@ class CompareWithComparisonOperator(
         }
     }
 
-    /**
-     * Является ли оператор негативным (т.е. нужно ли отрицание при компиляции)
-     */
-    internal var isNegative = false
+    override val children: List<Operator>
+        get() = listOf(firstExpr, secondExpr)
 
-    init {
-        require(
-            operator == ComparisonOperator.Equal || operator == ComparisonOperator.NotEqual
-                    || !(firstExpr.resultDataType == Types.String || firstExpr.resultDataType == Types.Object || firstExpr.resultDataType == Types.Enum || firstExpr.resultDataType == Types.Class)
-        ) { "Оператор сравнения величины ($operator) не совместим с нечисловыми типами данных (${firstExpr.resultDataType.simpleName})" }
-    }
-
-    override val argsDataTypes
-        get() = listOf(
-            listOf(Types.Integer, Types.Double),
-            listOf(Types.Double, Types.Integer),
-            listOf(Types.Integer, Types.Integer),
-            listOf(Types.Double, Types.Double),
-            listOf(Types.String, Types.String),
-            listOf(Types.Object, Types.Object),
-            listOf(Types.Class, Types.Class),
-            listOf(Types.Enum, Types.Enum)
+    override fun validateAndGetType(
+        domain: Domain,
+        results: ExpressionValidationResults,
+        context: ExpressionContext
+    ): Type<*> {
+        val firstType = firstExpr.validateAndGetType(domain, results, context)
+        val secondType = secondExpr.validateAndGetType(domain, results, context)
+        results.checkValid(
+            operator.isEquality || (firstType is NumericType && secondType is NumericType),
+            "Comparison operator $operator is not compatible with non-numeric types " +
+                    "(trying to compare values of types '$firstType' and '$secondType')"
         )
-
-    val firstExpr get() = arg(0)
-    val secondExpr get() = arg(1)
-
-
-    override val resultDataType get() = Types.Boolean
-
-
-    override fun clone(): Operator {
-        val newArgs = ArrayList<Operator>()
-
-        args.forEach { arg ->
-            newArgs.add(arg.clone())
-        }
-
-        return CompareWithComparisonOperator(newArgs, operator)
-    }
-
-    override fun clone(newArgs: List<Operator>): Operator {
-        return CompareWithComparisonOperator(newArgs, operator)
+        return BooleanType
     }
 
     override fun <I> use(behaviour: OperatorBehaviour<I>): I {

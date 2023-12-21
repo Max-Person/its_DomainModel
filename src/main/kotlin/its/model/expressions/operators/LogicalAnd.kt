@@ -1,33 +1,41 @@
 package its.model.expressions.operators
 
+import its.model.definition.Domain
+import its.model.definition.types.BooleanType
+import its.model.definition.types.NumericType
+import its.model.definition.types.Type
+import its.model.expressions.ExpressionContext
+import its.model.expressions.ExpressionValidationResults
 import its.model.expressions.Operator
-import its.model.expressions.types.Types
 import its.model.expressions.visitors.OperatorBehaviour
 
 /**
  * Логическое И
+ *
+ * Возвращает [BooleanType]
+ * @param firstExpr первый аргумент ([BooleanType])
+ * @param secondExpr первый аргумент  ([BooleanType])
  */
-class LogicalAnd(args: List<Operator>) : BaseOperator(args) {
+class LogicalAnd(
+    val firstExpr: Operator,
+    val secondExpr: Operator,
+) : Operator() {
 
-    override val argsDataTypes get() = listOf(listOf(Types.Boolean, Types.Boolean))
+    override val children: List<Operator>
+        get() = listOf(firstExpr, secondExpr)
 
-    val firstExpr get() = arg(0)
-    val secondExpr get() = arg(1)
-
-    override val resultDataType get() = Types.Boolean
-
-    override fun clone(): Operator {
-        val newArgs = ArrayList<Operator>()
-
-        args.forEach { arg ->
-            newArgs.add(arg.clone())
-        }
-
-        return LogicalAnd(newArgs)
-    }
-
-    override fun clone(newArgs: List<Operator>): Operator {
-        return LogicalAnd(newArgs)
+    override fun validateAndGetType(
+        domain: Domain,
+        results: ExpressionValidationResults,
+        context: ExpressionContext
+    ): Type<*> {
+        val firstType = firstExpr.validateAndGetType(domain, results, context)
+        val secondType = secondExpr.validateAndGetType(domain, results, context)
+        results.checkValid(
+            firstType is BooleanType && secondType is BooleanType,
+            "Both arguments of a $description should be of boolean type, but were '$firstType && $secondType'"
+        )
+        return BooleanType
     }
 
     override fun <I> use(behaviour: OperatorBehaviour<I>): I {

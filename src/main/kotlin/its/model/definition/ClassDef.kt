@@ -94,6 +94,55 @@ class ClassDef(
         get() = domain.classes.none { clazz -> clazz.parentName.map { it == this.name }.orElse(false) } //Нет детей
                 || domain.objects.any { obj -> obj.className == this.name } //есть экземпляры
 
+    /**
+     * Все отношения данного класса, с помощью которых возможна проекция;
+     * Отношение позволяет проекцию, если является бинарным и единично квантифицирована на стороне субъекта ("Один к ...")
+     */
+    val projectionRelationships: List<RelationshipDef>
+        get() = allRelationships.filter { it.isBinary && it.effectiveQuantifier.subjCount == 1 }
+
+    /**
+     * Отношение, с помощью которого данный класс может быть спроецирован на [other], с учетом наследования
+     * @throws ModelMisuseException если такого отношения нет, или оно не одно
+     * @see canBeProjectedOnto
+     */
+    fun getProjectionRelationship(other: ClassDef): RelationshipDef {
+        val fittingRelationships = projectionRelationships.filter { it.objectClasses.first().isSubclassOf(other) }
+        preventMisuse(
+            fittingRelationships.isNotEmpty(),
+            "No projection relationship exists from $description onto ${other.description}"
+        )
+        preventMisuse(
+            fittingRelationships.size < 2,
+            "Ambiguous projection from $description onto ${other.description} - " +
+                    "can be done with all of the following relationships: "
+        )
+        return fittingRelationships.single()
+    }
+
+    /**
+     * Может ли данный класс может быть спроецирован на [other], с учетом наследования
+     * @see getProjectionRelationship
+     */
+    fun canBeProjectedOnto(other: ClassDef): Boolean {
+        return try {
+            getProjectionRelationship(other)
+            true
+        } catch (e: ModelMisuseException) {
+            false
+        }
+    }
+
+    /**
+     * Список всех классов, на которые может быть спроецирован текущий;
+     *
+     * В данный список попадают только самые дочерние классы,
+     * но данный класс также может быть спроецирован на их родителей,
+     * поэтому для фактической проверки лучше использовать [canBeProjectedOnto]
+     */
+    val projectionClasses: List<ClassDef>
+        get() = projectionRelationships.map { it.objectClasses.first() }.filter { this.canBeProjectedOnto(it) }
+
 }
 
 class ClassContainer(domain: Domain) : RootDefContainer<ClassDef>(domain) {

@@ -99,13 +99,6 @@ object Types {
     }
 
     @JvmStatic
-    fun Operator.fits(expectation: KClass<*>): Boolean {
-        return if (expectation.isSubclassOf(Operator::class)) this::class == expectation else this.resultDataType.canCast(
-            expectation
-        )
-    }
-
-    @JvmStatic
     fun typeFromString(value: String) = when (value.uppercase()) {
         "OBJECT" -> Object
         "CLASS" -> Class

@@ -1,34 +1,40 @@
 package its.model.expressions.operators
 
+import its.model.definition.Domain
+import its.model.definition.types.BooleanType
+import its.model.definition.types.ClassType
+import its.model.definition.types.ObjectType
+import its.model.definition.types.Type
+import its.model.expressions.ExpressionContext
+import its.model.expressions.ExpressionValidationResults
 import its.model.expressions.Operator
-import its.model.expressions.types.Types
 import its.model.expressions.visitors.OperatorBehaviour
 
 /**
- * Получить класс объекта
+ * Получить непосредственный класс объекта
+ *
+ * Возвращает [ClassType]
+ * @param objectExpr объект, у которого берется класс ([ObjectType])
  */
-class GetClass(args: List<Operator>) : BaseOperator(args) {
+class GetClass(
+    val objectExpr: Operator,
+) : Operator() {
 
-    override val argsDataTypes get() = listOf(listOf(Types.Object))
+    override val children: List<Operator>
+        get() = listOf(objectExpr)
 
-    val objectExpr get() = arg(0)
-
-
-    override val resultDataType get() = Types.Class
-
-
-    override fun clone(): Operator {
-        val newArgs = ArrayList<Operator>()
-
-        args.forEach { arg ->
-            newArgs.add(arg.clone())
+    override fun validateAndGetType(
+        domain: Domain,
+        results: ExpressionValidationResults,
+        context: ExpressionContext
+    ): Type<*> {
+        val objType = objectExpr.validateAndGetType(domain, results, context)
+        if (objType !is ObjectType) {
+            results.invalid("Argument of $description should be an object, but was $objType")
+            return ClassType.untyped()
         }
 
-        return GetClass(newArgs)
-    }
-
-    override fun clone(newArgs: List<Operator>): Operator {
-        return GetClass(newArgs)
+        return objType.toClassType()
     }
 
     override fun <I> use(behaviour: OperatorBehaviour<I>): I {

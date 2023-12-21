@@ -1,19 +1,17 @@
 package its.model.expressions.literals
 
+import its.model.definition.Domain
+import its.model.definition.types.BooleanType
+import its.model.definition.types.Type
+import its.model.expressions.ExpressionContext
+import its.model.expressions.ExpressionValidationResults
 import its.model.expressions.Operator
-import its.model.expressions.types.Types
 import its.model.expressions.visitors.LiteralBehaviour
-import kotlin.reflect.KClass
 
 /**
- * Boolean литерал
- * @param value Значение
+ * [BooleanType] литерал
  */
-class BooleanLiteral(value: Boolean) : ValueLiteral<Boolean>(value) {
-
-    override val resultDataType: KClass<Boolean>
-        get() = Types.Boolean
-
+class BooleanLiteral(value: Boolean) : ValueLiteral<Boolean, BooleanType>(value, BooleanType) {
 
     override fun clone(): Operator = BooleanLiteral(value)
 

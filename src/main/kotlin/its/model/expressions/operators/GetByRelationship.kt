@@ -1,40 +1,68 @@
 package its.model.expressions.operators
 
+import its.model.definition.Domain
+import its.model.definition.DomainValidationResultsThrowImmediately
+import its.model.definition.types.BooleanType
+import its.model.definition.types.ObjectType
+import its.model.definition.types.Type
+import its.model.expressions.ExpressionContext
+import its.model.expressions.ExpressionValidationResults
 import its.model.expressions.Operator
-import its.model.expressions.literals.RelationshipRef
-import its.model.expressions.types.Types
 import its.model.expressions.visitors.OperatorBehaviour
+import java.util.*
 
 /**
  * Получить объект по отношению
- * TODO: еще bool условие
- * TODO: проверять что отношение бинарное?
+ *
+ * Возвращает [ObjectType], выбрасывает ошибку, если объекта нет
+ * @param subjectExpr исходный объект (субъект) проверяемой связи ([ObjectType])
+ * @param relationshipName имя отношения
  */
 class GetByRelationship(
-    args: List<Operator>
-) : BaseOperator(args) {
+    val subjectExpr: Operator,
+    val relationshipName: String,
+) : Operator() {
 
-    override val argsDataTypes get() = listOf(listOf(Types.Object, RelationshipRef::class))
+    override val children: List<Operator>
+        get() = listOf(subjectExpr)
 
-    val subjectExpr get() = arg(0)
-    val relationshipName get() = (arg(1) as RelationshipRef).name
-
-
-    override val resultDataType get() = Types.Object
-
-
-    override fun clone(): Operator {
-        val newArgs = ArrayList<Operator>()
-
-        args.forEach { arg ->
-            newArgs.add(arg.clone())
+    override fun validateAndGetType(
+        domain: Domain,
+        results: ExpressionValidationResults,
+        context: ExpressionContext
+    ): Type<*> {
+        val invalidType = ObjectType.untyped()
+        val subjType = subjectExpr.validateAndGetType(domain, results, context)
+        if (subjType !is ObjectType) {
+            results.invalid("Argument of $description should be an object, but was $subjType")
+            return invalidType
+        }
+        if (!subjType.exists(domain)) {
+            //Если невалидный класс, это кинется где-то ниже (где этот тип создавался)
+            return invalidType
         }
 
-        return GetByRelationship(newArgs)
-    }
+        val clazz = subjType.findIn(domain)
+        val relationshipOpt = clazz.findRelationshipDef(relationshipName)
+        if (relationshipOpt.isEmpty) {
+            results.nonConforming(
+                "No relationship '$relationshipName' exists for objects of type '${clazz.name}' " +
+                        "to be read via $description"
+            )
+            return invalidType
+        }
 
-    override fun clone(newArgs: List<Operator>): Operator {
-        return GetByRelationship(newArgs)
+        val relationship = relationshipOpt.get()
+        if (!relationship.isBinary) {
+            results.invalid(
+                "Non-binary relationship '$relationshipName' " +
+                        "cannot be used with $description, " +
+                        "as the object part of the link statement contains multiple objects"
+            )
+            return invalidType
+        }
+
+        return ObjectType(relationship.objectClassNames.first())
     }
 
     override fun <I> use(behaviour: OperatorBehaviour<I>): I {

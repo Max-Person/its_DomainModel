@@ -1,37 +1,56 @@
 package its.model.expressions.operators
 
-import its.model.DomainModel
+import its.model.definition.ClassRef
+import its.model.definition.Domain
+import its.model.definition.DomainValidationResultsThrowImmediately
+import its.model.definition.types.*
+import its.model.expressions.ExpressionContext
+import its.model.expressions.ExpressionValidationResults
 import its.model.expressions.Operator
-import its.model.expressions.literals.PropertyRef
-import its.model.expressions.types.Types
 import its.model.expressions.visitors.OperatorBehaviour
 
 /**
  * Получить значение свойства объекта
+ *
+ * Возвращает тип соответствующий типу свойства
+ * @param objectExpr целевой объект ([ObjectType])
+ * @param propertyName имя свойства
  */
-class GetPropertyValue(args: List<Operator>) : BaseOperator(args) {
+class GetPropertyValue(
+    val objectExpr: Operator,
+    val propertyName: String,
+) : Operator() {
 
-    override val argsDataTypes
-        get() = listOf(listOf(Types.Object, PropertyRef::class))
+    override val children: List<Operator>
+        get() = listOf(objectExpr)
 
-    val objectExpr get() = arg(0)
-    val propertyName get() = (arg(1) as PropertyRef).name
-
-    override val resultDataType get() = DomainModel.propertiesDictionary.dataType((args[1] as PropertyRef).name)!!
-
-
-    override fun clone(): Operator {
-        val newArgs = ArrayList<Operator>()
-
-        args.forEach { arg ->
-            newArgs.add(arg.clone())
+    override fun validateAndGetType(
+        domain: Domain,
+        results: ExpressionValidationResults,
+        context: ExpressionContext
+    ): Type<*> {
+        val invalidType = AnyType
+        val objType = objectExpr.validateAndGetType(domain, results, context)
+        if (objType !is ObjectType) {
+            results.invalid("Argument of $description should be an object, but was $objType")
+            return invalidType
+        }
+        if (!objType.exists(domain)) {
+            //Если невалидный класс, это кинется где-то ниже (где этот тип создавался)
+            return invalidType
         }
 
-        return GetPropertyValue(newArgs)
-    }
+        val clazz = objType.findIn(domain)
+        val propertyOpt = clazz.findPropertyDef(propertyName)
+        if (propertyOpt.isEmpty) {
+            results.nonConforming(
+                "No property '$propertyName' exists for objects of type '${clazz.name}' " +
+                        "to be read via $description"
+            )
+            return invalidType
+        }
 
-    override fun clone(newArgs: List<Operator>): Operator {
-        return GetPropertyValue(newArgs)
+        return propertyOpt.get().type
     }
 
     override fun <I> use(behaviour: OperatorBehaviour<I>): I {

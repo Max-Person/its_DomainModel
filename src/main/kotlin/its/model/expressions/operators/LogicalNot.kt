@@ -1,32 +1,37 @@
 package its.model.expressions.operators
 
+import its.model.definition.Domain
+import its.model.definition.types.BooleanType
+import its.model.definition.types.Type
+import its.model.expressions.ExpressionContext
+import its.model.expressions.ExpressionValidationResults
 import its.model.expressions.Operator
-import its.model.expressions.types.Types
 import its.model.expressions.visitors.OperatorBehaviour
 
 /**
  * Логическое отрицание
+ *
+ * Возвращает [BooleanType]
+ * @param operandExpr аргумент выражения ([BooleanType])
  */
-class LogicalNot(args: List<Operator>) : BaseOperator(args) {
+class LogicalNot(
+    val operandExpr: Operator,
+) : Operator() {
 
-    override val argsDataTypes get() = listOf(listOf(Types.Boolean))
+    override val children: List<Operator>
+        get() = listOf(operandExpr)
 
-    val operandExpr get() = arg(0)
-
-    override val resultDataType get() = Types.Boolean
-
-    override fun clone(): Operator {
-        val newArgs = ArrayList<Operator>()
-
-        args.forEach { arg ->
-            newArgs.add(arg.clone())
-        }
-
-        return LogicalNot(newArgs)
-    }
-
-    override fun clone(newArgs: List<Operator>): Operator {
-        return LogicalNot(newArgs)
+    override fun validateAndGetType(
+        domain: Domain,
+        results: ExpressionValidationResults,
+        context: ExpressionContext
+    ): Type<*> {
+        val opType = operandExpr.validateAndGetType(domain, results, context)
+        results.checkValid(
+            opType is BooleanType,
+            "Argument of a $description should be of boolean type, but was '$opType'"
+        )
+        return BooleanType
     }
 
     override fun <I> use(behaviour: OperatorBehaviour<I>): I {

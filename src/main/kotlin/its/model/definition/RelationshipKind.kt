@@ -1,6 +1,5 @@
 package its.model.definition
 
-import its.model.models.RelationshipModel
 import java.util.*
 
 //Вспомогательные классы для RelationshipDef
@@ -17,7 +16,7 @@ sealed interface RelationshipKind {
  * Независимое отношение
  */
 class BaseRelationshipKind(
-    val scaleType: Optional<RelationshipModel.ScaleType> = Optional.empty(),
+    val scaleType: Optional<ScaleType> = Optional.empty(),
     val quantifier: Optional<LinkQuantifier> = Optional.empty(),
 ) : RelationshipKind {
     override fun equals(other: Any?): Boolean {
@@ -35,6 +34,31 @@ class BaseRelationshipKind(
     override fun hashCode(): Int {
         return Objects.hash(this::class, scaleType, quantifier)
     }
+
+    /**
+     * Тип порядковой шкалы
+     */
+    enum class ScaleType {
+
+        /**
+         * Линейный порядок
+         */
+        Linear,
+
+        /**
+         * Частичный порядок
+         */
+        Partial;
+
+        companion object _static {
+            @JvmStatic
+            fun fromString(value: String) = when (value.uppercase()) {
+                "LINEAR" -> Linear
+                "PARTIAL" -> Partial
+                else -> null
+            }
+        }
+    }
 }
 
 /**
@@ -44,9 +68,12 @@ data class LinkQuantifier(
     val subjCount: Int = ANY_COUNT,
     val objCount: Int = ANY_COUNT,
 ) {
+    val reversed: LinkQuantifier
+        get() = LinkQuantifier(objCount, subjCount)
+
     companion object {
         @JvmStatic
-        val ANY_COUNT = -1
+        val ANY_COUNT = Int.MAX_VALUE
 
         @JvmStatic
         fun OneToOne() = LinkQuantifier(1, 1)

@@ -1,14 +1,13 @@
 package its.model.expressions
 
-import its.model.expressions.literals.DecisionTreeVar
-import its.model.expressions.operators.BaseOperator
+import its.model.expressions.literals.DecisionTreeVarLiteral
 
 fun Operator.getUsedVariables(): Set<String> {
     val set = mutableSetOf<String>()
-    if (this is DecisionTreeVar) {
+    if (this is DecisionTreeVarLiteral) {
         set.add(this.name)
-    } else if (this is BaseOperator) {
-        this.args.forEach { set.addAll(it.getUsedVariables()) }
+    } else if (this is Operator) {
+        this.children.forEach { set.addAll(it.getUsedVariables()) }
     }
     return set
 }
