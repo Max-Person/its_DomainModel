@@ -71,7 +71,7 @@ class CompareWithComparisonOperator(
     init {
         require(
             operator == ComparisonOperator.Equal || operator == ComparisonOperator.NotEqual
-                    || !(firstExpr.resultDataType == Types.String || firstExpr.resultDataType == Types.Object || firstExpr.resultDataType == Types.Enum || firstExpr.resultDataType == Types.Class)
+                    || firstExpr.resultDataType == Types.Integer || firstExpr.resultDataType == Types.Double
         ) { "Оператор сравнения величины ($operator) не совместим с нечисловыми типами данных (${firstExpr.resultDataType.simpleName})" }
     }
 
@@ -81,6 +81,7 @@ class CompareWithComparisonOperator(
             listOf(Types.Double, Types.Integer),
             listOf(Types.Integer, Types.Integer),
             listOf(Types.Double, Types.Double),
+            listOf(Types.Boolean, Types.Boolean),
             listOf(Types.String, Types.String),
             listOf(Types.Object, Types.Object),
             listOf(Types.Class, Types.Class),
