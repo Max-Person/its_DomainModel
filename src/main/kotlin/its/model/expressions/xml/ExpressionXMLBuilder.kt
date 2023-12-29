@@ -1,26 +1,21 @@
 package its.model.expressions.xml
 
+import its.model.build.xml.ElementBuildContext
+import its.model.build.xml.XMLBuildException
+import its.model.build.xml.XMLBuilder
+import its.model.definition.ThisShouldNotHappen
 import its.model.definition.types.ComparisonType
 import its.model.definition.types.EnumValue
 import its.model.expressions.Operator
 import its.model.expressions.literals.*
 import its.model.expressions.operators.*
 import org.w3c.dom.Element
-import org.w3c.dom.Node
-import org.xml.sax.InputSource
-import org.xml.sax.SAXException
-import java.io.IOException
-import java.io.StringReader
-import javax.xml.parsers.DocumentBuilderFactory
-import javax.xml.parsers.ParserConfigurationException
-import kotlin.reflect.full.findAnnotation
-import kotlin.reflect.full.findAnnotations
+import kotlin.reflect.KClass
 
 /**
- * Построение выражения из XML
- * TODO
+ * Построение выражений ([Operator]) из XML представления
  */
-object ExpressionXMLBuilder {
+object ExpressionXMLBuilder : XMLBuilder<ExpressionXMLBuilder.ExpressionBuildContext, Operator>() {
 
     /**
      * Создает выражение из строки с XML
@@ -28,27 +23,7 @@ object ExpressionXMLBuilder {
      * @return Выражение
      */
     @JvmStatic
-    fun fromXMLString(str: String): Operator? {
-        try {
-            // Создаем DocumentBuilder
-            val documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder()
-            // Создаем DOM документ из строки
-            val document = documentBuilder.parse(InputSource(StringReader(str)))
-
-            // Получаем корневой элемент документа
-            val xml: Element = document.documentElement
-
-            // Строим дерево
-            return build(xml)
-        } catch (ex: ParserConfigurationException) {
-            ex.printStackTrace()
-        } catch (ex: IOException) {
-            ex.printStackTrace()
-        } catch (ex: SAXException) {
-            ex.printStackTrace()
-        }
-        return null
-    }
+    fun fromXMLString(str: String) = buildFromXMLString(str)
 
     /**
      * Создает выражение из XML файла
@@ -56,27 +31,7 @@ object ExpressionXMLBuilder {
      * @return Выражение
      */
     @JvmStatic
-    fun fromXMLFile(path: String): Operator? {
-        try {
-            // Создаем DocumentBuilder
-            val documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder()
-            // Создаем DOM документ из файла
-            val document = documentBuilder.parse(path)
-
-            // Получаем корневой элемент документа
-            val xml: Element = document.documentElement
-
-            // Строим дерево
-            return build(xml)
-        } catch (ex: ParserConfigurationException) {
-            ex.printStackTrace()
-        } catch (ex: IOException) {
-            ex.printStackTrace()
-        } catch (ex: SAXException) {
-            ex.printStackTrace()
-        }
-        return null
-    }
+    fun fromXMLFile(path: String) = buildFromXMLFile(path)
 
     /**
      * Создает оператор из узла XML
@@ -84,209 +39,315 @@ object ExpressionXMLBuilder {
      * @return Оператор
      */
     @JvmStatic
-    fun build(el: Element): Operator {
-        val children = mutableListOf<Operator>()
-        for (i in 0 until el.childNodes.length) {
-            val child = el.childNodes.item(i)
-            if (child.nodeType == Node.ELEMENT_NODE) {
-                children.add(build(child as Element))
-            }
-        }
+    fun build(el: Element): Operator = buildFromElement(el)
 
-        when (el.nodeName) {
-            "Variable" -> {
-                return VariableLiteral(el.getAttribute("name"))
-            }
+    //--- Утилитарное ---
 
-            "DecisionTreeVar" -> {
-                return DecisionTreeVarLiteral(el.getAttribute("name"))
-            }
+    const val NAME = "name"
+    const val TYPE = "type"
+    const val VALUE = "value"
+    const val VAR_NAME = "varName"
+    const val PROPERTY_NAME = "propertyName"
+    const val RELATIONSHIP_NAME = "relationshipName"
 
-            "Class" -> {
-                return ClassLiteral(el.getAttribute("name"))
-            }
+    class ExpressionBuildContext(
+        el: Element,
+        buildClass: KClass<*>,
+        var operands: List<Operator>,
+    ) : ElementBuildContext(el, buildClass)
 
-            "Object" -> {
-                return ObjectLiteral(
-                    el.getAttribute("name"),
-                    el.getAttribute("type"),
-                )
-            }
+    override fun createException(message: String) = ExpressionXMLBuildException(message)
 
-            "ComparisonResult" -> {
-                return EnumLiteral(EnumValue(ComparisonType.enumName, el.getAttribute("value")))
-            }
+    override fun createBuildContext(el: Element, buildClass: KClass<*>): ExpressionBuildContext {
+        val operands = el.getChildren().map { build(it) }
+        return ExpressionBuildContext(el, buildClass, operands)
+    }
 
-            "String" -> {
-                return StringLiteral(el.getAttribute("value"))
-            }
+    override val defaultBuildingClass: KClass<*>
+        get() = Operator::class
 
-            "Boolean" -> {
-                return BooleanLiteral(el.getAttribute("value").toBoolean())
-            }
+    private fun ExpressionBuildContext.op(index: Int): Operator {
+        if (operands.size <= index)
+            throw createException("$this must have an operand at index $index")
+        return operands[index]
+    }
 
-            "Integer" -> {
-                return IntegerLiteral(el.getAttribute("value").toInt())
-            }
-
-            "Double" -> {
-                return DoubleLiteral(el.getAttribute("value").toDouble())
-            }
-
-            "Enum" -> {
-                return EnumLiteral(
-                    EnumValue(
-                        el.getAttribute("owner"),
-                        el.getAttribute("value"),
+    private fun ExpressionBuildContext.getAttributeOrTakeFromChild(
+        attr: String,
+        childIndex: Int,
+    ): String {
+        val childClass = if (attr == VAR_NAME) DecisionTreeVarLiteral::class else StringLiteral::class
+        val el = operands.toMutableList()
+        return this.findAttribute(attr)
+            .orElseGet {
+                if (operands.size <= childIndex || !childClass.isInstance(operands[childIndex]))
+                    throw createException(
+                        "$this must either have a '$attr' attribute " +
+                                "or have a named operand (child tag) at index $childIndex"
                     )
-                )
-            }
-
-            "AssignToDecisionTreeVar" -> {
-                return if (el.hasAttribute("varName"))
-                    AssignDecisionTreeVar(
-                        el.getAttribute("varName"),
-                        children[0],
-                    )
-                else
-                    AssignDecisionTreeVar(
-                        (children[0] as DecisionTreeVarLiteral).name,
-                        children[1],
-                    )
-            }
-
-            "AssignToProperty" -> {
-                return if (el.hasAttribute("propertyName"))
-                    AssignProperty(
-                        children[0],
-                        el.getAttribute("propertyName"),
-                        children[1],
-                    )
-                else
-                    AssignProperty(
-                        children[0],
-                        (children[1] as StringLiteral).value,
-                        children[2],
-                    )
-            }
-
-            "CheckClass" -> {
-                return CheckClass(children[0], children[1])
-            }
-
-            "CheckPropertyValue" -> {
-                return if (el.hasAttribute("propertyName"))
-                    CheckPropertyValue(
-                        children[0],
-                        el.getAttribute("propertyName"),
-                        children[1],
-                    )
-                else
-                    CheckPropertyValue(
-                        children[0],
-                        (children[1] as StringLiteral).value,
-                        children[2],
-                    )
-            }
-
-            "CheckRelationship" -> {
-                return if (el.hasAttribute("relationshipName"))
-                    CheckRelationship(
-                        children[0],
-                        el.getAttribute("relationshipName"),
-                        children.subList(1, children.size),
-                    )
-                else
-                    CheckRelationship(
-                        children[1],
-                        (children[0] as StringLiteral).value,
-                        children.subList(2, children.size),
-                    )
-            }
-
-            "Compare" -> {
-                return if (!el.hasAttribute("operator")) {
-                    Compare(children[0], children[1])
-                } else {
-                    val operator = CompareWithComparisonOperator.ComparisonOperator.fromString(
-                        el.getAttribute("operator")
-                    )!!
-                    CompareWithComparisonOperator(children[0], operator, children[1])
+                val child = el.removeAt(childIndex)
+                operands = el
+                when (child) {
+                    is ValueLiteral<*, *> -> child.value.toString()
+                    is ReferenceLiteral -> child.name
+                    else -> throw ThisShouldNotHappen()
                 }
             }
-
-            "ExistenceQuantifier" -> {
-                val selector = children[0]
-                val condition = children[1]
-                val varName = el.getAttribute("varName")
-                val type = if (el.hasAttribute("type")) el.getAttribute("type")
-                else getTypeFromConditionExpr(selector, varName, el.tagName)
-                return ExistenceQuantifier(TypedVariable(type, varName), selector, condition)
-            }
-
-            "ForAllQuantifier" -> {
-                val selector = children[0]
-                val condition = children[1]
-                val varName = el.getAttribute("varName")
-                val type = if (el.hasAttribute("type")) el.getAttribute("type")
-                else getTypeFromConditionExpr(selector, varName, el.tagName)
-                return ForAllQuantifier(TypedVariable(type, varName), selector, condition)
-            }
-
-            "GetByCondition" -> {
-                val condition = children[0]
-                val varName = el.getAttribute("varName")
-                val type = if (el.hasAttribute("type")) el.getAttribute("type")
-                else getTypeFromConditionExpr(condition, varName, el.tagName)
-                return GetByCondition(TypedVariable(type, varName), condition)
-            }
-
-            "GetByRelationship" -> {
-                val relationshipName = if (el.hasAttribute("relationshipName")) el.getAttribute("relationshipName")
-                else (children[1] as StringLiteral).value
-                return GetByRelationship(children[0], relationshipName)
-            }
-
-            "GetClass" -> {
-                return GetClass(children[0])
-            }
-
-            "GetExtreme" -> {
-                val condition = children[1]
-                val extremeCondition = children[0]
-                val varName = el.getAttribute("varName")
-                val extremeVarName = el.getAttribute("extremeVarName")
-                val type = if (el.hasAttribute("type")) el.getAttribute("type")
-                else getTypeFromConditionExpr(condition, varName, el.tagName)
-                return GetExtreme(type, varName, condition, extremeVarName, extremeCondition)
-            }
-
-            "GetPropertyValue" -> {
-                val propertyName = if (el.hasAttribute("propertyName")) el.getAttribute("propertyName")
-                else (children[1] as StringLiteral).value
-                return GetPropertyValue(children[0], propertyName)
-            }
-
-            "LogicalAnd" -> {
-                return LogicalAnd(children[0], children[1])
-            }
-
-            "LogicalOr" -> {
-                return LogicalOr(children[0], children[1])
-            }
-
-            "LogicalNot" -> {
-                return LogicalNot(children[0])
-            }
-
-            else -> {
-                if (el.hasAttribute("name"))
-                //В случае неизвестного типа узла собираем имя в строковый литерал
-                //Это нужно чтобы данные из устаревших типов операторов (ссылка на свойство и т.п.) не потерялись
-                    return StringLiteral(el.getAttribute("name"))
-                else
-                    throw IllegalArgumentException("Неизвестный тип узла ${el.nodeName}.")
-            }
-        }
     }
+
+    //--- Построение ---
+
+    @BuildForTags(["Variable"])
+    @BuildingClass(VariableLiteral::class)
+    private fun buildVariableLiteral(el: ExpressionBuildContext): VariableLiteral {
+        val name = el.getRequiredAttribute(NAME)
+        return VariableLiteral(name)
+    }
+
+    @BuildForTags(["DecisionTreeVar"])
+    @BuildingClass(DecisionTreeVarLiteral::class)
+    private fun buildDecisionTreeVarLiteral(el: ExpressionBuildContext): DecisionTreeVarLiteral {
+        val name = el.getRequiredAttribute(NAME)
+        return DecisionTreeVarLiteral(name)
+    }
+
+    @BuildForTags(["Class"])
+    @BuildingClass(ClassLiteral::class)
+    private fun buildClassLiteral(el: ExpressionBuildContext): ClassLiteral {
+        val name = el.getRequiredAttribute(NAME)
+        return ClassLiteral(name)
+    }
+
+    @BuildForTags(["Object"])
+    @BuildingClass(ObjectLiteral::class)
+    private fun buildObjectLiteral(el: ExpressionBuildContext): ObjectLiteral {
+        val name = el.getRequiredAttribute(NAME)
+        val type = el.getRequiredAttribute(TYPE)
+        return ObjectLiteral(name, type)
+    }
+
+    @BuildForTags(["ComparisonResult"])
+    @BuildingClass(EnumLiteral::class)
+    private fun buildComparisonResultLiteral(el: ExpressionBuildContext): EnumLiteral {
+        val value = el.getRequiredAttribute(VALUE)
+        return EnumLiteral(EnumValue(ComparisonType.enumName, value))
+    }
+
+    @BuildForTags(["String"])
+    @BuildingClass(StringLiteral::class)
+    private fun buildString(el: ExpressionBuildContext): StringLiteral {
+        val value = el.getRequiredAttribute(VALUE)
+        return StringLiteral(value)
+    }
+
+    @BuildForTags(["Boolean"])
+    @BuildingClass(BooleanLiteral::class)
+    private fun buildBoolean(el: ExpressionBuildContext): BooleanLiteral {
+        val value = el.getRequiredAttribute(VALUE)
+        return BooleanLiteral(value.toBoolean())
+    }
+
+    @BuildForTags(["Integer"])
+    @BuildingClass(IntegerLiteral::class)
+    private fun buildInteger(el: ExpressionBuildContext): IntegerLiteral {
+        val value = el.getRequiredAttribute(VALUE)
+        return IntegerLiteral(value.toInt())
+    }
+
+    @BuildForTags(["Double"])
+    @BuildingClass(DoubleLiteral::class)
+    private fun buildDouble(el: ExpressionBuildContext): DoubleLiteral {
+        val value = el.getRequiredAttribute(VALUE)
+        return DoubleLiteral(value.toDouble())
+    }
+
+    @BuildForTags(["Enum"])
+    @BuildingClass(EnumLiteral::class)
+    private fun buildEnum(el: ExpressionBuildContext): EnumLiteral {
+        val enum = el.getRequiredAttribute("owner")
+        val value = el.getRequiredAttribute(VALUE)
+        return EnumLiteral(EnumValue(enum, value))
+    }
+
+    @BuildForTags(["AssignToDecisionTreeVar"])
+    @BuildingClass(AssignDecisionTreeVar::class)
+    private fun buildAssignToDecisionTreeVar(el: ExpressionBuildContext): AssignDecisionTreeVar {
+        val varName = el.getAttributeOrTakeFromChild(VAR_NAME, 0)
+        return AssignDecisionTreeVar(
+            varName,
+            el.op(0)
+        )
+    }
+
+    @BuildForTags(["AssignToProperty"])
+    @BuildingClass(AssignProperty::class)
+    private fun buildAssignToProperty(el: ExpressionBuildContext): AssignProperty {
+        val propertyName = el.getAttributeOrTakeFromChild(PROPERTY_NAME, 0)
+        return AssignProperty(
+            el.op(0),
+            propertyName,
+            el.op(1),
+        )
+    }
+
+    @BuildForTags(["CheckClass"])
+    @BuildingClass(CheckClass::class)
+    private fun buildCheckClass(el: ExpressionBuildContext): CheckClass {
+        return CheckClass(
+            el.op(0),
+            el.op(1),
+        )
+    }
+
+    @BuildForTags(["CheckPropertyValue"])
+    @BuildingClass(CheckPropertyValue::class)
+    private fun buildCheckPropertyValue(el: ExpressionBuildContext): CheckPropertyValue {
+        val propertyName = el.getAttributeOrTakeFromChild(PROPERTY_NAME, 0)
+        return CheckPropertyValue(
+            el.op(0),
+            propertyName,
+            el.op(1),
+        )
+    }
+
+
+    @BuildForTags(["CheckRelationship"])
+    @BuildingClass(CheckRelationship::class)
+    private fun buildCheckRelationship(el: ExpressionBuildContext): CheckRelationship {
+        val relationshipName = el.getAttributeOrTakeFromChild(RELATIONSHIP_NAME, 0)
+        return CheckRelationship(
+            el.op(0),
+            relationshipName,
+            el.operands.subList(1, el.operands.size),
+        )
+    }
+
+    @BuildForTags(["Compare"])
+    private fun buildCompare(el: ExpressionBuildContext): Operator {
+        val opStringOpt = el.findAttribute("operator")
+        return opStringOpt
+            .map<Operator> {
+                el.buildClass = CompareWithComparisonOperator::class
+                val operator = CompareWithComparisonOperator.ComparisonOperator.fromString(it)
+                CompareWithComparisonOperator(
+                    el.op(0),
+                    operator,
+                    el.op(1),
+                )
+            }
+            .orElseGet {
+                el.buildClass = Compare::class
+                Compare(
+                    el.op(0),
+                    el.op(1),
+                )
+            }
+    }
+
+    @BuildForTags(["ExistenceQuantifier"])
+    @BuildingClass(ExistenceQuantifier::class)
+    private fun buildExistenceQuantifier(el: ExpressionBuildContext): ExistenceQuantifier {
+        val selector = el.op(0)
+        val condition = el.op(1)
+        val varName = el.getRequiredAttribute(VAR_NAME)
+        val type = el.findAttribute(TYPE).orElseGet { getTypeFromConditionExpr(selector, varName, el.tagName) }
+        return ExistenceQuantifier(TypedVariable(type, varName), selector, condition)
+    }
+
+    @BuildForTags(["ForAllQuantifier"])
+    @BuildingClass(ForAllQuantifier::class)
+    private fun buildForAllQuantifier(el: ExpressionBuildContext): ForAllQuantifier {
+        val selector = el.op(0)
+        val condition = el.op(1)
+        val varName = el.getRequiredAttribute(VAR_NAME)
+        val type = el.findAttribute(TYPE).orElseGet { getTypeFromConditionExpr(selector, varName, el.tagName) }
+        return ForAllQuantifier(TypedVariable(type, varName), selector, condition)
+    }
+
+    @BuildForTags(["GetByCondition"])
+    @BuildingClass(GetByCondition::class)
+    private fun buildGetByCondition(el: ExpressionBuildContext): GetByCondition {
+        val condition = el.op(0)
+        val varName = el.getRequiredAttribute(VAR_NAME)
+        val type = el.findAttribute(TYPE).orElseGet { getTypeFromConditionExpr(condition, varName, el.tagName) }
+        return GetByCondition(TypedVariable(type, varName), condition)
+    }
+
+    @BuildForTags(["GetByRelationship"])
+    @BuildingClass(GetByRelationship::class)
+    private fun buildGetByRelationship(el: ExpressionBuildContext): GetByRelationship {
+        val relationshipName = el.getAttributeOrTakeFromChild(RELATIONSHIP_NAME, 1)
+        return GetByRelationship(
+            el.op(0),
+            relationshipName,
+        )
+    }
+
+    @BuildForTags(["GetClass"])
+    @BuildingClass(GetClass::class)
+    private fun buildGetClass(el: ExpressionBuildContext): GetClass {
+        return GetClass(el.op(0))
+    }
+
+    @BuildForTags(["GetExtreme"])
+    @BuildingClass(GetExtreme::class)
+    private fun buildGetExtreme(el: ExpressionBuildContext): GetExtreme {
+        val extremeCondition = el.op(0)
+        val condition = el.op(1)
+        val extremeVarName = el.getRequiredAttribute("extremeVarName")
+        val varName = el.getRequiredAttribute(VAR_NAME)
+        val type = el.findAttribute(TYPE).orElseGet { getTypeFromConditionExpr(condition, varName, el.tagName) }
+        return GetExtreme(type, varName, condition, extremeVarName, extremeCondition)
+    }
+
+    @BuildForTags(["GetPropertyValue"])
+    @BuildingClass(GetPropertyValue::class)
+    private fun buildGetPropertyValue(el: ExpressionBuildContext): GetPropertyValue {
+        val propertyName = el.getAttributeOrTakeFromChild(PROPERTY_NAME, 1)
+        return GetPropertyValue(
+            el.op(0),
+            propertyName,
+        )
+    }
+
+    @BuildForTags(["LogicalAnd"])
+    @BuildingClass(LogicalAnd::class)
+    private fun buildLogicalAnd(el: ExpressionBuildContext): LogicalAnd {
+        return LogicalAnd(
+            el.op(0),
+            el.op(1),
+        )
+    }
+
+    @BuildForTags(["LogicalOr"])
+    @BuildingClass(LogicalOr::class)
+    private fun buildLogicalOr(el: ExpressionBuildContext): LogicalOr {
+        return LogicalOr(
+            el.op(0),
+            el.op(1),
+        )
+    }
+
+    @BuildForTags(["LogicalNot"])
+    @BuildingClass(LogicalNot::class)
+    private fun buildLogicalNot(el: ExpressionBuildContext): LogicalNot {
+        return LogicalNot(
+            el.op(0),
+        )
+    }
+
+    override fun buildDefault(el: ExpressionBuildContext): Operator {
+        //В случае неизвестного типа узла собираем имя в строковый литерал
+        //Это нужно чтобы данные из устаревших типов операторов (ссылка на свойство и т.п.) не потерялись
+        return el.findAttribute(NAME)
+            .map { StringLiteral(it) }
+            .orElseBuildErr("No build functions exist for tags '${el.nodeName}' to construct an Operator.")
+    }
+
+}
+
+open class ExpressionXMLBuildException : XMLBuildException {
+    constructor() : super()
+    constructor(message: String) : super(message)
+    constructor(message: String, cause: Exception) : super(message, cause)
 }
