@@ -1,8 +1,8 @@
 package its.model.nodes
 
+import its.model.Utils.isEmpty
+import its.model.Utils.isPresent
 import its.model.definition.Domain
-import its.model.isEmpty
-import its.model.isPresent
 import its.model.nodes.visitors.LinkNodeBehaviour
 
 /**

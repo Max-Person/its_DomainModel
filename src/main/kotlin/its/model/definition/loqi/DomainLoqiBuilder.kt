@@ -15,7 +15,7 @@ import java.util.concurrent.Callable
 /**
  * Построение объекта [Domain] на основе языка LOQI
  */
-class LoqiDomainBuilder private constructor(
+class DomainLoqiBuilder private constructor(
     val domain: Domain = Domain(),
 ) : LoqiGrammarBaseVisitor<Any?>() {
 
@@ -44,7 +44,7 @@ class LoqiDomainBuilder private constructor(
             val tree: ParseTree = parser.model()
             errorListener.getSyntaxErrors().firstOrNull()?.exception?.apply { throw this }
 
-            val builder = LoqiDomainBuilder()
+            val builder = DomainLoqiBuilder()
             tree.accept(builder)
 
             val domain = builder.domain

@@ -3,7 +3,7 @@ package its.model.definition.compat
 import its.model.definition.DomainDefinitionException
 
 /**
- * Ошибка при построении модели в [DictionariesDomainBuilder]
+ * Ошибка при построении модели в [DomainDictionariesBuilder]
  *
  * Оборачивает [DomainDefinitionException] (См. [cause]), предоставляющая информацию о
  * соответствующей строке LOQI

@@ -3,7 +3,7 @@ package its.model.definition.loqi
 import its.model.definition.DomainDefinitionException
 
 /**
- * Ошибка при построении модели в [LoqiDomainBuilder]
+ * Ошибка при построении модели в [DomainLoqiBuilder]
  *
  * Оборачивает [DomainDefinitionException] (См. [cause]), предоставляющая информацию о
  * соответствующей строке LOQI

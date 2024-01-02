@@ -1,7 +1,7 @@
 package its.model.definition.rdf
 
+import its.model.Utils.permutations
 import its.model.definition.*
-import its.model.definition.Utils.permutations
 import its.model.definition.rdf.RDFUtils.POAS_PREF
 import its.model.definition.rdf.RDFUtils.RDFS_PREF
 import its.model.definition.rdf.RDFUtils.RDF_PREF
@@ -29,7 +29,7 @@ import java.util.*
  * (существование классов, объектов, значениях их свойств и связи между ними), но не содержит объявления -
  * декларативную информацию о типах и форматах ожидаемых данных. Поэтому RDF используется для **заполнения**
  */
-class RDFDomainFiller protected constructor(
+class DomainRDFFiller protected constructor(
     val domain: Domain,
     val rdfModel: Model,
     val options: Set<Option> = emptySet(),
@@ -53,7 +53,7 @@ class RDFDomainFiller protected constructor(
          */
         @JvmStatic
         fun fillDomain(domain: Domain, rdfModel: Model, options: Set<Option> = emptySet()) {
-            RDFDomainFiller(domain, rdfModel, options).fill()
+            DomainRDFFiller(domain, rdfModel, options).fill()
             domain.validateAndThrowInvalid()
         }
 

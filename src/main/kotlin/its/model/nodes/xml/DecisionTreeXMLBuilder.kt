@@ -1,6 +1,7 @@
 package its.model.nodes.xml
 
 import its.model.TypedVariable
+import its.model.Utils.isPresent
 import its.model.build.xml.ElementBuildContext
 import its.model.build.xml.XMLBuildException
 import its.model.build.xml.XMLBuilder
@@ -10,7 +11,6 @@ import its.model.definition.types.EnumValue
 import its.model.definition.types.Obj
 import its.model.expressions.Operator
 import its.model.expressions.xml.ExpressionXMLBuilder
-import its.model.isPresent
 import its.model.nodes.*
 import org.w3c.dom.Element
 import kotlin.reflect.KClass

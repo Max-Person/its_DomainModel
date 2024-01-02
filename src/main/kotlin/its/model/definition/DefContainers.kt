@@ -1,6 +1,6 @@
 package its.model.definition
 
-import its.model.isPresent
+import its.model.Utils.isPresent
 import java.util.*
 
 /**

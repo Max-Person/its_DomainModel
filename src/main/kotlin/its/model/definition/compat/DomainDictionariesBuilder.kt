@@ -2,8 +2,8 @@ package its.model.definition.compat
 
 import com.opencsv.CSVParserBuilder
 import com.opencsv.CSVReaderBuilder
+import its.model.Utils.plus
 import its.model.definition.*
-import its.model.definition.Utils.plus
 import its.model.definition.types.*
 import java.io.File
 import java.io.Reader
@@ -17,7 +17,7 @@ import java.util.concurrent.Callable
  * Под словарем понимается CSV файл, столбцы которого разделены символами `'|'`.
  * Данные внутри ячеек словаря могут быть разделены символами `';'`
  */
-class DictionariesDomainBuilder private constructor(
+class DomainDictionariesBuilder private constructor(
     val domain: Domain = Domain(),
     val enumsDictReader: Reader,
     val classesDictReader: Reader,
@@ -40,7 +40,7 @@ class DictionariesDomainBuilder private constructor(
             propertiesDictReader: Reader,
             relationshipsDictReader: Reader,
         ): Domain {
-            val builder = DictionariesDomainBuilder(
+            val builder = DomainDictionariesBuilder(
                 Domain(),
                 enumsDictReader,
                 classesDictReader,

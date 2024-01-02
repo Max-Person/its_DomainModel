@@ -1,11 +1,11 @@
 package its.model.nodes
 
 import its.model.TypedVariable
+import its.model.Utils.isPresent
 import its.model.definition.Domain
 import its.model.definition.types.BooleanType
 import its.model.definition.types.ObjectType
 import its.model.expressions.Operator
-import its.model.isPresent
 import its.model.nodes.visitors.LinkNodeBehaviour
 
 /**
