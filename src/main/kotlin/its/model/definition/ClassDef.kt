@@ -7,10 +7,10 @@ import java.util.*
  */
 class ClassDef(
     override val name: String,
-    val parentName: Optional<String> = Optional.empty(),
+    val parentName: String?,
 ) : ClassInheritorDef<ClassDef>() {
 
-    override val parentClassName: Optional<String>
+    override val parentClassName: String?
         get() = parentName
 
     override val description = "class $name"
@@ -36,7 +36,7 @@ class ClassDef(
         super.validate(results)
 
         //Существование родителя и ацикличность зависимостей
-        val parentOpt = getKnownInheritanceLineage(results)
+        getKnownInheritanceLineage(results)
 
         declaredProperties.validate(results)
         declaredRelationships.validate(results)
@@ -79,7 +79,7 @@ class ClassDef(
      * Прямые классы-наследники данного класса
      */
     val children: List<ClassDef>
-        get() = domain.classes.filter { clazz -> clazz.parentName.map { it == this.name }.orElse(false) }
+        get() = domain.classes.filter { clazz -> clazz.parentName == this.name }
 
     /**
      * Прямые экземпляры данного класса
@@ -91,7 +91,7 @@ class ClassDef(
      * Является ли класс конкретным (финальным в некоторой цепочке наследования)
      */
     val isConcrete: Boolean
-        get() = domain.classes.none { clazz -> clazz.parentName.map { it == this.name }.orElse(false) } //Нет детей
+        get() = domain.classes.none { clazz -> clazz.parentName == this.name } //Нет детей
                 || domain.objects.any { obj -> obj.className == this.name } //есть экземпляры
 
     /**

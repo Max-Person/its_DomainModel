@@ -1,28 +1,26 @@
 package its.model.definition
 
-import java.util.*
-
 /**
  * Общий класс для классов и объектов - реализация наследования от классов
  */
 sealed class ClassInheritorDef<Self : ClassInheritorDef<Self>> : DomainDefWithMeta<Self>() {
 
-    protected abstract val parentClassName: Optional<String>
+    protected abstract val parentClassName: String?
     abstract val definedPropertyValues: PropertyValueStatements<Self>
 
     /**
      * Для валидации - получить класс-родитель,
      * или добавить сообщение о его неизвестности в [results]
      */
-    internal fun getKnownParentClass(results: DomainValidationResults): Optional<ClassDef> {
-        if (!parentClassName.isPresent) return Optional.empty()
+    internal fun getKnownParentClass(results: DomainValidationResults): ClassDef? {
+        if (parentClassName == null) return null
 
-        val clazzOpt = domain.classes.get(parentClassName.get())
+        val clazz = domain.classes.get(parentClassName!!)
         results.checkKnown(
-            clazzOpt.isPresent,
-            "No class definition '${parentClassName.get()}' found to be defined as $name's parent class"
+            clazz != null,
+            "No class definition '${parentClassName}' found to be defined as $name's parent class"
         )
-        return clazzOpt
+        return clazz
     }
 
     /**
@@ -32,11 +30,11 @@ sealed class ClassInheritorDef<Self : ClassInheritorDef<Self>> : DomainDefWithMe
      */
     internal fun getKnownInheritanceLineage(results: DomainValidationResults): List<ClassDef> {
         val lineage = mutableListOf<ClassDef>()
-        var p = if (this is ClassDef) Optional.of(this) else getKnownParentClass(results)
-        while (p.isPresent) {
-            lineage.add(p.get())
-            p = p.get().getKnownParentClass(results)
-            if (p.isPresent && p.get() === this) {
+        var p = if (this is ClassDef) this else getKnownParentClass(results)
+        while (p != null) {
+            lineage.add(p)
+            p = p.getKnownParentClass(results)
+            if (p === this) {
                 results.invalid("$description is a supertype of itself (lineage is ${lineage.map { it.name }})")
                 break
             }
@@ -47,12 +45,12 @@ sealed class ClassInheritorDef<Self : ClassInheritorDef<Self>> : DomainDefWithMe
     /**
      * Валидация - найти определение свойства по имени; любые ошибки кладутся в [results]
      */
-    internal fun findPropertyDef(propertyName: String, results: DomainValidationResults): Optional<PropertyDef> {
+    internal fun findPropertyDef(propertyName: String, results: DomainValidationResults): PropertyDef? {
         for (clazz in getKnownInheritanceLineage(results)) {
             val found = clazz.declaredProperties.get(propertyName)
-            if (found.isPresent) return found
+            if (found != null) return found
         }
-        return Optional.empty()
+        return null
     }
 
     /**
@@ -61,12 +59,12 @@ sealed class ClassInheritorDef<Self : ClassInheritorDef<Self>> : DomainDefWithMe
     internal fun findRelationshipDef(
         relationshipName: String,
         results: DomainValidationResults
-    ): Optional<RelationshipDef> {
+    ): RelationshipDef? {
         for (clazz in getKnownInheritanceLineage(results)) {
             val found = clazz.declaredRelationships.get(relationshipName)
-            if (found.isPresent) return found
+            if (found != null) return found
         }
-        return Optional.empty()
+        return null
     }
 
     //---Операции (на валидном домене)---
@@ -74,9 +72,9 @@ sealed class ClassInheritorDef<Self : ClassInheritorDef<Self>> : DomainDefWithMe
     /**
      * Родительcкий класс данной сущности
      *
-     * *(Для объектов данный Optional всегда заполнен - используй [ObjectDef.clazz])*
+     * *(Для объектов данное свойство всегда присутствует (не null) - используй [ObjectDef.clazz])*
      */
-    val parentClass: Optional<ClassDef>
+    val parentClass: ClassDef?
         get() = getKnownParentClass(DomainValidationResultsThrowImmediately())
 
     /**
@@ -132,14 +130,14 @@ sealed class ClassInheritorDef<Self : ClassInheritorDef<Self>> : DomainDefWithMe
      */
     fun getPropertyValue(propertyName: String): Any {
         checkConforming(
-            findPropertyDef(propertyName, DomainValidationResultsThrowImmediately()).isPresent,
+            findPropertyDef(propertyName, DomainValidationResultsThrowImmediately()) != null,
             "No property $propertyName exists for $description"
         )
-        val definedOpt = definedPropertyValues.get(propertyName)
-        if (definedOpt.isPresent) return definedOpt
+        val defined = definedPropertyValues.get(propertyName)
+        if (defined != null) return defined
         for (clazz in getInheritanceLineage()) {
             val found = clazz.definedPropertyValues.get(propertyName)
-            if (found.isPresent) return found.get()
+            if (found != null) return found
         }
         throw ThisShouldNotHappen()
     }

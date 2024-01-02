@@ -14,7 +14,7 @@ data class TypedVariable(
         owner: Describable,
     ): Boolean {
         var valid = true
-        if (domain.classes.get(className).isEmpty) {
+        if (domain.classes.get(className) == null) {
             results.nonConforming(
                 "No class of name '$className' found in domain, " +
                         "but it was declared as a type for variable in ${owner.description}"

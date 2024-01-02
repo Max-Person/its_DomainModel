@@ -1,7 +1,5 @@
 package its.model.definition
 
-import java.util.*
-
 /**
  * Утверждение о связи объекта с другими объектами
  */
@@ -14,27 +12,26 @@ class RelationshipLinkStatement(
 
     override fun copyForOwner(owner: ObjectDef) = RelationshipLinkStatement(owner, relationshipName, objectNames)
 
-    internal fun getKnownObjects(results: DomainValidationResults): List<Optional<ObjectDef>> {
+    internal fun getKnownObjects(results: DomainValidationResults): List<ObjectDef?> {
         return objectNames.map { objectName ->
-            val objectOpt = domain.objects.get(objectName)
+            val obj = domain.objects.get(objectName)
             results.checkKnown(
-                objectOpt.isPresent,
+                obj != null,
                 "No object definition '$objectName' found, while $description uses it as one of its objects"
             )
-            objectOpt
+            obj
         }
     }
 
     override fun validate(results: DomainValidationResults) {
         //известность отношения
-        val relationshipOpt = owner.findRelationshipDef(relationshipName, results)
-        if (relationshipOpt.isEmpty) {
+        val relationship = owner.findRelationshipDef(relationshipName, results)
+        if (relationship == null) {
             results.unknown(
                 "No relationship definition '$relationshipName' found for $description"
             )
             return
         }
-        val relationship = relationshipOpt.get()
 
         //Если зависимое, то стейтмент не нужен
         if (relationship.kind is DependantRelationshipKind) {
@@ -54,11 +51,10 @@ class RelationshipLinkStatement(
 
         //наличие объектов, совпадение по типу
         val foundObjects = getKnownObjects(results)
-        foundObjects.forEachIndexed { i, objectOpt ->
-            if (objectOpt.isPresent) {
-                val obj = objectOpt.get()
+        foundObjects.forEachIndexed { i, obj ->
+            if (obj != null) {
                 val classes = obj.getKnownInheritanceLineage(results)
-                if (classes.isNotEmpty() && classes.last().parentName.isEmpty) { //Проверка выполняется, если иерархия завершена
+                if (classes.isNotEmpty() && classes.last().parentName == null) { //Проверка выполняется, если иерархия завершена
                     val expectedClassName = relationship.objectClassNames[i]
                     results.checkValid(
                         classes.any { it.name == expectedClassName },

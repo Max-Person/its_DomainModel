@@ -1,7 +1,5 @@
 package its.model.definition
 
-import java.util.*
-
 /**
  * Метаданные элементов домена
  *
@@ -19,16 +17,13 @@ class MetaData(
     /**
      * Получить метаданные
      */
-    override fun get(key: MetadataProperty): Optional<Any> {
+    override fun get(key: MetadataProperty): Any? {
         return if (declaredValues.containsKey(key)) {
-            Optional.of(declaredValues[key]!!)
-        } else if (
-            owner is ClassInheritorDef<*>
-            && owner.parentClass.isPresent
-        ) {
-            owner.parentClass.get().metadata.get(key)
+            declaredValues[key]!!
+        } else if (owner is ClassInheritorDef<*> && owner.parentClass != null) {
+            owner.parentClass!!.metadata[key]
         } else {
-            Optional.empty<Any>()
+            null
         }
     }
 
@@ -39,9 +34,8 @@ class MetaData(
      * @throws [NoMetadataException] если метаданных не оказалось
      */
     fun getAsserted(property: MetadataProperty): Any {
-        return get(property).orElseThrow {
-            throw NoMetadataException("No metadata property ${property.name} found for ${owner.description}")
-        }
+        return get(property)
+            ?: throw NoMetadataException("No metadata property ${property.name} found for ${owner.description}")
     }
 
     fun getAsserted(property: String) = getAsserted(MetadataProperty(property))
@@ -81,15 +75,15 @@ class MetaData(
  */
 data class MetadataProperty(
     val name: String,
-    val locCode: Optional<String> = Optional.empty(),
+    val locCode: String? = null,
 ) {
 
     constructor(string: String) : this(
         if (string.split(LOC_CODE_DELIMITER, limit = 2).size < 2) string
         else string.split(LOC_CODE_DELIMITER, limit = 2)[1],
 
-        if (string.split(LOC_CODE_DELIMITER, limit = 2).size < 2) Optional.empty()
-        else Optional.of(string.split(LOC_CODE_DELIMITER, limit = 2)[0]),
+        if (string.split(LOC_CODE_DELIMITER, limit = 2).size < 2) null
+        else string.split(LOC_CODE_DELIMITER, limit = 2)[0],
     )
 
     companion object {

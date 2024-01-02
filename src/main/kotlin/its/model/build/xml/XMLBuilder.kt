@@ -6,7 +6,6 @@ import org.w3c.dom.Node
 import org.xml.sax.InputSource
 import java.io.StringReader
 import java.lang.reflect.InvocationTargetException
-import java.util.*
 import javax.management.modelmbean.XMLParseException
 import javax.xml.parsers.DocumentBuilderFactory
 import kotlin.reflect.KCallable
@@ -87,8 +86,8 @@ abstract class XMLBuilder<Context : ElementBuildContext, Build : Any> {
         return out
     }
 
-    protected fun Element.findChild(): Optional<Element> {
-        return Optional.ofNullable(getChildren().firstOrNull())
+    protected fun Element.findChild(): Element? {
+        return getChildren().firstOrNull()
     }
 
     protected fun Element.getRequiredChild(): Element {
@@ -99,8 +98,8 @@ abstract class XMLBuilder<Context : ElementBuildContext, Build : Any> {
         return getChildren().filter { it.tagName.equals(tagName) }
     }
 
-    protected fun Element.findChild(tagName: String): Optional<Element> {
-        return Optional.ofNullable(getChildren(tagName).firstOrNull())
+    protected fun Element.findChild(tagName: String): Element? {
+        return getChildren(tagName).firstOrNull()
     }
 
     protected fun ElementBuildContext.getRequiredChild(tagName: String): Element {
@@ -109,12 +108,12 @@ abstract class XMLBuilder<Context : ElementBuildContext, Build : Any> {
     }
 
     protected fun ElementBuildContext.getSeveralByWrapper(wrapper: String): List<Element> {
-        return findChild(wrapper).map { it.getChildren() }
+        return findChild(wrapper)?.getChildren()
             .orElseBuildErr("$this needs to have a nested wrapper tag '$wrapper'")
     }
 
-    protected fun ElementBuildContext.findSingleByWrapper(wrapper: String): Optional<Element> {
-        return findChild(wrapper).flatMap { it.findChild() }
+    protected fun ElementBuildContext.findSingleByWrapper(wrapper: String): Element? {
+        return findChild(wrapper)?.findChild()
     }
 
     protected fun ElementBuildContext.getRequiredSingleByWrapper(wrapper: String): Element {
@@ -122,12 +121,12 @@ abstract class XMLBuilder<Context : ElementBuildContext, Build : Any> {
             ?: throw createException("Wrapper tag '$wrapper' for $this should not be empty")
     }
 
-    protected fun Element.findAttribute(attr: String): Optional<String> {
-        return if (this.hasAttribute(attr)) Optional.of(this.getAttribute(attr)) else Optional.empty()
+    protected fun Element.findAttribute(attr: String): String? {
+        return if (this.hasAttribute(attr)) this.getAttribute(attr) else null
     }
 
-    protected fun <T> Optional<T>.orElseBuildErr(errMessage: String): T {
-        return this.orElseThrow { createException(errMessage) }
+    protected fun <T> T?.orElseBuildErr(errMessage: String): T {
+        return this ?: throw createException(errMessage)
     }
 
     protected fun ElementBuildContext.getRequiredAttribute(attr: String): String {

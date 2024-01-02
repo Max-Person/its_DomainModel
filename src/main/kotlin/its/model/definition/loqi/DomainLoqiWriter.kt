@@ -71,7 +71,7 @@ class LoqiDomainWriter private constructor(
             it.writeEnum()
             skipLines()
         }
-        domain.classes.sortedBy { it.parentName.orElse("!") + it.name }.forEach {
+        domain.classes.sortedBy { (it.parentName ?: "!") + it.name }.forEach {
             it.writeClass()
             skipLines()
         }
@@ -108,7 +108,7 @@ class LoqiDomainWriter private constructor(
                 || (!hasOption(LoqiWriteOptions.SEPARATE_CLASS_PROPERTY_VALUES)
                 && definedPropertyValues.isNotEmpty())
         write("$CLASS ${name.toLoqiName()}")
-        parentName.ifPresent { write(" : ${it.toLoqiName()}") }
+        parentName?.also { write(" : ${it.toLoqiName()}") }
         if (hasBody) {
             writeln(" {")
             indent()
@@ -123,7 +123,7 @@ class LoqiDomainWriter private constructor(
             }
             if (!hasOption(LoqiWriteOptions.SEPARATE_CLASS_PROPERTY_VALUES)) {
                 val nonDeclaredPropertyValues = definedPropertyValues.toMutableList()
-                nonDeclaredPropertyValues.removeIf { declaredProperties.get(it.propertyName).isPresent }
+                nonDeclaredPropertyValues.removeIf { declaredProperties.get(it.propertyName) != null }
 
                 nonDeclaredPropertyValues.forEach {
                     it.writePropertyValue()
@@ -171,9 +171,9 @@ class LoqiDomainWriter private constructor(
         }
         write("$kindString prop ${name.toLoqiName()}: ${type.toLoqi()}")
         if (!hasOption(LoqiWriteOptions.SEPARATE_CLASS_PROPERTY_VALUES)
-            && owner.definedPropertyValues.get(name).isPresent
+            && owner.definedPropertyValues.get(name) != null
         ) {
-            val value = owner.definedPropertyValues.get(name).get().value
+            val value = owner.definedPropertyValues.get(name)!!.value
             write(" = ${value.toLoqiValue()}")
         }
         if (!hasOption(LoqiWriteOptions.SEPARATE_METADATA)) {
@@ -189,10 +189,10 @@ class LoqiDomainWriter private constructor(
     private fun RelationshipDef.writeRelationship(owner: ClassDef) {
         write("rel ${name.toLoqiName()}(${objectClassNames.map { it.toLoqiName() }.joinToString(", ")})")
         when (kind) {
-            is BaseRelationshipKind -> if (isScalar || kind.quantifier.isPresent) {
+            is BaseRelationshipKind -> if (isScalar || kind.quantifier != null) {
                 write(" : ")
-                if (isScalar) write(kind.scaleType.get().toLoqi())
-                if (kind.quantifier.isPresent) write(kind.quantifier.get().toLoqi())
+                if (isScalar) write(kind.scaleType!!.toLoqi())
+                if (kind.quantifier != null) write(kind.quantifier.toLoqi())
             }
 
             is DependantRelationshipKind -> {
@@ -248,7 +248,7 @@ class LoqiDomainWriter private constructor(
     }
 
     private fun writeVariableSection() {
-        val separateVariables = domain.variables.filter { domain.objects.get(it.valueObjectName).isEmpty }
+        val separateVariables = domain.variables.filter { domain.objects.get(it.valueObjectName) == null }
         if (separateVariables.isEmpty()) return
 
         writeCommentDelimiter("separate variables")
@@ -309,7 +309,7 @@ class LoqiDomainWriter private constructor(
         writeln(" [")
         indent()
         this.forEach { (property, value) ->
-            property.locCode.ifPresent { write("${it.toLoqiName()}.") }
+            property.locCode?.also { write("${it.toLoqiName()}.") }
             writeln("${property.name.toLoqiName()} = ${value.toLoqiValue()} ;")
         }
         unindent()

@@ -23,8 +23,8 @@ class ObjectLiteral(
         context: ExpressionContext
     ): Type<*> {
         //Существование объекта не проверяется, т.к. это динамические данные
-        val typeName = if (className.isBlank() && domain.objects.get(name).isPresent)
-            domain.objects.get(name).get().className
+        val typeName = if (className.isBlank() && domain.objects.get(name) != null)
+            domain.objects.get(name)!!.className
         else className
         val type = ObjectType(typeName)
 

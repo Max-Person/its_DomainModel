@@ -9,13 +9,13 @@ class VariableDef(
     override val description = "variable $name"
     override val reference = VariableRef(name)
 
-    internal fun getKnownValueObject(results: DomainValidationResults): Optional<ObjectDef> {
-        val objectOpt = domain.objects.get(valueObjectName)
+    internal fun getKnownValueObject(results: DomainValidationResults): ObjectDef? {
+        val obj = domain.objects.get(valueObjectName)
         results.checkKnown(
-            objectOpt.isPresent,
+            obj != null,
             "No object definition '$valueObjectName' found for variable $name"
         )
-        return objectOpt
+        return obj
     }
 
     override fun validate(results: DomainValidationResults) {
@@ -30,7 +30,7 @@ class VariableDef(
     //---Операции (на валидном домене)---
 
     val valueObject: ObjectDef
-        get() = getKnownValueObject(DomainValidationResultsThrowImmediately()).get()
+        get() = getKnownValueObject(DomainValidationResultsThrowImmediately())!!
 }
 
 class VariableContainer(domain: Domain) : RootDefContainer<VariableDef>(domain)

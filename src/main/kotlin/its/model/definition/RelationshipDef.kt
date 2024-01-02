@@ -19,27 +19,27 @@ class RelationshipDef(
      * Для валидации - получить известный класс-субъект отношения
      * или добавить сообщение о его неизвестности в [results]
      */
-    internal fun getKnownSubjectClass(results: DomainValidationResults): Optional<ClassDef> {
-        val clazzOpt = domain.classes.get(subjectClassName)
+    internal fun getKnownSubjectClass(results: DomainValidationResults): ClassDef? {
+        val clazz = domain.classes.get(subjectClassName)
         results.checkKnown(
-            clazzOpt.isPresent,
+            clazz != null,
             "No class definition '$subjectClassName' found, while $description is said to be declared in it"
         )
-        return clazzOpt
+        return clazz
     }
 
     /**
      * Для валидации - получить известные классы-объекты отношения
      * или добавить сообщение о его неизвестности в [results]
      */
-    internal fun getKnownObjectClasses(results: DomainValidationResults): List<Optional<ClassDef>> {
+    internal fun getKnownObjectClasses(results: DomainValidationResults): List<ClassDef?> {
         return objectClassNames.map { className ->
-            val clazzOpt = domain.classes.get(className)
+            val clazz = domain.classes.get(className)
             results.checkKnown(
-                clazzOpt.isPresent,
+                clazz != null,
                 "No class definition '$className' found, while $description uses it as one of its object types"
             )
-            clazzOpt
+            clazz
         }
     }
 
@@ -47,15 +47,15 @@ class RelationshipDef(
      * Для валидации - если текущее отношение имеет тип [DependantRelationshipKind],
      * то получить отношение, от которого зависит текущее, или добавить сообщение о его неизвестности в [results]
      */
-    internal fun getKnownBaseRelationship(results: DomainValidationResults): Optional<RelationshipDef> {
-        if (kind !is DependantRelationshipKind) return Optional.empty()
-        val baseRelOpt = kind.baseRelationshipRef.findIn(domain)
+    internal fun getKnownBaseRelationship(results: DomainValidationResults): RelationshipDef? {
+        if (kind !is DependantRelationshipKind) return null
+        val baseRelationship = kind.baseRelationshipRef.findIn(domain)
         results.checkKnown(
-            baseRelOpt.isPresent,
+            baseRelationship != null,
             "No relationship definition '${kind.baseRelationshipRef}' " +
                     "found to be declared as a base relationship for $description"
         )
-        return baseRelOpt
+        return baseRelationship
     }
 
     /**
@@ -64,11 +64,11 @@ class RelationshipDef(
      */
     internal fun getKnownDependencyLineage(results: DomainValidationResults): List<RelationshipDef> {
         val lineage = mutableListOf<RelationshipDef>()
-        var p = Optional.of(this)
-        while (p.isPresent) {
-            lineage.add(p.get())
-            p = p.get().getKnownBaseRelationship(results)
-            if (p.isPresent && p.get() === this) {
+        var p: RelationshipDef? = this
+        while (p != null) {
+            lineage.add(p)
+            p = p.getKnownBaseRelationship(results)
+            if (p === this) {
                 results.invalid("$description is cyclically dependant on itself (lineage is ${lineage.map { it.name }})")
                 break
             }
@@ -85,17 +85,16 @@ class RelationshipDef(
         )
 
         //Существование классов
-        val subjectClassOpt = getKnownSubjectClass(results)
-        val objectClassesOpt = getKnownObjectClasses(results)
+        val subjectClass = getKnownSubjectClass(results)
+        val objectClasses = getKnownObjectClasses(results)
 
         //Не переопределяет
-        if (subjectClassOpt.isPresent) {
-            val owner = subjectClassOpt.get()
-            val lineage = owner.getKnownInheritanceLineage(results).minusElement(owner)
+        if (subjectClass != null) {
+            val lineage = subjectClass.getKnownInheritanceLineage(results).minusElement(subjectClass)
             for (parent in lineage) {
-                if (parent.declaredRelationships.get(name).isPresent) {
+                if (parent.declaredRelationships.get(name) != null) {
                     results.invalid(
-                        "relationship $name cannot be redeclared in ${owner.description}, " +
+                        "relationship $name cannot be redeclared in ${subjectClass.description}, " +
                                 "as a relationship with the same name is already declared in superclass ${parent.description}."
                     )
                     break
@@ -108,13 +107,12 @@ class RelationshipDef(
             is BaseRelationshipKind -> {
                 //квантификаторы могут быть только у бинарных отношений
                 results.checkValid(
-                    isBinary || kind.quantifier.isEmpty,
+                    isBinary || kind.quantifier == null,
                     "Quantifiers are only allowed on binary relationships, but $description is not binary"
                 )
 
-                val scaleTypeOpt = kind.scaleType
-                if (scaleTypeOpt.isPresent) {
-                    val scaleType = scaleTypeOpt.get()
+                val scaleType = kind.scaleType
+                if (scaleType != null) {
                     //Шкалу могут задавать только бинарные отношения между одинаковыми классами
                     results.checkValid(
                         isBinary && objectClassNames.first() == subjectClassName,
@@ -124,12 +122,12 @@ class RelationshipDef(
                     //Соответсвие кватификаторов заданному типу шкалы
                     when (scaleType) {
                         BaseRelationshipKind.ScaleType.Linear -> results.checkValid(
-                            kind.quantifier.isEmpty || kind.quantifier.get() == LinkQuantifier.OneToOne(),
+                            kind.quantifier == null || kind.quantifier == LinkQuantifier.OneToOne(),
                             "$description has to be quantified as one-to-one ( {1->1} ) as it is declared as $scaleType"
                         )
 
                         BaseRelationshipKind.ScaleType.Partial -> results.checkValid(
-                            kind.quantifier.isEmpty || kind.quantifier.get().objCount == 1,
+                            kind.quantifier == null || kind.quantifier.objCount == 1,
                             "$description has to be quantified as many-to-one ( {...->1} ) as it is declared as $scaleType"
                         )
                     }
@@ -199,19 +197,19 @@ class RelationshipDef(
      * Класс-субъект отношения
      */
     val subjectClass: ClassDef
-        get() = getKnownSubjectClass(DomainValidationResultsThrowImmediately()).get()
+        get() = getKnownSubjectClass(DomainValidationResultsThrowImmediately())!!
 
     /**
      * Классы-объекты отношения
      */
     val objectClasses: List<ClassDef>
-        get() = getKnownObjectClasses(DomainValidationResultsThrowImmediately()).map { it.get() }
+        get() = getKnownObjectClasses(DomainValidationResultsThrowImmediately()).requireNoNulls()
 
     /**
      * Задает ли отношение шкалу
      */
     val isScalar: Boolean
-        get() = kind is BaseRelationshipKind && kind.scaleType.isPresent
+        get() = kind is BaseRelationshipKind && kind.scaleType != null
 
     /**
      * Является ли отношение бинарным
@@ -243,7 +241,7 @@ class RelationshipDef(
     /**
      * Отношение, от которого зависит текущее (если текущее имеет тип [DependantRelationshipKind])
      */
-    val baseRelationship: Optional<RelationshipDef>
+    val baseRelationship: RelationshipDef?
         get() = getKnownBaseRelationship(DomainValidationResultsThrowImmediately())
 
     /**
@@ -253,9 +251,9 @@ class RelationshipDef(
         get() {
             when (kind) {
                 is BaseRelationshipKind -> {
-                    if (kind.quantifier.isPresent) return kind.quantifier.get()
-                    if (kind.scaleType.isPresent) {
-                        val scaleType = kind.scaleType.get()
+                    if (kind.quantifier != null) return kind.quantifier
+                    if (kind.scaleType != null) {
+                        val scaleType = kind.scaleType
                         return when (scaleType) {
                             BaseRelationshipKind.ScaleType.Linear -> LinkQuantifier.OneToOne()
                             BaseRelationshipKind.ScaleType.Partial -> LinkQuantifier.ManyToOne()
@@ -266,7 +264,7 @@ class RelationshipDef(
 
                 is DependantRelationshipKind -> {
                     if (kind.type == DependantRelationshipKind.Type.OPPOSITE)
-                        return baseRelationship.get().effectiveQuantifier.reversed
+                        return baseRelationship!!.effectiveQuantifier.reversed
                     return LinkQuantifier.ManyToMany()
                 }
             }
@@ -279,10 +277,9 @@ class RelationshipRef(
     val className: String,
     val relationshipName: String,
 ) : DomainRef<RelationshipDef> {
-    override fun findIn(domain: Domain): Optional<RelationshipDef> {
-        val classOpt = ClassRef(className).findIn(domain)
-        if (!classOpt.isPresent) return Optional.empty()
-        return classOpt.get().declaredRelationships.get(relationshipName)
+    override fun findIn(domain: Domain): RelationshipDef? {
+        val clazz = ClassRef(className).findIn(domain) ?: return null
+        return clazz.declaredRelationships.get(relationshipName)
     }
 
     override fun toString() = "$className->$relationshipName"

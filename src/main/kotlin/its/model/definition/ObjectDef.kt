@@ -10,8 +10,8 @@ class ObjectDef(
     val className: String,
 ) : ClassInheritorDef<ObjectDef>() {
 
-    override val parentClassName: Optional<String>
-        get() = Optional.of(className)
+    override val parentClassName: String
+        get() = className
 
     override val description = "object $name"
     override val reference = ObjectRef(name)
@@ -57,7 +57,7 @@ class ObjectDef(
      * Класс данного объекта
      */
     val clazz: ClassDef
-        get() = parentClass.get()
+        get() = parentClass!!
 
     /**
      * Является ли экземпляром класса

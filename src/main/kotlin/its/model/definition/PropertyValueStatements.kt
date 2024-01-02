@@ -1,7 +1,6 @@
 package its.model.definition
 
 import its.model.definition.types.EnumType
-import java.util.*
 
 /**
  * Утверждение о значении свойства
@@ -17,14 +16,13 @@ class PropertyValueStatement<Owner : ClassInheritorDef<Owner>>(
 
     override fun validate(results: DomainValidationResults) {
         //Существование свойства
-        val propertyOpt = owner.findPropertyDef(propertyName, results)
-        if (propertyOpt.isEmpty) {
+        val property = owner.findPropertyDef(propertyName, results)
+        if (property == null) {
             results.unknown(
                 "No property definition '$propertyName' found to define the value $value in ${owner.description}"
             )
             return
         }
-        val property = propertyOpt.get()
 
         //Соответствие вида свойства месту определения (внутри класса/объекта)
         results.checkValid(
@@ -62,16 +60,16 @@ class PropertyValueStatements<Owner : ClassInheritorDef<Owner>>(
     override fun addToInner(statement: PropertyValueStatement<Owner>) {
         val existing = get(statement.propertyName)
         checkValid(
-            existing.map { it.value == statement.value }.orElse(true),
+            existing == null || existing.value == statement.value,
             "cannot add ${statement.description}, " +
-                    "because ${owner.description} already defines a value '${existing.map { it.value }}'" +
+                    "because ${owner.description} already defines a value '${existing?.value}'" +
                     "for property '${statement.propertyName}'"
         )
         map[statement.propertyName] = statement
     }
 
-    fun get(propertyName: String): Optional<PropertyValueStatement<Owner>> {
-        return Optional.ofNullable(map[propertyName])
+    fun get(propertyName: String): PropertyValueStatement<Owner>? {
+        return map[propertyName]
     }
 
     override fun validate(results: DomainValidationResults) {
@@ -84,12 +82,12 @@ class PropertyValueStatements<Owner : ClassInheritorDef<Owner>>(
         for (clazz in topDownLineage) {
             undefinedClassProperties.addAll(clazz.declaredProperties.filter { it.kind.fits(owner) })
             undefinedClassProperties.removeIf {
-                it.kind.fits(clazz) && clazz.definedPropertyValues.get(it.name).isPresent
+                it.kind.fits(clazz) && clazz.definedPropertyValues.get(it.name) != null
             }
         }
         for (undefinedProperty in undefinedClassProperties) {
             results.checkKnown(
-                get(undefinedProperty.name).isPresent,
+                get(undefinedProperty.name) != null,
                 "${owner.description} does not define a value for ${undefinedProperty.description}"
             )
         }

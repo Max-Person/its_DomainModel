@@ -8,7 +8,6 @@ import its.model.definition.types.*
 import java.io.File
 import java.io.Reader
 import java.net.URL
-import java.util.*
 import java.util.concurrent.Callable
 
 /**
@@ -136,7 +135,7 @@ class DomainDictionariesBuilder private constructor(
         )
 
         val className = csvRow[0]
-        val parentName = if (csvRow[1].isNullOrBlank()) Optional.empty<String>() else Optional.of(csvRow[1])
+        val parentName = if (csvRow[1].isNullOrBlank()) null else csvRow[1]
 
         domainOpAt(rowNum, dictName) {
             domain.classes.add(ClassDef(className, parentName))
@@ -201,7 +200,7 @@ class DomainDictionariesBuilder private constructor(
         domainOpAt(rowNum, dictName) {
             subjectClass.declaredRelationships.add(RelationshipDef(subjectClassName, name, objectClassNames, kind))
         }
-        if (scaleType.isPresent) {
+        if (scaleType != null) {
             val dependantNames = csvRow[4].split(LIST_ITEMS_SEPARATOR)
             checkCSVCorrect(
                 dependantNames.size == 6,
@@ -362,20 +361,20 @@ class DomainDictionariesBuilder private constructor(
         }
     }
 
-    private fun String?.getScaleType(): Optional<BaseRelationshipKind.ScaleType> {
-        if (this.isNullOrBlank()) return Optional.empty()
+    private fun String?.getScaleType(): BaseRelationshipKind.ScaleType? {
+        if (this.isNullOrBlank()) return null
         return when (this.lowercase()) {
-            "linear" -> Optional.of(BaseRelationshipKind.ScaleType.Linear)
-            "partial" -> Optional.of(BaseRelationshipKind.ScaleType.Partial)
+            "linear" -> BaseRelationshipKind.ScaleType.Linear
+            "partial" -> BaseRelationshipKind.ScaleType.Partial
             else -> throw IllegalArgumentException("Cannot parse '$this' into a valid relationship scale type")
         }
     }
 
-    private fun String?.getLinkQuantifier(): Optional<LinkQuantifier> {
-        if (this.isNullOrBlank()) return Optional.empty()
+    private fun String?.getLinkQuantifier(): LinkQuantifier? {
+        if (this.isNullOrBlank()) return null
         return when (this.lowercase()) {
-            "onetoone" -> Optional.of(LinkQuantifier.OneToOne())
-            "onetomany" -> Optional.of(LinkQuantifier.OneToMany())
+            "onetoone" -> LinkQuantifier.OneToOne()
+            "onetomany" -> LinkQuantifier.OneToMany()
             else -> throw IllegalArgumentException("Cannot parse '$this' into a valid relationship link quantifier")
         }
     }

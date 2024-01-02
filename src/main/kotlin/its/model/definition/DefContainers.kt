@@ -1,7 +1,5 @@
 package its.model.definition
 
-import its.model.Utils.isPresent
-import java.util.*
 
 /**
  * Хранилище определений в домене
@@ -40,9 +38,8 @@ sealed class DefContainer<T : DomainDef<T>> : DomainElement(), Collection<T> {
     fun addMerge(def: T) = add(def, true)
 
     private fun add(def: T, tryMerging: Boolean): T {
-        val existingOpt = get(def.name)
-        if (existingOpt.isPresent) {
-            val existing = existingOpt.get()
+        val existing = get(def.name)
+        if (existing != null) {
             if (tryMerging && existing.mergeEquals(def)) {
                 existing.addMerge(def)
                 return existing
@@ -59,7 +56,7 @@ sealed class DefContainer<T : DomainDef<T>> : DomainElement(), Collection<T> {
     private fun addNew(def: T, addTo: MutableMap<String, T>): T {
         //Приведение к нужному хранимому виду
         val belongsToDomain = def.belongsToDomain
-        val added = if (belongsToDomain.isPresent && belongsToDomain.get() == domain) {
+        val added = if (belongsToDomain == domain) {
             def
         } else {
             def.copyForDomain(domain)
@@ -67,7 +64,7 @@ sealed class DefContainer<T : DomainDef<T>> : DomainElement(), Collection<T> {
         added.validateAndThrowInvalid()
 
         //добавление
-        if (added is DomainDefWithMeta<*> && domain.separateMetadata.isPresent) { //Проверка на нулл нужна, т.к. при добавлении встроенных значений domain.separateMetadata еще может быть не инициализирован
+        if (added is DomainDefWithMeta<*> && domain.separateMetadata != null) { //Проверка на нулл нужна, т.к. при добавлении встроенных значений domain.separateMetadata еще может быть не инициализирован
             domain.separateMetadata.claimIfPresent(added)
         }
         addTo[added.name] = added
@@ -87,8 +84,8 @@ sealed class DefContainer<T : DomainDef<T>> : DomainElement(), Collection<T> {
     /**
      * Получить определение по имени
      */
-    fun get(name: String): Optional<T> {
-        return Optional.ofNullable(values[name] ?: builtInValues[name])
+    fun get(name: String): T? {
+        return values[name] ?: builtInValues[name]
     }
 
     override fun validate(results: DomainValidationResults) {
@@ -99,7 +96,7 @@ sealed class DefContainer<T : DomainDef<T>> : DomainElement(), Collection<T> {
         get() = values.size
 
     override fun contains(element: T): Boolean {
-        return get(element.name).map { it == element }.orElse(false)
+        return get(element.name) == element
     }
 
     override fun containsAll(elements: Collection<T>): Boolean {

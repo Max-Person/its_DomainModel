@@ -13,13 +13,13 @@ abstract class SeparateDataContainer<Key : DomainRef<*>, Value : Any>(
      */
     fun add(key: Key, value: Value) {
         val owner = key.findIn(domain)
-        owner.ifPresentOrElse({ attachValue(it, value) }, {
-            if (map.containsKey(key)) {
-                map[key] = mergeValues(map[key]!!, value)
-            } else {
-                map[key] = value
-            }
-        })
+        if (owner != null) {
+            attachValue(owner, value)
+        } else if (map.containsKey(key)) {
+            map[key] = mergeValues(map[key]!!, value)
+        } else {
+            map[key] = value
+        }
     }
 
     protected open fun mergeValues(old: Value, new: Value): Value {

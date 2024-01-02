@@ -3,7 +3,6 @@ package its.model.nodes
 import its.model.definition.Domain
 import its.model.expressions.Operator
 import its.model.nodes.visitors.DecisionTreeBehaviour
-import java.util.*
 
 /**
  * Узел-результат ветви мысли [ThoughtBranch]
@@ -12,14 +11,14 @@ import java.util.*
  */
 class BranchResultNode(
     val value: Boolean, //TODO исправить когда перейдем к зеленым деревьям
-    val actionExpr: Optional<Operator>,
+    val actionExpr: Operator?,
 ) : DecisionTreeNode() {
 
     override val linkedElements: List<DecisionTreeElement>
         get() = listOf()
 
     override fun validate(domain: Domain, results: DecisionTreeValidationResults, context: DecisionTreeContext) {
-        actionExpr.ifPresent { it.validateForDecisionTree(domain, results, context) }
+        actionExpr?.also { it.validateForDecisionTree(domain, results, context) }
     }
 
     override fun <I> use(behaviour: DecisionTreeBehaviour<I>): I {

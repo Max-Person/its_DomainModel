@@ -1,9 +1,9 @@
 package its.model.expressions.operators
 
-import its.model.definition.ClassRef
 import its.model.definition.Domain
-import its.model.definition.DomainValidationResultsThrowImmediately
-import its.model.definition.types.*
+import its.model.definition.types.AnyType
+import its.model.definition.types.ObjectType
+import its.model.definition.types.Type
 import its.model.expressions.ExpressionContext
 import its.model.expressions.ExpressionValidationResults
 import its.model.expressions.Operator
@@ -41,8 +41,8 @@ class GetPropertyValue(
         }
 
         val clazz = objType.findIn(domain)
-        val propertyOpt = clazz.findPropertyDef(propertyName)
-        if (propertyOpt.isEmpty) {
+        val property = clazz.findPropertyDef(propertyName)
+        if (property == null) {
             results.nonConforming(
                 "No property '$propertyName' exists for objects of type '${clazz.name}' " +
                         "to be read via $description"
@@ -50,7 +50,7 @@ class GetPropertyValue(
             return invalidType
         }
 
-        return propertyOpt.get().type
+        return property.type
     }
 
     override fun <I> use(behaviour: OperatorBehaviour<I>): I {

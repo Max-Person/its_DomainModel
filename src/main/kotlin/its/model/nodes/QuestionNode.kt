@@ -1,6 +1,5 @@
 package its.model.nodes
 
-import its.model.Utils.isPresent
 import its.model.definition.Domain
 import its.model.definition.types.BooleanType
 import its.model.definition.types.Type
@@ -38,8 +37,8 @@ class QuestionNode(
                 "Outcome key '${outcome.key}' cannot be cast to the node's type '$exprType' (in $description)"
             )
         }
-        if (trivialityExpr.isPresent) {
-            val trivialityType = trivialityExpr!!.validateForDecisionTree(domain, results, context)
+        if (trivialityExpr != null) {
+            val trivialityType = trivialityExpr.validateForDecisionTree(domain, results, context)
             results.checkValid(
                 trivialityType is BooleanType,
                 "Triviality expression for the $description returns $trivialityType, but must return a boolean"

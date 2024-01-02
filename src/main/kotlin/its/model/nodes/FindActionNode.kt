@@ -1,7 +1,6 @@
 package its.model.nodes
 
 import its.model.TypedVariable
-import its.model.Utils.isPresent
 import its.model.definition.Domain
 import its.model.definition.types.BooleanType
 import its.model.definition.types.ObjectType
@@ -101,7 +100,7 @@ class FindActionNode(
         //Сначала валидируются части, в которых находимая переменная неизвестна
         validateLinked(domain, results, context,
             mutableListOf<DecisionTreeElement>(varAssignment).also {
-                if (nextIfNone.isPresent) it.add(nextIfNone!!)
+                if (nextIfNone != null) it.add(nextIfNone!!)
             }
         )
 

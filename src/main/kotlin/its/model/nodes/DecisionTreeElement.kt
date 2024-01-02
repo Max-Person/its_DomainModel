@@ -52,7 +52,9 @@ sealed class DecisionTreeElement : MetaOwner, Describable {
     override val description: String
         get() {
             val className = this::class.simpleName
-            var descr = metadata["alias"].orElseGet { metadata["label"].orElse("") }.toString()
+            var descr = metadata["alias"]?.toString()
+                ?: metadata["label"]?.toString()
+                ?: ""
             if (descr.isNotBlank())
                 descr = " '$descr'"
             return className + descr

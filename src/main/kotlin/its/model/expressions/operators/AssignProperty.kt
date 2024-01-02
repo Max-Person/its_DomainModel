@@ -1,9 +1,11 @@
 package its.model.expressions.operators
 
 import its.model.definition.Domain
-import its.model.definition.DomainValidationResultsThrowImmediately
 import its.model.definition.PropertyDef
-import its.model.definition.types.*
+import its.model.definition.types.BooleanType
+import its.model.definition.types.NoneType
+import its.model.definition.types.ObjectType
+import its.model.definition.types.Type
 import its.model.expressions.ExpressionContext
 import its.model.expressions.ExpressionValidationResults
 import its.model.expressions.Operator
@@ -43,8 +45,8 @@ class AssignProperty(
         }
 
         val clazz = objType.findIn(domain)
-        val propertyOpt = clazz.findPropertyDef(propertyName)
-        if (propertyOpt.isEmpty) {
+        val property = clazz.findPropertyDef(propertyName)
+        if (property == null) {
             results.nonConforming(
                 "No property '$propertyName' exists for objects of type '${clazz.name}' " +
                         "to be read via $description"
@@ -52,7 +54,6 @@ class AssignProperty(
             return type
         }
 
-        val property = propertyOpt.get()
         results.checkConforming(
             property.kind == PropertyDef.PropertyKind.OBJECT,
             "Cannot assign a value to a ${property.description}"

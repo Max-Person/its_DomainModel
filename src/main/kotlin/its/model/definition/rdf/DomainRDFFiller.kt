@@ -10,7 +10,6 @@ import its.model.definition.types.EnumValue
 import its.model.definition.types.Type
 import org.apache.jena.rdf.model.*
 import java.io.File
-import java.util.*
 
 /**
  * Заполнение домена данными из RDF модели [Model];
@@ -81,10 +80,8 @@ class DomainRDFFiller protected constructor(
 
     private fun fillClasses() {
         for (clazz in domain.classes) {
-            val resourceOpt = findRdfResource(clazz.name)
-            if (resourceOpt.isEmpty) continue
-            val res = resourceOpt.get()
-            fillClass(clazz, res)
+            val resource = findRdfResource(clazz.name) ?: continue
+            fillClass(clazz, resource)
         }
     }
 
@@ -104,7 +101,7 @@ class DomainRDFFiller protected constructor(
     private fun createAndFillObjects() {
         val objToResource = mutableSetOf<Pair<ObjectDef, Resource>>()
         for (objResource in findAllObjectResources()) {
-            val obj = domain.objects.get(objResource.localName).orElseGet {
+            val obj = domain.objects.get(objResource.localName) ?: run {
                 val className = objResource.getProperty(typeRdfProp).`object`.asResource().localName
                 domain.objects.add(ObjectDef(objResource.localName, className))
             }
@@ -219,12 +216,12 @@ class DomainRDFFiller protected constructor(
         //объектами считаются все ресурсы, являющиеся инстансом другого ресурса (т.е. субьекты свойства "тип")
         return rdfModel.listSubjectsWithProperty(typeRdfProp).filterKeep {
             val classResource = it.getProperty(typeRdfProp).`object`
-            classResource.isResource && domain.classes.get(classResource.asResource().localName).isPresent
+            classResource.isResource && domain.classes.get(classResource.asResource().localName) != null
         }.toList()
     }
 
-    private fun findRdfResource(name: String): Optional<Resource> {
+    private fun findRdfResource(name: String): Resource? {
         val res = rdfModel.getResource(basePrefix + name)!!
-        return if (rdfModel.containsResource(res)) Optional.of(res) else Optional.empty<Resource>()
+        return if (rdfModel.containsResource(res)) res else null
     }
 }

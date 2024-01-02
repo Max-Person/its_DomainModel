@@ -1,7 +1,5 @@
 package its.model.definition
 
-import java.util.*
-
 /**
  * Именованное определение внутри домена
  */
@@ -13,23 +11,23 @@ sealed class DomainDef<Self : DomainDef<Self>> : DomainElement(), Cloneable {
     override fun toString() = description
     internal abstract val reference: DomainRef<Self>
 
-    private var _domain: Domain? = null
-    internal val belongsToDomain: Optional<Domain>
-        get() = Optional.ofNullable(_domain)
+    internal var belongsToDomain: Domain? = null
+        private set
+
     override var domain: Domain
         internal set(value) {
             preventMisuse(
-                _domain == null || _domain == value,
+                this.belongsToDomain == null || this.belongsToDomain == value,
                 "Attempting to change the 'domain' property of a $description once it's set"
             )
-            _domain = value
+            this.belongsToDomain = value
         }
         get() : Domain {
             preventMisuse(
-                _domain != null,
+                this.belongsToDomain != null,
                 "Attempting to access the 'domain' property of a $description before it is set"
             )
-            return _domain!!
+            return this.belongsToDomain!!
         }
 
     /**
@@ -90,14 +88,14 @@ sealed interface DomainRef<Def : DomainDef<Def>> {
     /**
      * Найти в домене [domain] определение, на которое ссылается эта ссылка, если оно есть
      */
-    fun findIn(domain: Domain): Optional<Def>
+    fun findIn(domain: Domain): Def?
 
     fun findInOrUnkown(domain: Domain): Def {
         val found = findIn(domain)
         checkKnown(
-            found.isPresent,
+            found != null,
             "No definition for reference '$this' found in domain"
         )
-        return found.get()
+        return found!!
     }
 }

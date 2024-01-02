@@ -1,15 +1,12 @@
 package its.model.expressions.operators
 
 import its.model.definition.Domain
-import its.model.definition.DomainValidationResultsThrowImmediately
-import its.model.definition.types.BooleanType
 import its.model.definition.types.ObjectType
 import its.model.definition.types.Type
 import its.model.expressions.ExpressionContext
 import its.model.expressions.ExpressionValidationResults
 import its.model.expressions.Operator
 import its.model.expressions.visitors.OperatorBehaviour
-import java.util.*
 
 /**
  * Получить объект по отношению
@@ -43,8 +40,8 @@ class GetByRelationship(
         }
 
         val clazz = subjType.findIn(domain)
-        val relationshipOpt = clazz.findRelationshipDef(relationshipName)
-        if (relationshipOpt.isEmpty) {
+        val relationship = clazz.findRelationshipDef(relationshipName)
+        if (relationship == null) {
             results.nonConforming(
                 "No relationship '$relationshipName' exists for objects of type '${clazz.name}' " +
                         "to be read via $description"
@@ -52,7 +49,6 @@ class GetByRelationship(
             return invalidType
         }
 
-        val relationship = relationshipOpt.get()
         if (!relationship.isBinary) {
             results.invalid(
                 "Non-binary relationship '$relationshipName' " +

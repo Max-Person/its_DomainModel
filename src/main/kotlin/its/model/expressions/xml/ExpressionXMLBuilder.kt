@@ -81,7 +81,7 @@ object ExpressionXMLBuilder : XMLBuilder<ExpressionXMLBuilder.ExpressionBuildCon
         val childClass = if (attr == VAR_NAME) DecisionTreeVarLiteral::class else StringLiteral::class
         val el = operands.toMutableList()
         return this.findAttribute(attr)
-            .orElseGet {
+            ?: run {
                 if (operands.size <= childIndex || !childClass.isInstance(operands[childIndex]))
                     throw createException(
                         "$this must either have a '$attr' attribute " +
@@ -243,24 +243,22 @@ object ExpressionXMLBuilder : XMLBuilder<ExpressionXMLBuilder.ExpressionBuildCon
 
     @BuildForTags(["Compare"])
     private fun buildCompare(el: ExpressionBuildContext): Operator {
-        val opStringOpt = el.findAttribute("operator")
-        return opStringOpt
-            .map<Operator> {
-                el.buildClass = CompareWithComparisonOperator::class
-                val operator = CompareWithComparisonOperator.ComparisonOperator.fromString(it)
-                CompareWithComparisonOperator(
-                    el.op(0),
-                    operator,
-                    el.op(1),
-                )
-            }
-            .orElseGet {
-                el.buildClass = Compare::class
-                Compare(
-                    el.op(0),
-                    el.op(1),
-                )
-            }
+        val opString = el.findAttribute("operator")
+        return if (opString != null) {
+            el.buildClass = CompareWithComparisonOperator::class
+            val operator = CompareWithComparisonOperator.ComparisonOperator.fromString(opString)
+            CompareWithComparisonOperator(
+                el.op(0),
+                operator,
+                el.op(1),
+            )
+        } else {
+            el.buildClass = Compare::class
+            Compare(
+                el.op(0),
+                el.op(1),
+            )
+        }
     }
 
     @BuildForTags(["ExistenceQuantifier"])
@@ -269,7 +267,7 @@ object ExpressionXMLBuilder : XMLBuilder<ExpressionXMLBuilder.ExpressionBuildCon
         val selector = el.op(0)
         val condition = el.op(1)
         val varName = el.getRequiredAttribute(VAR_NAME)
-        val type = el.findAttribute(TYPE).orElseGet { el.getTypeFromConditionExpr(selector, varName) }
+        val type = el.findAttribute(TYPE) ?: el.getTypeFromConditionExpr(selector, varName)
         return ExistenceQuantifier(TypedVariable(type, varName), selector, condition)
     }
 
@@ -279,7 +277,7 @@ object ExpressionXMLBuilder : XMLBuilder<ExpressionXMLBuilder.ExpressionBuildCon
         val selector = el.op(0)
         val condition = el.op(1)
         val varName = el.getRequiredAttribute(VAR_NAME)
-        val type = el.findAttribute(TYPE).orElseGet { el.getTypeFromConditionExpr(selector, varName) }
+        val type = el.findAttribute(TYPE) ?: el.getTypeFromConditionExpr(selector, varName)
         return ForAllQuantifier(TypedVariable(type, varName), selector, condition)
     }
 
@@ -288,7 +286,7 @@ object ExpressionXMLBuilder : XMLBuilder<ExpressionXMLBuilder.ExpressionBuildCon
     private fun buildGetByCondition(el: ExpressionBuildContext): GetByCondition {
         val condition = el.op(0)
         val varName = el.getRequiredAttribute(VAR_NAME)
-        val type = el.findAttribute(TYPE).orElseGet { el.getTypeFromConditionExpr(condition, varName) }
+        val type = el.findAttribute(TYPE) ?: el.getTypeFromConditionExpr(condition, varName)
         return GetByCondition(TypedVariable(type, varName), condition)
     }
 
@@ -315,7 +313,7 @@ object ExpressionXMLBuilder : XMLBuilder<ExpressionXMLBuilder.ExpressionBuildCon
         val condition = el.op(1)
         val extremeVarName = el.getRequiredAttribute("extremeVarName")
         val varName = el.getRequiredAttribute(VAR_NAME)
-        val type = el.findAttribute(TYPE).orElseGet { el.getTypeFromConditionExpr(condition, varName) }
+        val type = el.findAttribute(TYPE) ?: el.getTypeFromConditionExpr(condition, varName)
         return GetExtreme(type, varName, condition, extremeVarName, extremeCondition)
     }
 
@@ -359,7 +357,7 @@ object ExpressionXMLBuilder : XMLBuilder<ExpressionXMLBuilder.ExpressionBuildCon
         //В случае неизвестного типа узла собираем имя в строковый литерал
         //Это нужно чтобы данные из устаревших типов операторов (ссылка на свойство и т.п.) не потерялись
         return el.findAttribute(NAME)
-            .map { StringLiteral(it) }
+            ?.let { StringLiteral(it) }
             .orElseBuildErr("No build functions exist for tags '${el.nodeName}' to construct an Operator.")
     }
 

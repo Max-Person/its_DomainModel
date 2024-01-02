@@ -9,7 +9,6 @@ import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.tree.ParseTree
 import java.io.Reader
-import java.util.*
 import java.util.concurrent.Callable
 
 /**
@@ -67,10 +66,10 @@ class DomainLoqiBuilder private constructor(
     override fun visitClassDecl(ctx: ClassDeclContext) {
         val line = ctx.id(0).start.line
         val name = ctx.id(0).getName()
-        var parentName = Optional.empty<String>()
+        var parentName: String? = null
 
         if (ctx.id().size > 1) { //Есть второй id - значит указан класс-родитель
-            parentName = Optional.of(ctx.id(1).getName())
+            parentName = ctx.id(1).getName()
         }
 
         val clazz = domainOpAt(line) { domain.classes.add(ClassDef(name, parentName)) }
@@ -95,10 +94,10 @@ class DomainLoqiBuilder private constructor(
         val kind = if (ctx.OBJ() != null) PropertyDef.PropertyKind.OBJECT else PropertyDef.PropertyKind.CLASS
         val name = ctx.id().getName()
         val type = if (ctx.type() != null) ctx.type().getType() else ctx.value().getTypeAndValue().type
-        val value = Optional.ofNullable(ctx.value()?.getTypeAndValue()?.value)
+        val value = ctx.value()?.getTypeAndValue()?.value
 
         val property = domainOpAt(line) { clazz.declaredProperties.add(PropertyDef(clazz.name, name, type, kind)) }
-        value.ifPresent {
+        value?.also {
             val tmpStatement = ClassPropertyValueStatement(clazz, name, it)
             domainOpAt(ctx.value().start.line) { clazz.definedPropertyValues.add(tmpStatement) }
         }
@@ -226,7 +225,7 @@ class DomainLoqiBuilder private constructor(
 
     private val SYNTHETIC = "LOQI_SYNTHETIC"
     private fun syntheticObj() = ObjectDef(SYNTHETIC, SYNTHETIC)
-    private fun syntheticClass(name: String) = ClassDef(name, Optional.of(SYNTHETIC))
+    private fun syntheticClass(name: String) = ClassDef(name, SYNTHETIC)
 
     private fun MetaRefContext.getRef(): DomainRef<*> {
         if (CLASS() != null) return ClassRef(id().getName())
@@ -242,9 +241,9 @@ class DomainLoqiBuilder private constructor(
         for (metadataPropertyDecl in ctx.metadataPropertyDecl()) {
             val locCode =
                 if (metadataPropertyDecl.id().size == 2)
-                    Optional.of(metadataPropertyDecl.id(0).getName())
+                    metadataPropertyDecl.id(0).getName()
                 else
-                    Optional.empty()
+                    null
             val propName = metadataPropertyDecl.id().last().getName()
 
             val value = metadataPropertyDecl.value().getTypeAndValue().value
@@ -325,8 +324,8 @@ class DomainLoqiBuilder private constructor(
                     relationshipDependency().relationshipRef().getRef()
             return DependantRelationshipKind(type, ref)
         } else {
-            val scale = Optional.ofNullable(scaleType()?.run { getRelationshipScale(this.text) })
-            val quantifier = Optional.ofNullable(relationshipQuantifier()?.getQuantifier())
+            val scale = scaleType()?.run { getRelationshipScale(this.text) }
+            val quantifier = relationshipQuantifier()?.getQuantifier()
             return BaseRelationshipKind(scale, quantifier)
         }
     }

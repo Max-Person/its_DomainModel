@@ -1,7 +1,6 @@
 package its.model.expressions.operators
 
 import its.model.definition.Domain
-import its.model.definition.DomainValidationResultsThrowImmediately
 import its.model.definition.types.BooleanType
 import its.model.definition.types.ObjectType
 import its.model.definition.types.Type
@@ -53,11 +52,9 @@ class CheckRelationship(
         }
 
         val clazz = subjType.findIn(domain)
-        var relationshipOpt = clazz.findRelationshipDef(relationshipName)
-        if (relationshipOpt.isEmpty) {
-            val possibleRelationships = clazz.projectionClasses
-                .map { it.findRelationshipDef(relationshipName) }
-                .filter { it.isPresent }
+        var relationship = clazz.findRelationshipDef(relationshipName)
+        if (relationship == null) {
+            val possibleRelationships = clazz.projectionClasses.mapNotNull { it.findRelationshipDef(relationshipName) }
             if (possibleRelationships.isEmpty()) {
                 results.nonConforming(
                     "No relationship '$relationshipName' exists for objects of type '${clazz.name}' " +
@@ -69,14 +66,13 @@ class CheckRelationship(
                 results.nonConforming(
                     "Multiple relationship definitions for name '$relationshipName' are available to check " +
                             "for objects of type '${clazz.name}' via projection in $description: " +
-                            possibleRelationships.map { it.get() }.joinToString(", ")
+                            possibleRelationships.joinToString(", ")
                 )
                 return type
             }
-            relationshipOpt = possibleRelationships.single()
+            relationship = possibleRelationships.single()
         }
 
-        val relationship = relationshipOpt.get()
         val isCorrectObjectCount = objectExprs.size == relationship.objectClassNames.size
         results.checkConforming(
             isCorrectObjectCount,

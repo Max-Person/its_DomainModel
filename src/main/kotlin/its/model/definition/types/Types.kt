@@ -161,7 +161,7 @@ sealed class DomainRefType<Value : Any, Ref : DomainRef<Def>, Def : DomainDef<De
     /**
      * Существует ли тип в домене
      */
-    open fun exists(domain: Domain): Boolean = reference.findIn(domain).isPresent
+    open fun exists(domain: Domain): Boolean = reference.findIn(domain) != null
 
     /**
      * Найти соответствующее типу определение в домене
@@ -198,7 +198,7 @@ open class EnumType(
         value as EnumValue
 
         val enum = this.findIn(inDomain)
-        return enum.name == value.enumName && enum.values.get(value.valueName).isPresent
+        return enum.name == value.enumName && enum.values.get(value.valueName) != null
     }
 
     override fun equals(other: Any?): Boolean {
@@ -252,13 +252,11 @@ sealed class ClassInheritorType<Value : DomainRef<Inheritor>, Inheritor : ClassI
     override val reference: ClassRef
         get() = ClassRef(className)
 
-    fun classOpt(domain: Domain): Optional<ClassDef> = Optional.empty()
-
     override fun fits(value: Any, inDomain: Domain): Boolean {
         if (!super.fits(value, inDomain)) return false
         value as Value
 
-        return value.findIn(inDomain).map { it.inheritsFrom(this.findIn(inDomain)) }.orElse(false)
+        return value.findIn(inDomain)?.inheritsFrom(this.findIn(inDomain)) ?: false
     }
 
     override fun castFits(subType: Type<*>, inDomain: Domain): Boolean {

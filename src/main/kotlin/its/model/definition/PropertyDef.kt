@@ -34,20 +34,20 @@ class PropertyDef(
      * Для валидации - получить класс, объявляющий свойство,
      * или добавить сообщение о его неизвестности в [results]
      */
-    internal fun getKnownDeclaringClass(results: DomainValidationResults): Optional<ClassDef> {
-        val clazzOpt = domain.classes.get(declaringClassName)
+    internal fun getKnownDeclaringClass(results: DomainValidationResults): ClassDef? {
+        val clazz = domain.classes.get(declaringClassName)
         results.checkKnown(
-            clazzOpt.isPresent,
+            clazz != null,
             "No class definition '$declaringClassName' found, while $description is said to be declared in it"
         )
-        return clazzOpt
+        return clazz
     }
 
     override fun validate(results: DomainValidationResults) {
         super.validate(results)
 
         //Существование класса
-        val ownerOpt = getKnownDeclaringClass(results)
+        val owner = getKnownDeclaringClass(results)
 
         //Существование енама
         if (type is EnumType) {
@@ -58,11 +58,10 @@ class PropertyDef(
         }
 
         //не перекрывает ли определения выше
-        if (!ownerOpt.isPresent) return
-        val owner = ownerOpt.get()
+        if (owner == null) return
         val lineage = owner.getKnownInheritanceLineage(results).minusElement(owner)
         for (parent in lineage) {
-            if (parent.declaredProperties.get(name).isPresent) {
+            if (parent.declaredProperties.get(name) != null) {
                 results.invalid(
                     "property $name cannot be redeclared in ${owner.description}, " +
                             "as a property with the same name is already declared in superclass ${parent.description}."
@@ -93,7 +92,7 @@ class PropertyDef(
      * Класс, объявляющий свойство
      */
     val declaringClass: ClassDef
-        get() = getKnownDeclaringClass(DomainValidationResultsThrowImmediately()).get()
+        get() = getKnownDeclaringClass(DomainValidationResultsThrowImmediately())!!
 }
 
 class PropertyContainer(clazz: ClassDef) : ChildDefContainer<PropertyDef, ClassDef>(clazz)
@@ -102,10 +101,9 @@ class PropertyRef(
     val className: String,
     val propertyName: String,
 ) : DomainRef<PropertyDef> {
-    override fun findIn(domain: Domain): Optional<PropertyDef> {
-        val classOpt = ClassRef(className).findIn(domain)
-        if (!classOpt.isPresent) return Optional.empty()
-        return classOpt.get().declaredProperties.get(propertyName)
+    override fun findIn(domain: Domain): PropertyDef? {
+        val clazz = ClassRef(className).findIn(domain) ?: return null
+        return clazz.declaredProperties.get(propertyName)
     }
 
     override fun toString() = "$className.$propertyName"

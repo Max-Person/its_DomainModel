@@ -8,7 +8,6 @@ import its.model.expressions.ExpressionContext
 import its.model.expressions.ExpressionValidationResults
 import its.model.expressions.Operator
 import its.model.expressions.visitors.LiteralBehaviour
-import kotlin.reflect.KClass
 
 /**
  * [EnumType] литерал
@@ -30,7 +29,7 @@ class EnumLiteral(value: EnumValue) : ValueLiteral<EnumValue, EnumType>(value, E
 
         val enum = type.findIn(domain)
         results.checkConforming(
-            enum.values.get(value.valueName).isPresent,
+            enum.values.get(value.valueName) != null,
             "Enum '${value.enumName}' does not contain a '${value.valueName}' value, " +
                     "but it is used as one of its values in $description"
         )

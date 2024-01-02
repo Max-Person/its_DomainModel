@@ -1,7 +1,6 @@
 package its.model.nodes.xml
 
 import its.model.TypedVariable
-import its.model.Utils.isPresent
 import its.model.build.xml.ElementBuildContext
 import its.model.build.xml.XMLBuildException
 import its.model.build.xml.XMLBuilder
@@ -133,9 +132,9 @@ object DecisionTreeNodeXMLBuilder : AbstractDecisionTreeXMLBuilder<DecisionTreeN
     fun build(el: Element) = buildFromElement(el)
 
     private fun String.parseValue(): Any {
-        if (this.lowercase().toBooleanStrictOrNull().isPresent) return this.lowercase().toBooleanStrict()
-        if (this.toIntOrNull().isPresent) return this.toInt()
-        if (this.toDoubleOrNull().isPresent) return this.toDouble()
+        if (this.lowercase().toBooleanStrictOrNull() != null) return this.lowercase().toBooleanStrict()
+        if (this.toIntOrNull() != null) return this.toInt()
+        if (this.toDoubleOrNull() != null) return this.toDouble()
         if (this.matches("\\w+:\\w+".toRegex())) {
             val split = this.split(":", limit = 2)
             return EnumValue(split[0], split[1])
@@ -175,11 +174,11 @@ object DecisionTreeNodeXMLBuilder : AbstractDecisionTreeXMLBuilder<DecisionTreeN
 
     private fun <T : Any, T_act : T?> buildOutcome(el: ElementBuildContext, keyType: KClass<T>): Outcome<T_act> {
         val key = if (keyType == ThoughtBranch::class)
-            el.findChild(THOUGHT_BRANCH_TAG).map { buildThoughtBranch(it) }.orElse(null)
+            el.findChild(THOUGHT_BRANCH_TAG)?.let { buildThoughtBranch(it) }
         else
             el.getRequiredAttributeAs(VALUE_ATTR, keyType)
 
-        if (key.isPresent && !keyType.isInstance(key))
+        if (key != null && !keyType.isInstance(key))
             throw createException("$el must have a key of type ${keyType.simpleName}, but was ${key::class.simpleName}")
         key as T_act
 
@@ -198,7 +197,7 @@ object DecisionTreeNodeXMLBuilder : AbstractDecisionTreeXMLBuilder<DecisionTreeN
     @BuildingClass(BranchResultNode::class)
     private fun buildBrachResultNode(el: ElementBuildContext): BranchResultNode {
         val value = el.getRequiredAttributeAs(VALUE_ATTR, Boolean::class)
-        val expr = el.findSingleByWrapper(EXPR_TAG).map { it.toExpr() }
+        val expr = el.findSingleByWrapper(EXPR_TAG)?.toExpr()
 
         return BranchResultNode(value, expr).collectMetadata(el)
     }
@@ -244,9 +243,9 @@ object DecisionTreeNodeXMLBuilder : AbstractDecisionTreeXMLBuilder<DecisionTreeN
     @BuildingClass(QuestionNode::class)
     private fun buildQuestionNode(el: ElementBuildContext): QuestionNode {
         val expr = el.getRequiredSingleByWrapper(EXPR_TAG).toExpr()
-        val isSwitch = el.findAttribute("isSwitch").map { it.toBoolean() }.orElse(false)
+        val isSwitch = el.findAttribute("isSwitch")?.toBoolean() ?: false
         val outcomes = el.getOutcomes(Any::class)
-        val trivialityExpr: Operator? = el.findSingleByWrapper("Triviality").map { it.toExpr() }.orElse(null)
+        val trivialityExpr: Operator? = el.findSingleByWrapper("Triviality")?.toExpr()
         return QuestionNode(expr, outcomes, isSwitch, trivialityExpr).collectMetadata(el)
     }
 
