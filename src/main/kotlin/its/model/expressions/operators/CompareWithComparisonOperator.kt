@@ -1,7 +1,10 @@
 package its.model.expressions.operators
 
 import its.model.definition.Domain
-import its.model.definition.types.*
+import its.model.definition.types.AnyType
+import its.model.definition.types.BooleanType
+import its.model.definition.types.NumericType
+import its.model.definition.types.Type
 import its.model.expressions.ExpressionContext
 import its.model.expressions.ExpressionValidationResults
 import its.model.expressions.Operator
@@ -10,7 +13,7 @@ import its.model.expressions.visitors.OperatorBehaviour
 /**
  * Сравнение с явным указанием оператора
  *
- * Возвращает [ComparisonType]
+ * Возвращает [BooleanType]
  * @param firstExpr первое сравниваемое значение ([AnyType] для (не)равенств, иначе [NumericType])
  * @param operator оператор сравнения
  * @param secondExpr второе сравниваемое значение ([AnyType] для (не)равенств, иначе [NumericType])

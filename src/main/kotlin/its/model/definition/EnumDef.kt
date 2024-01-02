@@ -1,5 +1,7 @@
 package its.model.definition
 
+import its.model.definition.types.Comparison
+import its.model.definition.types.EnumValue
 import java.util.*
 
 /**
@@ -33,7 +35,17 @@ class EnumDef(
 
 }
 
-class EnumContainer(domain: Domain) : RootDefContainer<EnumDef>(domain)
+class EnumContainer(domain: Domain) : RootDefContainer<EnumDef>(domain) {
+    init {
+        fun EnumValue.toDef() = EnumValueDef(enumName, valueName)
+
+        addBuiltIn(EnumDef(Comparison.Type.enumName)).also {
+            it.values.add(Comparison.Values.Less.toDef())
+            it.values.add(Comparison.Values.Greater.toDef())
+            it.values.add(Comparison.Values.Equal.toDef())
+        }
+    }
+}
 
 class EnumRef(
     val enumName: String,

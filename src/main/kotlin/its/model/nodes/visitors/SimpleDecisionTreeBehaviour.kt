@@ -19,7 +19,7 @@ interface SimpleDecisionTreeBehaviour<Info> : DecisionTreeBehaviour<Info> {
     }
 
     override fun process(node: FindActionNode): Info {
-        return process(node as LinkNode<String>)
+        return process(node as LinkNode<Boolean>)
     }
 
     override fun process(node: LogicAggregationNode): Info {
@@ -27,12 +27,12 @@ interface SimpleDecisionTreeBehaviour<Info> : DecisionTreeBehaviour<Info> {
     }
 
     override fun process(node: PredeterminingFactorsNode): Info {
-        return process(node as LinkNode<String>)
+        return process(node as LinkNode<ThoughtBranch?>)
     }
 
     override fun process(node: QuestionNode): Info {
         return process(node as LinkNode<Any>)
     }
 
-    fun <AnswerType : Any> process(node: LinkNode<AnswerType>): Info
+    fun <AnswerType> process(node: LinkNode<AnswerType>): Info
 }

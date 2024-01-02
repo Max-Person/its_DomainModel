@@ -2,20 +2,23 @@ package its.model.nodes
 
 import its.model.nodes.visitors.DecisionTreeBehaviour
 import its.model.nodes.visitors.LinkNodeBehaviour
-import kotlin.reflect.KClass
 
-sealed class LinkNode<AnswerType : Any> : DecisionTreeNode() {
-    abstract val next: Outcomes<AnswerType>
+/**
+ * Общий класс для узлов-связок, имеющих переходы [outcomes] к дочерним узлам;
+ *
+ * Данный тип узлов составляет основную часть дерева решений
+ */
+sealed class LinkNode<AnswerType> : DecisionTreeNode() {
+    /**
+     * Переходы из текущего узла
+     */
+    abstract val outcomes: Outcomes<AnswerType>
+
+    /**
+     * Дочерние узлы для текущего узла
+     */
     val children
-        get() = next.values
-    val answerType: KClass<out AnswerType>
-        get() {
-            val clazz = next.keys.first()::class
-            require(next.keys.all { it::class == clazz }) {
-                "Не поддерживаются узлы, где классы ответов различаются"
-            }
-            return clazz
-        }
+        get() = outcomes.values.map { it.node }
 
     abstract fun <I> use(behaviour: LinkNodeBehaviour<I>): I
     override fun <I> use(behaviour: DecisionTreeBehaviour<I>): I {

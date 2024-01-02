@@ -32,6 +32,8 @@ class MetaData(
         }
     }
 
+    operator fun get(key: String) = get(MetadataProperty(key))
+
     /**
      * Получить метаданные, при уверенности что они есть
      * @throws [NoMetadataException] если метаданных не оказалось
@@ -41,6 +43,8 @@ class MetaData(
             throw NoMetadataException("No metadata property ${property.name} found for ${owner.description}")
         }
     }
+
+    fun getAsserted(property: String) = getAsserted(MetadataProperty(property))
 
     /**
      * Добавить метаданные
@@ -81,12 +85,16 @@ data class MetadataProperty(
 ) {
 
     constructor(string: String) : this(
-        if (string.split(".", limit = 2).size < 2) string
-        else string.split(".", limit = 2)[1],
+        if (string.split(LOC_CODE_DELIMITER, limit = 2).size < 2) string
+        else string.split(LOC_CODE_DELIMITER, limit = 2)[1],
 
-        if (string.split(".", limit = 2).size < 2) Optional.empty()
-        else Optional.of(string.split(".", limit = 2)[0]),
+        if (string.split(LOC_CODE_DELIMITER, limit = 2).size < 2) Optional.empty()
+        else Optional.of(string.split(LOC_CODE_DELIMITER, limit = 2)[0]),
     )
+
+    companion object {
+        const val LOC_CODE_DELIMITER = "."
+    }
 }
 
 /**

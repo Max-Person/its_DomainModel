@@ -1,5 +1,6 @@
 package its.model.expressions
 
+import its.model.Describable
 import its.model.definition.Domain
 import its.model.definition.types.Type
 import its.model.expressions.visitors.OperatorBehaviour
@@ -7,7 +8,7 @@ import its.model.expressions.visitors.OperatorBehaviour
 /**
  * Оператор в логическом выражении (LOQI выражения)
  */
-abstract class Operator : Cloneable {
+abstract class Operator : Cloneable, Describable {
 
     /**
      * Список аргументов
@@ -24,7 +25,7 @@ abstract class Operator : Cloneable {
     /**
      * Описание оператора
      */
-    open val description
+    override val description
         get() = "a ${this::class.simpleName} operator"
 
     /**
@@ -41,6 +42,15 @@ abstract class Operator : Cloneable {
         results: ExpressionValidationResults,
         context: ExpressionContext,
     ): Type<*>
+
+    fun validateAndGet(
+        domain: Domain,
+        context: ExpressionContext = ExpressionContext(),
+    ): Pair<Type<*>, ExpressionValidationResults> {
+        val results = ExpressionValidationResults()
+        val type = validateAndGetType(domain, results, context)
+        return type to results
+    }
 
     /**
      * Валидация - провалидировать выражение (с учетом контекста [context])

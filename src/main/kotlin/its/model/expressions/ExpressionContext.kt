@@ -1,6 +1,5 @@
 package its.model.expressions
 
-import its.model.definition.types.Type
 import its.model.nodes.DecisionTreeContext
 
 /**
@@ -9,6 +8,12 @@ import its.model.nodes.DecisionTreeContext
  * @param decisionTreeVariableTypes соответствие имен переменных дерева решений и названий их типов
  */
 class ExpressionContext(
-    val variableTypes: MutableMap<String, String> = mutableMapOf(),
-    decisionTreeVariableTypes: MutableMap<String, String> = mutableMapOf(),
-) : DecisionTreeContext(decisionTreeVariableTypes)
+    variableTypes: MutableMap<String, String> = mutableMapOf(),
+    val decisionTreeVariableTypes: Map<String, String> = mapOf(),
+) : DecisionTreeContext(variableTypes) {
+    companion object {
+        @JvmStatic
+        fun from(decisionTreeContext: DecisionTreeContext) =
+            ExpressionContext(decisionTreeVariableTypes = decisionTreeContext.variableTypes)
+    }
+}

@@ -1,26 +1,37 @@
 package its.model.nodes
 
+import its.model.definition.Domain
 import its.model.nodes.visitors.LinkNodeBehaviour
-import its.model.nullCheck
-import org.w3c.dom.Element
 
+/**
+ * Узел логической агрегации по ветвям
+ *
+ * Выполняет (условно параллельно) все ветви [thoughtBranches] и агрегирует их результаты по оператору [logicalOp];
+ * Дальнейшие переходы осуществляются в зависимости от результата агрегации
+ *
+ * @param logicalOp логический оператор, агрегирующий результаты каждой итерации цикла
+ * @param thoughtBranches ветви мысли, результаты которых агрегируются в данном узле
+ */
 class LogicAggregationNode(
     val logicalOp: LogicalOp,
     val thoughtBranches: List<ThoughtBranch>,
-    override val next: Outcomes<Boolean>,
+    override val outcomes: Outcomes<Boolean>,
 ) : LinkNode<Boolean>() {
-    init {
-        require(next.keys == setOf(true, false)) { "LogicAggregationNode has to have both true and false outcomes" }
-        require(thoughtBranches.isNotEmpty()) { "LogicAggregationNode has to have at least one ThoughtBranch" }
-    }
 
-    internal constructor(el: Element) : this(
-        LogicalOp.fromString(el.getAttribute("operator"))
-            .nullCheck("LogicAggregationNode has to have a valid 'operator' attribute"),
-        el.getChildren("ThoughtBranch").map { ThoughtBranch(it) },
-        getOutcomes(el) { it.toBoolean() }
-    ) {
-        collectAdditionalInfo(el)
+    override val linkedElements: List<DecisionTreeElement>
+        get() = thoughtBranches.toList().plus(outcomes.values)
+
+    override fun validate(domain: Domain, results: DecisionTreeValidationResults, context: DecisionTreeContext) {
+        results.checkValid(
+            outcomes.containsKey(true) && outcomes.containsKey(false),
+            "$description has to have both true and false outcomes"
+        )
+        results.checkValid(
+            thoughtBranches.isNotEmpty(),
+            "$description has to have at least one ThoughtBranch"
+        )
+
+        validateLinked(domain, results, context)
     }
 
     override fun <I> use(behaviour: LinkNodeBehaviour<I>): I {

@@ -1,5 +1,6 @@
 package its.model.expressions.operators
 
+import its.model.TypedVariable
 import its.model.definition.Domain
 import its.model.definition.types.BooleanType
 import its.model.definition.types.ObjectType
@@ -8,7 +9,6 @@ import its.model.expressions.ExpressionContext
 import its.model.expressions.ExpressionValidationResults
 import its.model.expressions.Operator
 import its.model.expressions.visitors.OperatorBehaviour
-import java.util.*
 
 /**
  * Получить объект по условию экстремума

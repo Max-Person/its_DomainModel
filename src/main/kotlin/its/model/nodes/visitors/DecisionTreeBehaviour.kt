@@ -1,9 +1,7 @@
 package its.model.nodes.visitors
 
 import its.model.nodes.BranchResultNode
-import its.model.nodes.StartNode
 import its.model.nodes.ThoughtBranch
-import its.model.nodes.UndeterminedResultNode
 
 /**
  * Интерфейс, описывающий некоторое поведение, внедряемое в узлы дерева решений (подклассы [DecisionTreeNode])
@@ -13,7 +11,5 @@ import its.model.nodes.UndeterminedResultNode
 interface DecisionTreeBehaviour<Info> : LinkNodeBehaviour<Info> {
     // ---------------------- Для узлов дерева решений ---------------------------
     fun process(node: BranchResultNode): Info
-    fun process(node: StartNode): Info
     fun process(branch: ThoughtBranch): Info
-    fun process(node: UndeterminedResultNode): Info
 }

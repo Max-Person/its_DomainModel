@@ -1,23 +1,16 @@
-import its.model.DomainModel
-import its.model.dictionaries.*
-
-
-
+import its.model.definition.compat.DictionariesRDFDomainBuilder
+import its.model.nodes.xml.DecisionTreeXMLBuilder
 
 
 fun main(){
-    val d = DomainModel(
-        ClassesDictionary(),
-        DecisionTreeVarsDictionary(),
-        EnumsDictionary(),
-        PropertiesDictionary(),
-        RelationshipsDictionary(),
-        "..\\inputs\\input_examples\\"
-    )
+    val dir = "..\\inputs\\input_examples\\"
+    val domain = DictionariesRDFDomainBuilder.buildDomain(dir)
 
+    val tree = DecisionTreeXMLBuilder.buildFromXMLFile("${dir}tree.xml")
+    tree.validate(domain)
 
     val v = CounterVisitor()
-    v.process(d.decisionTree(""))
+    v.process(tree)
 
     println("There are ${v.count} tree nodes total")
 }

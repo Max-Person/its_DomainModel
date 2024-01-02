@@ -2,12 +2,11 @@ package its.model
 
 import its.model.definition.Domain
 import its.model.definition.compat.DictionariesRDFDomainBuilder
-import its.model.nodes.DecisionTreeNode
-import its.model.nodes.StartNode
-import org.apache.jena.rdf.model.Model
-import org.apache.jena.rdf.model.ModelFactory
 import its.model.dictionaries.*
 import its.model.models.*
+import its.model.nodes.DecisionTree
+import org.apache.jena.rdf.model.Model
+import org.apache.jena.rdf.model.ModelFactory
 import java.io.File
 import java.net.URL
 
@@ -48,8 +47,8 @@ open class DomainModel<
     @get:JvmName("_domain")
     val domain: Domain //FIXME временное, для проверки совместной работы
 
-    private var decisionTrees = mutableMapOf<String, StartNode>()
-    val decisionTree: StartNode
+    private var decisionTrees = mutableMapOf<String, DecisionTree>()
+    val decisionTree: DecisionTree
         @JvmName("_decisionTree")
         get() {
             require(decisionTrees.containsKey("")) { "DomainModel does not have a default decisionTree. Use decisionTree(name) instead." }
@@ -57,7 +56,7 @@ open class DomainModel<
         }
 
     @JvmName("_decisionTree")
-    fun decisionTree(name: String): StartNode {
+    fun decisionTree(name: String): DecisionTree {
         require(decisionTrees.containsKey(name)) { "DomainModel does not have a decisionTree named '$name'." }
         return decisionTrees[name]!!
     }
@@ -90,7 +89,7 @@ open class DomainModel<
             if (treeRegex.matches(it)) {
                 var (name) = treeRegex.find(it)!!.destructured
                 if (name.startsWith("_")) name = name.substring(1)
-                decisionTrees[name] = DecisionTreeNode.fromXMLFile((directoryUrl + it).toURI().toString())!!
+//                decisionTrees[name] = DecisionTreeNode.fromXMLFile((directoryUrl + it).toURI().toString())!!
             }
         }
     }

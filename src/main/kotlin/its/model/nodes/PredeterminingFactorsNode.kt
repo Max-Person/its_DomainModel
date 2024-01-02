@@ -1,21 +1,37 @@
 package its.model.nodes
 
+import its.model.definition.Domain
+import its.model.isEmpty
+import its.model.isPresent
 import its.model.nodes.visitors.LinkNodeBehaviour
-import org.w3c.dom.Element
 
+/**
+ * Узел предрешающих факторов ("Независимое ветвление")
+ *
+ * К переходам из данного узла привязаны ветви решения [ThoughtBranch],
+ * результат выполнения которых определяют совершаемый из узла переход -
+ * гарантируется, что в любой ситуации только одна из данных ветвей может дать положительный (`true`) результат.
+ * Соответственно будет выполнен переход, соответствующий данной ветви.
+ * В случае, если ни одна из ветвей не дала положительный результат,
+ * будет выполнен 'неопределенный' переход - переход, к которому не привязана ветвь мысли
+ */
 class PredeterminingFactorsNode(
-    override val next: PredeterminingOutcomes
-) : LinkNode<String>() {
-    val predetermining
-        get() = next.info.filter { it.decidingBranch != null }
-    val undetermined
-        get() = next.info.singleOrNull { it.decidingBranch == null }
+    override val outcomes: Outcomes<ThoughtBranch?>
+) : LinkNode<ThoughtBranch?>() {
+    override val linkedElements: List<DecisionTreeElement>
+        get() = outcomes.values.toList()
 
-    internal constructor(el: Element) : this(
-        getPredeterminingOutcomes(el)
-    ) {
-        require(next.info.filter { it.decidingBranch == null }.size <= 1) { "У узла предрешающих факторов может быть только один неопределенный переход" }
-        collectAdditionalInfo(el)
+    val predetermining
+        get() = outcomes.filter { it.key.isPresent }
+    val undetermined
+        get() = outcomes.values.singleOrNull { it.key.isEmpty }
+
+    override fun validate(domain: Domain, results: DecisionTreeValidationResults, context: DecisionTreeContext) {
+        results.checkValid(
+            outcomes.filter { it.key.isEmpty }.size <= 1,
+            "$description cannot have more than one undetermined outcome (outcome without an associated ThoughtBranch)"
+        )
+        validateLinked(domain, results, context)
     }
 
     override fun <I> use(behaviour: LinkNodeBehaviour<I>): I {

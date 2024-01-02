@@ -1,35 +1,43 @@
 package its.model.nodes
 
+import its.model.definition.Domain
+import its.model.definition.types.BooleanType
 import its.model.expressions.Operator
 import its.model.nodes.visitors.LinkNodeBehaviour
-import its.model.nullCheck
-import org.w3c.dom.Element
 
+/**
+ * Узел агрегации в цикле 'while'
+ *
+ * Выполняет ветку [thoughtBranch], пока выполняется условие [conditionExpr]
+ * и агрегирует результаты каждого выполнения ветви по оператору [logicalOp];
+ * Дальнейшие переходы осуществляются в зависимости от результата агрегации
+ *
+ * @param logicalOp логический оператор, агрегирующий результаты каждой итерации цикла
+ * @param conditionExpr условие продолжения выполнения цикла
+ * @param thoughtBranch ветвь мысли, представляющая тело цикла
+ */
 class WhileAggregationNode(
     val logicalOp: LogicalOp,
     val conditionExpr: Operator,
     val thoughtBranch: ThoughtBranch,
-    override val next: Outcomes<Boolean>,
-    val isWhile: Boolean = false
+    override val outcomes: Outcomes<Boolean>,
 ) : LinkNode<Boolean>() {
 
-    init {
-        require(next.keys == setOf(true, false)) { "WhileAggregationNode has to have both true and false outcomes" }
-    }
+    override val linkedElements: List<DecisionTreeElement>
+        get() = listOf(thoughtBranch).plus(outcomes.values)
 
-    internal constructor(el: Element) : this(
-        LogicalOp.fromString(el.getAttribute("operator"))
-            .nullCheck("WhileAggregationNode has to have a valid 'operator' attribute"),
-        Operator.build(
-            el.getSingleByWrapper("SelectorExpression")
-                .nullCheck("WhileAggregationNode has to have a 'SelectorExpression' child tag")
-        ),
-        ThoughtBranch(
-            el.getChild("ThoughtBranch").nullCheck("WhileAggregationNode has to have a 'ThoughtBranch' child tag")
-        ),
-        getOutcomes(el) { it.toBoolean() },
-    ) {
-        collectAdditionalInfo(el)
+    override fun validate(domain: Domain, results: DecisionTreeValidationResults, context: DecisionTreeContext) {
+        val conditionType = conditionExpr.validateForDecisionTree(domain, results, context)
+        results.checkValid(
+            conditionType is BooleanType,
+            "Condition expression for the $description returns $conditionType, but must return a boolean"
+        )
+        results.checkValid(
+            outcomes.containsKey(true) && outcomes.containsKey(false),
+            "$description has to have both true and false outcomes"
+        )
+
+        validateLinked(domain, results, context)
     }
 
     override fun <I> use(behaviour: LinkNodeBehaviour<I>): I {

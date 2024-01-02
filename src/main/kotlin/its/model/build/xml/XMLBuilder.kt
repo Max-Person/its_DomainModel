@@ -13,6 +13,7 @@ import kotlin.reflect.KCallable
 import kotlin.reflect.KClass
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.instanceParameter
+import kotlin.reflect.jvm.isAccessible
 
 /**
  * Строитель объектов на основе XML
@@ -86,25 +87,39 @@ abstract class XMLBuilder<Context : ElementBuildContext, Build : Any> {
         return out
     }
 
-    protected fun Element.getChild(): Optional<Element> {
+    protected fun Element.findChild(): Optional<Element> {
         return Optional.ofNullable(getChildren().firstOrNull())
+    }
+
+    protected fun Element.getRequiredChild(): Element {
+        return findChild().orElseBuildErr("$this needs to have at least one child tag")
     }
 
     protected fun Element.getChildren(tagName: String): List<Element> {
         return getChildren().filter { it.tagName.equals(tagName) }
     }
 
-    protected fun Element.getChild(tagName: String): Optional<Element> {
+    protected fun Element.findChild(tagName: String): Optional<Element> {
         return Optional.ofNullable(getChildren(tagName).firstOrNull())
     }
 
+    protected fun ElementBuildContext.getRequiredChild(tagName: String): Element {
+        return findChild(tagName)
+            .orElseBuildErr("$this needs to have a child tag '$tagName'")
+    }
+
     protected fun ElementBuildContext.getSeveralByWrapper(wrapper: String): List<Element> {
-        return getChild(wrapper).map { it.getChildren() }
+        return findChild(wrapper).map { it.getChildren() }
             .orElseBuildErr("$this needs to have a nested wrapper tag '$wrapper'")
     }
 
-    protected fun ElementBuildContext.getSingleByWrapper(wrapper: String): Optional<Element> {
-        return Optional.ofNullable(getSeveralByWrapper(wrapper).firstOrNull())
+    protected fun ElementBuildContext.findSingleByWrapper(wrapper: String): Optional<Element> {
+        return findChild(wrapper).flatMap { it.findChild() }
+    }
+
+    protected fun ElementBuildContext.getRequiredSingleByWrapper(wrapper: String): Element {
+        return getSeveralByWrapper(wrapper).firstOrNull()
+            ?: throw createException("Wrapper tag '$wrapper' for $this should not be empty")
     }
 
     protected fun Element.findAttribute(attr: String): Optional<String> {
@@ -176,6 +191,7 @@ abstract class XMLBuilder<Context : ElementBuildContext, Build : Any> {
             "Callable '${method.name}' in ${this::class.simpleName} must have just one regular parameter - " +
                     "a ElementBuildContext - to be used for XML building"
         }
+        method.isAccessible = true
         return if (method.instanceParameter != null) { c: Context -> method.call(this, c) as Build }
         else { c: Context -> method.call(c) as Build }
 
@@ -195,9 +211,12 @@ abstract class XMLBuilder<Context : ElementBuildContext, Build : Any> {
 
     /**
      * Создать объект для тега, которому не соответствует ни одна из определенных функций построения;
-     * В этом же методе можно выкинуть ошибку, если оно того требует
+     *
+     * Реализация по умолчанию выкидывает ошибку [createException] о невозможности построить объект
      */
-    protected abstract fun buildDefault(el: Context): Build
+    protected open fun buildDefault(el: Context): Build {
+        throw createException("No build functions exist for tags '${el.nodeName}' in ${this::class.simpleName}.")
+    }
 
     private inner class ConverterMethod(
         val buildClass: KClass<*>,

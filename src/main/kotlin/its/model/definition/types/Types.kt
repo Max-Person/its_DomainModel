@@ -51,6 +51,22 @@ sealed class Type<T : Any>(
     override fun hashCode(): Int {
         return Objects.hash(this::class, valueClass)
     }
+
+    companion object {
+        @JvmStatic
+        fun of(value: Any): Type<*> {
+            return when (value) {
+                is Boolean -> BooleanType
+                is Int -> IntegerType(value)
+                is Double -> DoubleType(value)
+                is String -> StringType
+                is EnumValue -> EnumType(value.enumName)
+                is Clazz -> ClassType(value.className)
+                is Obj -> ObjectType.untyped() //FIXME?
+                else -> AnyType
+            }
+        }
+    }
 }
 
 /**
@@ -192,7 +208,21 @@ open class EnumType(
 /**
  * Тип "Результат сравнения"
  */
-object ComparisonType : EnumType("Comparison") //TODO
+object Comparison {
+    @JvmField
+    val Type = EnumType("Comparison")
+
+    object Values {
+        @JvmField
+        val Less = EnumValue(Type.enumName, "less")
+
+        @JvmField
+        val Greater = EnumValue(Type.enumName, "greater")
+
+        @JvmField
+        val Equal = EnumValue(Type.enumName, "equal")
+    }
+}
 
 
 /**
@@ -255,6 +285,8 @@ typealias Clazz = ClassRef
  * Тип Класс
  */
 class ClassType(className: String) : ClassInheritorType<Clazz, ClassDef>(className, Clazz::class) {
+    fun toObjectType() = ObjectType(className)
+
     companion object {
         @JvmStatic
         fun untyped() = ClassType(UNTYPED)

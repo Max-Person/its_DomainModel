@@ -12,6 +12,7 @@ interface OperatorBehaviour<Info> : LiteralBehaviour<Info> {
     // ------------------ Для узлов дерева выражений -------------------------
     fun process(op: AssignProperty): Info
     fun process(op: AssignDecisionTreeVar): Info
+    fun process(op: Cast): Info
     fun process(op: CheckClass): Info
     fun process(op: CheckPropertyValue): Info
     fun process(op: CheckRelationship): Info

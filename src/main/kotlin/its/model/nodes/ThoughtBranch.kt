@@ -1,28 +1,20 @@
 package its.model.nodes
 
-import its.model.expressions.types.Types.typeFromString
-import its.model.nodes.visitors.DecisionTreeBehaviour
-import its.model.nullCheck
-import org.w3c.dom.Element
-import kotlin.reflect.KClass
-
+/**
+ * Ветвь мысли в дереве решений
+ *
+ * Ветви мысли соответствуют отдельным под-задачам (под-проблемам) в дереве решений,
+ * и имеют собственные ответы (результаты, определяемые [BranchResultNode]),
+ * которые влияют на более высокоуровневые рассуждения
+ */
 class ThoughtBranch(
-    val type: KClass<*>,
-    val parameterName: String? = null,
     val start: DecisionTreeNode,
-) : DecisionTreeNode() {
-    internal constructor(el: Element) : this(
-        typeFromString(el.getAttribute("type")).nullCheck("ThoughtBranch has to have a valid 'type' attribute"),
-        el.getAttribute("paramName").ifBlank { null },
-        build(el.getChild()).nullCheck("No nodes can be built from tag ${el.getChild()?.tagName}"),
-    ) {
-        collectAdditionalInfo(el)
-    }
+) : DecisionTreeElement() {
 
-    val isParametrized: Boolean
-        get() = parameterName != null
+    override val linkedElements: List<DecisionTreeElement>
+        get() = listOf(start)
 
-    override fun <I> use(behaviour: DecisionTreeBehaviour<I>): I {
-        return behaviour.process(this)
-    }
+//    override fun <I> use(behaviour: DecisionTreeBehaviour<I>): I {
+//        return behaviour.process(this)
+//    }
 }

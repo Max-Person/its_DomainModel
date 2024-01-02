@@ -338,7 +338,7 @@ class DictionariesDomainBuilder private constructor(
             "BOOL", "BOOLEAN" -> BooleanType
             "INT", "INTEGER" -> IntegerType(range.toRange())
             "DOUBLE" -> DoubleType(range.toRange())
-//            "COMPARISON", "COMPARISONRESULT", "COMPARISON_RESULT" -> EnumType(domain, "ComparisonResult") //FIXME
+            "COMPARISON", "COMPARISONRESULT", "COMPARISON_RESULT" -> Comparison.Type
             "ENUM" -> EnumType(enumName!!)
             else -> throw IllegalArgumentException("Cannot parse '$this' into a valid property type")
         }

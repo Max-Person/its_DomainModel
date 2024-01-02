@@ -1,10 +1,7 @@
 package its.model.expressions.operators
 
 import its.model.definition.Domain
-import its.model.definition.types.BooleanType
-import its.model.definition.types.ComparisonType
-import its.model.definition.types.NumericType
-import its.model.definition.types.Type
+import its.model.definition.types.*
 import its.model.expressions.ExpressionContext
 import its.model.expressions.ExpressionValidationResults
 import its.model.expressions.Operator
@@ -37,7 +34,7 @@ class Compare(
             "$description is not compatible with non-numeric types " +
                     "(trying to compare values of types '$firstType' and '$secondType')"
         )
-        return ComparisonType
+        return Comparison.Type
     }
 
     override fun <I> use(behaviour: OperatorBehaviour<I>): I {

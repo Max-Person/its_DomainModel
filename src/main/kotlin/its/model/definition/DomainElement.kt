@@ -1,11 +1,13 @@
 package its.model.definition
 
+import its.model.Describable
+
 /**
  * Любой элемент домена
  *
  * Имеет ссылку на домен, в котором содержится, и функции для валидации
  */
-abstract class DomainElement {
+abstract class DomainElement : Describable {
     /**
      * Домен, в котором содержится элемент
      */
@@ -14,7 +16,7 @@ abstract class DomainElement {
     /**
      * Строковое описание элемента домена
      */
-    open val description: String
+    override val description: String
         get() = "DomainElement"
 
     /**

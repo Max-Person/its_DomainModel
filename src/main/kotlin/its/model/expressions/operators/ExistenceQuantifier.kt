@@ -1,8 +1,8 @@
 package its.model.expressions.operators
 
+import its.model.TypedVariable
 import its.model.definition.Domain
 import its.model.definition.types.BooleanType
-import its.model.definition.types.ComparisonType
 import its.model.definition.types.Type
 import its.model.expressions.ExpressionContext
 import its.model.expressions.ExpressionValidationResults

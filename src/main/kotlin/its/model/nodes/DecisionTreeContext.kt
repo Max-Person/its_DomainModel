@@ -1,11 +1,19 @@
 package its.model.nodes
 
-import its.model.definition.types.Type
+import its.model.TypedVariable
 
 /**
  * Контекст проверки деревьев решений
- * @param decisionTreeVariableTypes соответствие имен переменных дерева решений и названий их типов
+ * @param variableTypes соответствие имен переменных дерева решений и названий их типов
  */
 open class DecisionTreeContext(
-    val decisionTreeVariableTypes: MutableMap<String, String> = mutableMapOf(),
-)
+    open val variableTypes: MutableMap<String, String> = mutableMapOf(),
+) {
+    fun add(variable: TypedVariable) {
+        variableTypes[variable.varName] = variable.className
+    }
+
+    fun remove(variable: TypedVariable) {
+        variableTypes.remove(variable.varName)
+    }
+}

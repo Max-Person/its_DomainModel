@@ -1,12 +1,14 @@
 package its.model.expressions.xml
 
+import its.model.TypedVariable
 import its.model.build.xml.ElementBuildContext
 import its.model.build.xml.XMLBuildException
 import its.model.build.xml.XMLBuilder
 import its.model.definition.ThisShouldNotHappen
-import its.model.definition.types.ComparisonType
+import its.model.definition.types.Comparison
 import its.model.definition.types.EnumValue
 import its.model.expressions.Operator
+import its.model.expressions.getTypesFromConditionExpr
 import its.model.expressions.literals.*
 import its.model.expressions.operators.*
 import org.w3c.dom.Element
@@ -43,12 +45,12 @@ object ExpressionXMLBuilder : XMLBuilder<ExpressionXMLBuilder.ExpressionBuildCon
 
     //--- Утилитарное ---
 
-    const val NAME = "name"
-    const val TYPE = "type"
-    const val VALUE = "value"
-    const val VAR_NAME = "varName"
-    const val PROPERTY_NAME = "propertyName"
-    const val RELATIONSHIP_NAME = "relationshipName"
+    private const val NAME = "name"
+    private const val TYPE = "type"
+    private const val VALUE = "value"
+    private const val VAR_NAME = "varName"
+    private const val PROPERTY_NAME = "propertyName"
+    private const val RELATIONSHIP_NAME = "relationshipName"
 
     class ExpressionBuildContext(
         el: Element,
@@ -95,6 +97,14 @@ object ExpressionXMLBuilder : XMLBuilder<ExpressionXMLBuilder.ExpressionBuildCon
             }
     }
 
+    private fun ExpressionBuildContext.getTypeFromConditionExpr(condition: Operator, varName: String): String {
+        val types = getTypesFromConditionExpr(condition, varName)
+        if (types.size != 1) {
+            throw createException("Cannot infer type for variable '$varName' in $this")
+        }
+        return types.single()
+    }
+
     //--- Построение ---
 
     @BuildForTags(["Variable"])
@@ -130,7 +140,7 @@ object ExpressionXMLBuilder : XMLBuilder<ExpressionXMLBuilder.ExpressionBuildCon
     @BuildingClass(EnumLiteral::class)
     private fun buildComparisonResultLiteral(el: ExpressionBuildContext): EnumLiteral {
         val value = el.getRequiredAttribute(VALUE)
-        return EnumLiteral(EnumValue(ComparisonType.enumName, value))
+        return EnumLiteral(EnumValue(Comparison.Type.enumName, value))
     }
 
     @BuildForTags(["String"])
@@ -186,6 +196,15 @@ object ExpressionXMLBuilder : XMLBuilder<ExpressionXMLBuilder.ExpressionBuildCon
         return AssignProperty(
             el.op(0),
             propertyName,
+            el.op(1),
+        )
+    }
+
+    @BuildForTags(["Cast"])
+    @BuildingClass(Cast::class)
+    private fun buildCast(el: ExpressionBuildContext): Cast {
+        return Cast(
+            el.op(0),
             el.op(1),
         )
     }
@@ -250,7 +269,7 @@ object ExpressionXMLBuilder : XMLBuilder<ExpressionXMLBuilder.ExpressionBuildCon
         val selector = el.op(0)
         val condition = el.op(1)
         val varName = el.getRequiredAttribute(VAR_NAME)
-        val type = el.findAttribute(TYPE).orElseGet { getTypeFromConditionExpr(selector, varName, el.tagName) }
+        val type = el.findAttribute(TYPE).orElseGet { el.getTypeFromConditionExpr(selector, varName) }
         return ExistenceQuantifier(TypedVariable(type, varName), selector, condition)
     }
 
@@ -260,7 +279,7 @@ object ExpressionXMLBuilder : XMLBuilder<ExpressionXMLBuilder.ExpressionBuildCon
         val selector = el.op(0)
         val condition = el.op(1)
         val varName = el.getRequiredAttribute(VAR_NAME)
-        val type = el.findAttribute(TYPE).orElseGet { getTypeFromConditionExpr(selector, varName, el.tagName) }
+        val type = el.findAttribute(TYPE).orElseGet { el.getTypeFromConditionExpr(selector, varName) }
         return ForAllQuantifier(TypedVariable(type, varName), selector, condition)
     }
 
@@ -269,7 +288,7 @@ object ExpressionXMLBuilder : XMLBuilder<ExpressionXMLBuilder.ExpressionBuildCon
     private fun buildGetByCondition(el: ExpressionBuildContext): GetByCondition {
         val condition = el.op(0)
         val varName = el.getRequiredAttribute(VAR_NAME)
-        val type = el.findAttribute(TYPE).orElseGet { getTypeFromConditionExpr(condition, varName, el.tagName) }
+        val type = el.findAttribute(TYPE).orElseGet { el.getTypeFromConditionExpr(condition, varName) }
         return GetByCondition(TypedVariable(type, varName), condition)
     }
 
@@ -296,7 +315,7 @@ object ExpressionXMLBuilder : XMLBuilder<ExpressionXMLBuilder.ExpressionBuildCon
         val condition = el.op(1)
         val extremeVarName = el.getRequiredAttribute("extremeVarName")
         val varName = el.getRequiredAttribute(VAR_NAME)
-        val type = el.findAttribute(TYPE).orElseGet { getTypeFromConditionExpr(condition, varName, el.tagName) }
+        val type = el.findAttribute(TYPE).orElseGet { el.getTypeFromConditionExpr(condition, varName) }
         return GetExtreme(type, varName, condition, extremeVarName, extremeCondition)
     }
 

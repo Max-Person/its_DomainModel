@@ -1,110 +1,126 @@
 package its.model.nodes
 
-import its.model.DomainModel
+import its.model.TypedVariable
+import its.model.definition.Domain
+import its.model.definition.types.BooleanType
+import its.model.definition.types.ObjectType
 import its.model.expressions.Operator
-import its.model.models.DecisionTreeVarModel
+import its.model.isPresent
 import its.model.nodes.visitors.LinkNodeBehaviour
-import its.model.nullCheck
-import org.w3c.dom.Element
 
-
+/**
+ * Узел действия (поиска объекта)
+ *
+ * Вычисляет и присваивает значение переменной дерева мысли согласно [varAssignment] (находит объект и запоминает его).
+ * Если объект найден, то выполняет также дополнительные присвоения [secondaryAssignments] и переходит по выходу `true`
+ * Иначе переходит по выходу `false`
+ *
+ * @param varAssignment основное присвоение переменной в узле
+ * @param errorCategories список категорий возможных в данном узле ошибок
+ * @param secondaryAssignments дополнительные присвоения переменных, если основное было выполнено
+ * (данные присвоения могут ссылаться на переменную дерева мысли, определяемую в [varAssignment], т.к. выполняются только если оно выполнено успешно)
+ */
 //FindAction пока выделен отдельно, но в случае появления новых действий можно выделить общий родительский класс
 class FindActionNode(
-    val selectorExpr: Operator,
-    varName: String,
-    varClass: String,
+    val varAssignment: DecisionTreeVarAssignment,
     val errorCategories: List<FindErrorCategory>,
-    val additionalVariables: List<AdditionalVarDeclaration>,
-    override val next: Outcomes<String>,
-) : LinkNode<String>(), DecisionTreeVarDeclaration {
-    val variable: DecisionTreeVarModel
-    val nextIfFound
-        get() = next["found"]!!
-    val nextIfNone
-        get() = next["none"]
+    val secondaryAssignments: List<DecisionTreeVarAssignment>,
+    override val outcomes: Outcomes<Boolean>,
+) : LinkNode<Boolean>() {
+    override val linkedElements: List<DecisionTreeElement>
+        get() = listOf(varAssignment).plus(errorCategories).plus(secondaryAssignments).plus(outcomes.values)
 
+    val nextIfFound
+        get() = outcomes[true]!!
+    val nextIfNone
+        get() = outcomes[false]
+
+    /**
+     * Категория ошибок в узле [FindActionNode]
+     *
+     * В случае, если студент неправильно выполнил действие в узле и выбрал не тот объект, который нужно,
+     * то любой выбранный объект должен соответствовать одной или нескольким категориям ошибок
+     *
+     * @param priority приоритет данной категории ошибок - если объект соответствует нескольким категориям,
+     * то будет выбрана категория с наивысшим приоритетом (1 считается наивысшим приоритетом, и далее 2, 3.. по убыванию)
+     * @param selectorExpr условие (предикат) для проверки соответствия объекта категории ([BooleanType]);
+     * проверяемый объект подставляется в предикат как контекстная переменная 'checked', чей тип соответствует основной переменной узла
+     */
     class FindErrorCategory(
         val priority: Int,
         val selectorExpr: Operator,
-        val additionalInfo: Map<String, String> = mapOf()
-    ) {
-        constructor(el: Element, className: String) : this(
-            el.getAttribute("priority").toIntOrNull()
-                .nullCheck("Find Error Category has to have a valid int 'prioroty' attribute"),
-            Operator.build(
-                el.getSingleByWrapper("Expression")
-                    .nullCheck("Find Error Category has to have an 'Expression' child tag"),
-                mapOf("checked" to className),
-            ),
-            el.getAdditionalInfo()
+    ) : HelperDecisionTreeElement() {
+        private val parentNode
+            get() = (parent as FindActionNode)
+
+        companion object {
+            const val CHECKED_OBJ = "checked"
+        }
+
+        override fun validate(domain: Domain, results: DecisionTreeValidationResults, context: DecisionTreeContext) {
+            super.validate(domain, results, context)
+            val selectorType = selectorExpr.validateForDecisionTree(
+                domain,
+                results,
+                context,
+                withVariables = mapOf(CHECKED_OBJ to parentNode.varAssignment.variable.className)
+            )
+            results.checkValid(
+                selectorType is BooleanType,
+                "Selector expression in a $description returns $selectorType, but must return a boolean " +
+                        "(be a predicate with respect to variable '$CHECKED_OBJ')"
+            )
+        }
+    }
+
+    /**
+     * Присвоение переменной в дереве решений
+     *
+     * Создает или заменяет переменную дерева решений [variable] со значением (объектом), вычисляемым по [valueExpr]
+     *
+     * @param variable определяемая переменная дерева решений
+     * @param valueExpr выражение, вычисляющее значение переменной ([ObjectType])
+     */
+    class DecisionTreeVarAssignment(
+        val variable: TypedVariable,
+        val valueExpr: Operator,
+    ) : HelperDecisionTreeElement() {
+        override fun validate(domain: Domain, results: DecisionTreeValidationResults, context: DecisionTreeContext) {
+            super.validate(domain, results, context)
+            variable.checkValid(domain, results, context, this)
+            val valueType = valueExpr.validateForDecisionTree(domain, results, context)
+            results.checkValid(
+                valueType is ObjectType && ObjectType(variable.className).castFits(valueType, domain),
+                "Value expression in $description ($parent) returns $valueType, but must return " +
+                        "an object of type '${variable.className}' to conform to a variable ${variable.varName}"
+            )
+        }
+    }
+
+    override fun validate(domain: Domain, results: DecisionTreeValidationResults, context: DecisionTreeContext) {
+        //Сначала валидируются части, в которых находимая переменная неизвестна
+        validateLinked(domain, results, context,
+            mutableListOf<DecisionTreeElement>(varAssignment).also {
+                if (nextIfNone.isPresent) it.add(nextIfNone!!)
+            }
         )
 
-        override fun toString(): String {
-            return this.additionalInfo["alias"] ?: this.additionalInfo["label"] ?: super.toString()
+        //Далее части валидируются с добавлением в контекст известных переменных
+        context.add(varAssignment.variable)
+        validateLinked(domain, results, context, errorCategories)
+        validateLinked(domain, results, context, secondaryAssignments)
+        for ((i, secondaryAssignment) in secondaryAssignments.withIndex()) {
+            val others = secondaryAssignments.subList(i + 1, secondaryAssignments.size)
+            results.checkValid(
+                others.none { it.variable.varName == secondaryAssignment.variable.varName },
+                "Cannot declare multiple secondary assignments " +
+                        "with the same name ${secondaryAssignment.variable.varName} (in $description)"
+            )
         }
-    }
-
-    class AdditionalVarDeclaration(
-        varName: String,
-        varClass: String,
-        val calcExpr: Operator,
-    ) {
-        val variable: DecisionTreeVarModel
-
-        init {
-            variable = checkVar(varName, varClass)
-        }
-
-        constructor(el: Element) : this(
-            el.getAttribute("name"),
-            el.getAttribute("type"),
-            Operator.build(el.getSingleByWrapper("Expression")!!),
-        )
-    }
-
-    init {
-        next.keys.forEach { require(it == "none" || it == "found") { "FindActionNode cannot have an outcome with a value $it" } }
-        variable = checkVar(varName, varClass)
-    }
-
-    companion object _static {
-        @JvmStatic
-        fun checkVar(varName: String, varClass: String): DecisionTreeVarModel {
-            require(DomainModel.decisionTreeVarsDictionary.contains(varName)) {
-                "Переменная $varName, используемая в дереве решений, не объявлена в словаре"
-            }
-            require(DomainModel.decisionTreeVarsDictionary.getClass(varName) == varClass) {
-                "Переменная $varName, используемая в дереве решений, объявлена с классом, не совпадающим с объявлением в словаре"
-            }
-            return DomainModel.decisionTreeVarsDictionary.get(varName)!!
-        }
-    }
-
-    internal constructor(el: Element) : this(
-        Operator.build(el.getSingleByWrapper("Expression")!!),
-        el.getChild("DecisionTreeVarDecl").nullCheck("FindActionNode has to have a 'DecisionTreeVarDecl' child tag")
-            .getAttribute("name"),
-        el.getChild("DecisionTreeVarDecl").nullCheck("FindActionNode has to have a 'DecisionTreeVarDecl' child tag")
-            .getAttribute("type"),
-        el.getChildren("FindError")
-            .map { errEl -> FindErrorCategory(errEl, el.getChild("DecisionTreeVarDecl")!!.getAttribute("type")) }
-            .sortedBy { category -> category.priority },
-        el.getChildren("AdditionalVarDecl").map { declEl -> AdditionalVarDeclaration(declEl) },
-        getOutcomes(el) { it }
-    ) {
-        collectAdditionalInfo(el)
-    }
-
-    override fun declaredVariable(): DecisionTreeVarModel {
-        return variable
-    }
-
-    override fun declarationExpression(): Operator {
-        return selectorExpr
-    }
-
-    fun allDeclaredVariables(): Set<String> {
-        return setOf(this.variable.name).plus(this.additionalVariables.map { it.variable.name })
+        secondaryAssignments.forEach { context.add(it.variable) }
+        nextIfFound.validate(domain, results, context)
+        context.remove(varAssignment.variable)
+        secondaryAssignments.forEach { context.remove(it.variable) }
     }
 
     override fun <I> use(behaviour: LinkNodeBehaviour<I>): I {

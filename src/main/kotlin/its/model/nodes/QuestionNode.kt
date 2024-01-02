@@ -1,36 +1,54 @@
 package its.model.nodes
 
+import its.model.definition.Domain
+import its.model.definition.types.BooleanType
+import its.model.definition.types.Type
 import its.model.expressions.Operator
-import its.model.expressions.types.ParseValue.parseValue
-import its.model.expressions.types.Types.typeFromString
+import its.model.isPresent
 import its.model.nodes.visitors.LinkNodeBehaviour
-import its.model.nullCheck
-import org.w3c.dom.Element
-import kotlin.reflect.KClass
 
+/**
+ * Узел вопроса
+ *
+ * Вычисляет выражение [expr] и совершает переход, чей ключ соответствует вычисленному результату
+ *
+ * @param [expr] выражение, вычисляемое в узле
+ * @param [isSwitch] является ли узел 'switch'-узлом. 'switch'-узлы считаются тривиальными (см. [trivialityExpr])
+ * @param [trivialityExpr] условие тривиальности узла ([BooleanType]).
+ * Если узел тривиален, на нем не должно заостряться внимание студента
+ */
 class QuestionNode(
-    val type: KClass<*>,
-    val isSwitch: Boolean = false,
     val expr: Operator,
-    override val next: Outcomes<Any>,
+    override val outcomes: Outcomes<Any>,
+    val isSwitch: Boolean = false,
     val trivialityExpr: Operator? = null,
 ) : LinkNode<Any>() {
-    internal constructor(el: Element) : this(
-        typeFromString(el.getAttribute("type")).nullCheck("QuestionNode has to have a valid 'type' attribute"),
-        el.getAttribute("isSwitch").toBoolean(),
-        Operator.build(
-            el.getSingleByWrapper("Expression").nullCheck("QuestionNode has to have an 'Expression' child tag")
-        ),
-        getOutcomes(el) { it.parseValue(typeFromString(el.getAttribute("type")).nullCheck("QuestionNode's outcomes' values should match its type")) },
-        el.getChild("Triviality")
-            ?.let { Operator.build(it.getChild().nullCheck("Triviality must contain a valid expression XML")) },
-    ) {
-        collectAdditionalInfo(el)
+    override val linkedElements: List<DecisionTreeElement>
+        get() = outcomes.values.toList()
+
+    val canBeTrivial: Boolean
+        get() = isSwitch || trivialityExpr != null
+
+    override fun validate(domain: Domain, results: DecisionTreeValidationResults, context: DecisionTreeContext) {
+        val exprType = expr.validateForDecisionTree(domain, results, context)
+        for (outcome in outcomes.values) {
+            val outcomeType = Type.of(outcome.key)
+            results.checkValid(
+                exprType.castFits(outcomeType, domain),
+                "Outcome key '${outcome.key}' cannot be cast to the node's type '$exprType' (in $description)"
+            )
+        }
+        if (trivialityExpr.isPresent) {
+            val trivialityType = trivialityExpr!!.validateForDecisionTree(domain, results, context)
+            results.checkValid(
+                trivialityType is BooleanType,
+                "Triviality expression for the $description returns $trivialityType, but must return a boolean"
+            )
+        }
+        validateLinked(domain, results, context)
     }
 
     override fun <I> use(behaviour: LinkNodeBehaviour<I>): I {
         return behaviour.process(this)
     }
-
-    fun canBeTrivial(): Boolean = isSwitch || trivialityExpr != null
 }
