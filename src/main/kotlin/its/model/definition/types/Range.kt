@@ -3,30 +3,40 @@ package its.model.definition.types
 /**
  * Диапазон числовых значений
  */
-sealed interface Range {
+sealed class Range {
     /**
      * Содержит ли диапазон число
      */
-    fun contains(v: Number): Boolean
+    abstract fun contains(v: Number): Boolean
 
     /**
      * Входит ли диапазон [other] в текущий диапазон (полностью содержится в нем)
      */
-    fun contains(other: Range): Boolean
+    abstract fun contains(other: Range): Boolean
+
+    /**
+     * Строковое представление диапазона в виде модификатора для типа
+     */
+    abstract val modString: String
+
+    protected fun Double.mapNum() = if (this.rem(1) == 0.0) this.toInt() else this
 }
 
 /**
  * Любое число
  */
-data object AnyNumber : Range {
+data object AnyNumber : Range() {
     override fun contains(v: Number): Boolean = true
     override fun contains(other: Range): Boolean = true
+
+    override val modString: String
+        get() = ""
 }
 
 /**
  * Дискретный диапазон (набор допустимых значений)
  */
-class DiscreteRange(val values: Set<Double>) : Range {
+class DiscreteRange(val values: Set<Double>) : Range() {
     override fun contains(v: Number): Boolean {
         return values.any { it.compareTo(v.toDouble()) == 0 }
     }
@@ -38,12 +48,15 @@ class DiscreteRange(val values: Set<Double>) : Range {
 
         return other is DiscreteRange && other.values == this.values
     }
+
+    override val modString: String
+        get() = "{${values.map { it.mapNum() }.joinToString(", ")}}"
 }
 
 /**
  * Непрерывный диапазон (между двумя значениями)
  */
-class ContinuousRange(boundaries: Pair<Double, Double>) : Range {
+class ContinuousRange(boundaries: Pair<Double, Double>) : Range() {
     val boundaries: Pair<Double, Double>
 
     init {
@@ -64,5 +77,9 @@ class ContinuousRange(boundaries: Pair<Double, Double>) : Range {
             is DiscreteRange -> other.values.all { this.contains(it) }
         }
     }
+
+    override val modString: String
+        get() = "[${if (boundaries.first.isFinite()) boundaries.first.mapNum() else ""}" +
+                ", ${if (boundaries.second.isFinite()) boundaries.second.mapNum() else ""}]"
 }
 

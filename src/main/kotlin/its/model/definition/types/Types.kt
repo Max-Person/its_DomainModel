@@ -67,6 +67,8 @@ sealed class Type<T : Any>(
             }
         }
     }
+
+    override fun toString() = this::class.simpleName.toString()
 }
 
 /**
@@ -115,6 +117,10 @@ sealed class NumericType<T : Number>(
 
     override fun hashCode(): Int {
         return Objects.hash(super.hashCode(), range)
+    }
+
+    override fun toString(): String {
+        return super.toString() + range.modString
     }
 }
 
@@ -203,6 +209,10 @@ open class EnumType(
     override fun hashCode(): Int {
         return Objects.hash(super.hashCode(), enumName)
     }
+
+    override fun toString(): String {
+        return super.toString() + "($enumName)"
+    }
 }
 
 /**
@@ -268,6 +278,10 @@ sealed class ClassInheritorType<Value : DomainRef<Inheritor>, Inheritor : ClassI
 
     override fun hashCode(): Int {
         return Objects.hash(super.hashCode(), className)
+    }
+
+    override fun toString(): String {
+        return super.toString() + "($className)"
     }
 
     companion object {
