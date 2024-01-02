@@ -16,7 +16,7 @@ import java.net.URL
  */
 object DomainDictionariesRDFBuilder {
     /**
-     * Посроить модель домена на основе словарей
+     * Построить модель домена на основе словарей
      * @param enumsDictReader reader для словаря перечислений
      * @param classesDictReader reader для словаря классов
      * @param propertiesDictReader reader для словаря свойств
@@ -44,7 +44,7 @@ object DomainDictionariesRDFBuilder {
     }
 
     /**
-     * Посроить модель домена на основе данных, взятых из директории [directoryUrl]
+     * Построить модель домена на основе данных, взятых из директории [directoryUrl]
      *
      * Ожидается, что словари являются файломи в данной директории и называются
      * `'enums.csv'`, `'classes.csv'`, `'properties.csv'` и `'relationships.csv'` соответственно.
@@ -63,7 +63,7 @@ object DomainDictionariesRDFBuilder {
     }
 
     /**
-     * Посроить модель домена на основе словарей, взятых из директории [directoryPath]
+     * Построить модель домена на основе словарей, взятых из директории [directoryPath]
      *
      * Ожидается, что словари являются файломи в данной директории и называются
      * `'enums.csv'`, `'classes.csv'`, `'properties.csv'` и `'relationships.csv'` соответственно

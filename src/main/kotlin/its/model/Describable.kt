@@ -1,11 +1,11 @@
 package its.model
 
 /**
- * TODO Class Description
- *
- * @author Marat Gumerov
- * @since 29.12.2023
+ * Объект с описанием
  */
 interface Describable {
+    /**
+     * Описание данного объекта
+     */
     val description: String
 }
