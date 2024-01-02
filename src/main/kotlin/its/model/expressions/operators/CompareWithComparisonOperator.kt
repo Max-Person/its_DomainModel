@@ -66,12 +66,12 @@ class CompareWithComparisonOperator(
 
             @JvmStatic
             fun fromString(value: String) = when (value.uppercase()) {
-                "LESS" -> Less
-                "GREATER" -> Greater
+                "LESS", "LT" -> Less
+                "GREATER", "GT" -> Greater
                 "EQ", "EQUAL" -> Equal
-                "LESSEQ", "LESSEQUAL", "LESS_EQ", "LESS_EQUAL" -> LessEqual
-                "GREATEREQ", "GREATEREQUAL", "GREATER_EQ", "GREATER_EQUAL" -> GreaterEqual
-                "NOTEQ", "NOTEQUAL", "NOT_EQ", "NOT_EQUAL" -> NotEqual
+                "LESSEQ", "LE", "LESSEQUAL", "LESS_EQ", "LESS_EQUAL" -> LessEqual
+                "GREATEREQ", "GE", "GREATEREQUAL", "GREATER_EQ", "GREATER_EQUAL" -> GreaterEqual
+                "NOTEQ", "NE", "NOTEQUAL", "NOT_EQ", "NOT_EQUAL" -> NotEqual
                 else -> throw IllegalArgumentException("Cannot convert String '$value' into a ComparisonOperator")
             }
         }
