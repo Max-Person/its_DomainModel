@@ -134,10 +134,10 @@ sealed class ClassInheritorDef<Self : ClassInheritorDef<Self>> : DomainDefWithMe
             "No property $propertyName exists for $description"
         )
         val defined = definedPropertyValues.get(propertyName)
-        if (defined != null) return defined
+        if (defined != null) return defined.value
         for (clazz in getInheritanceLineage()) {
             val found = clazz.definedPropertyValues.get(propertyName)
-            if (found != null) return found
+            if (found != null) return found.value
         }
         throw ThisShouldNotHappen()
     }
