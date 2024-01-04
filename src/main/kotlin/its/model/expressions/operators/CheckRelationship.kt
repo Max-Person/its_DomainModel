@@ -1,6 +1,8 @@
 package its.model.expressions.operators
 
+import its.model.definition.ClassDef
 import its.model.definition.Domain
+import its.model.definition.RelationshipDef
 import its.model.definition.types.BooleanType
 import its.model.definition.types.ObjectType
 import its.model.definition.types.Type
@@ -52,26 +54,7 @@ class CheckRelationship(
         }
 
         val clazz = subjType.findIn(domain)
-        var relationship = clazz.findRelationshipDef(relationshipName)
-        if (relationship == null) {
-            val possibleRelationships = clazz.projectionClasses.mapNotNull { it.findRelationshipDef(relationshipName) }
-            if (possibleRelationships.isEmpty()) {
-                results.nonConforming(
-                    "No relationship '$relationshipName' exists for objects of type '${clazz.name}' " +
-                            "to be read via $description"
-                )
-                return type
-            }
-            if (possibleRelationships.size >= 2) {
-                results.nonConforming(
-                    "Multiple relationship definitions for name '$relationshipName' are available to check " +
-                            "for objects of type '${clazz.name}' via projection in $description: " +
-                            possibleRelationships.joinToString(", ")
-                )
-                return type
-            }
-            relationship = possibleRelationships.single()
-        }
+        val relationship = getRelationship(domain, clazz, results) ?: return type
 
         val isCorrectObjectCount = objectExprs.size == relationship.objectClassNames.size
         results.checkConforming(
@@ -99,6 +82,41 @@ class CheckRelationship(
 
         return type
     }
+
+    private fun getRelationship(
+        domain: Domain,
+        subjClass: ClassDef,
+        results: ExpressionValidationResults,
+    ): RelationshipDef? {
+        var relationship = subjClass.findRelationshipDef(relationshipName)
+        if (relationship == null) {
+            val possibleRelationships =
+                subjClass.projectionClasses.mapNotNull { it.findRelationshipDef(relationshipName) }
+            if (possibleRelationships.isEmpty()) {
+                results.nonConforming(
+                    "No relationship '$relationshipName' exists for objects of type '${subjClass.name}' " +
+                            "to be read via $description"
+                )
+                return null
+            }
+            if (possibleRelationships.size >= 2) {
+                results.nonConforming(
+                    "Multiple relationship definitions for name '$relationshipName' are available to check " +
+                            "for objects of type '${subjClass.name}' via projection in $description: " +
+                            possibleRelationships.joinToString(", ")
+                )
+                return null
+            }
+            relationship = possibleRelationships.single()
+        }
+        return relationship
+    }
+
+    /**
+     * Получить отношение с учетом проекции
+     */
+    fun getRelationship(domain: Domain, subjClass: ClassDef) =
+        getRelationship(domain, subjClass, ExpressionValidationResults(true))!!
 
     override fun <I> use(behaviour: OperatorBehaviour<I>): I {
         return behaviour.process(this)

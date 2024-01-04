@@ -9,7 +9,7 @@ sealed class DomainDef<Self : DomainDef<Self>> : DomainElement(), Cloneable {
      */
     abstract val name: String
     override fun toString() = description
-    internal abstract val reference: DomainRef<Self>
+    abstract val reference: DomainRef<Self>
 
     internal var belongsToDomain: Domain? = null
         private set

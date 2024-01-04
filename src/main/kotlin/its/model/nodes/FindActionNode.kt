@@ -56,13 +56,16 @@ class FindActionNode(
             const val CHECKED_OBJ = "checked"
         }
 
+        val checkedVariable
+            get() = TypedVariable(parentNode.varAssignment.variable.className, CHECKED_OBJ)
+
         override fun validate(domain: Domain, results: DecisionTreeValidationResults, context: DecisionTreeContext) {
             super.validate(domain, results, context)
             val selectorType = selectorExpr.validateForDecisionTree(
                 domain,
                 results,
                 context,
-                withVariables = mapOf(CHECKED_OBJ to parentNode.varAssignment.variable.className)
+                withVariables = mapOf(checkedVariable.varName to checkedVariable.className)
             )
             results.checkValid(
                 selectorType is BooleanType,

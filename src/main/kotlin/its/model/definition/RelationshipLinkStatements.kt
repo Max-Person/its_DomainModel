@@ -64,6 +64,9 @@ class RelationshipLinkStatement(
             }
         }
     }
+
+    val objects: List<ObjectDef>
+        get() = getKnownObjects(DomainValidationResultsThrowImmediately()).requireNoNulls()
 }
 
 

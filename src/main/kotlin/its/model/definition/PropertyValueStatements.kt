@@ -68,6 +68,13 @@ class PropertyValueStatements<Owner : ClassInheritorDef<Owner>>(
         map[statement.propertyName] = statement
     }
 
+    fun addOrReplace(statement: PropertyValueStatement<Owner>) {
+        if (get(statement.propertyName) != null) {
+            map.remove(statement.propertyName)
+        }
+        add(statement)
+    }
+
     fun get(propertyName: String): PropertyValueStatement<Owner>? {
         return map[propertyName]
     }
