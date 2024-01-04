@@ -12,6 +12,15 @@ class RelationshipLinkStatement(
 
     override fun copyForOwner(owner: ObjectDef) = RelationshipLinkStatement(owner, relationshipName, objectNames)
 
+    internal fun getKnownRelationship(results: DomainValidationResults): RelationshipDef? {
+        val relationship = owner.findRelationshipDef(relationshipName, results)
+        results.checkKnown(
+            relationship != null,
+            "No relationship definition '$relationshipName' found for $description"
+        )
+        return relationship
+    }
+
     internal fun getKnownObjects(results: DomainValidationResults): List<ObjectDef?> {
         return objectNames.map { objectName ->
             val obj = domain.objects.get(objectName)
@@ -25,13 +34,7 @@ class RelationshipLinkStatement(
 
     override fun validate(results: DomainValidationResults) {
         //известность отношения
-        val relationship = owner.findRelationshipDef(relationshipName, results)
-        if (relationship == null) {
-            results.unknown(
-                "No relationship definition '$relationshipName' found for $description"
-            )
-            return
-        }
+        val relationship = getKnownRelationship(results) ?: return
 
         //Если зависимое, то стейтмент не нужен
         if (relationship.kind is DependantRelationshipKind) {
@@ -64,6 +67,9 @@ class RelationshipLinkStatement(
             }
         }
     }
+
+    val relationship: RelationshipDef
+        get() = getKnownRelationship(DomainValidationResultsThrowImmediately())!!
 
     val objects: List<ObjectDef>
         get() = getKnownObjects(DomainValidationResultsThrowImmediately()).requireNoNulls()

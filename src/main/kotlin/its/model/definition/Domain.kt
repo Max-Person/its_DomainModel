@@ -21,8 +21,6 @@ class Domain : DomainElement() {
         enums.validate(results)
         objects.validate(results)
 
-        //TODO? валидировать квантификаторы отношений?
-
         variables.validate(results)
 
         separateMetadata.validate(results)

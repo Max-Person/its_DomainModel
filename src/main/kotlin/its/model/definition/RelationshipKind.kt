@@ -1,5 +1,6 @@
 package its.model.definition
 
+import its.model.Describable
 import java.util.*
 
 //Вспомогательные классы для RelationshipDef
@@ -67,7 +68,7 @@ class BaseRelationshipKind(
 data class LinkQuantifier(
     val subjCount: Int = ANY_COUNT,
     val objCount: Int = ANY_COUNT,
-) {
+) : Describable {
     val reversed: LinkQuantifier
         get() = LinkQuantifier(objCount, subjCount)
 
@@ -86,7 +87,14 @@ data class LinkQuantifier(
 
         @JvmStatic
         fun ManyToMany() = LinkQuantifier(ANY_COUNT, ANY_COUNT)
+
+        private fun Int.toLinkCount(): String {
+            return if (this == ANY_COUNT) "*" else this.toString()
+        }
     }
+
+    override val description = "{${subjCount.toLinkCount()} -> ${objCount.toLinkCount()}}"
+    override fun toString() = description
 }
 
 

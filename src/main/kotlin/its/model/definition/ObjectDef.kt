@@ -71,7 +71,49 @@ class ObjectDef(
     fun isInstanceOf(classDef: ClassDef) = inheritsFrom(classDef)
 }
 
-class ObjectContainer(domain: Domain) : RootDefContainer<ObjectDef>(domain)
+class ObjectContainer(domain: Domain) : RootDefContainer<ObjectDef>(domain) {
+    override fun validate(results: DomainValidationResults) {
+        super.validate(results)
+
+        //проверка квантификаторов отношений
+        val subjects = mutableMapOf<Pair<ObjectDef, RelationshipDef>, Int>()
+        val objects = mutableMapOf<Pair<ObjectDef, RelationshipDef>, Int>()
+        for (subj in this) {
+            for (link in subj.relationshipLinks) {
+                val relationship = link.getKnownRelationship(results)
+                if (relationship == null || !relationship.isBinary)
+                    continue
+
+                val obj = link.getKnownObjects(results).firstOrNull() ?: continue
+
+                objects[subj to relationship] = (objects[subj to relationship] ?: 0) + 1
+                subjects[obj to relationship] = (subjects[obj to relationship] ?: 0) + 1
+            }
+        }
+        for ((subjToRel, count) in objects) {
+            val subj = subjToRel.first
+            val relationship = subjToRel.second
+
+            val quantifier = relationship.effectiveQuantifier
+            results.checkValid(
+                objects[subj to relationship]!! <= quantifier.objCount,
+                "$subj has too many outgoing links of $relationship: " +
+                        "it is a subject of $count links, but the relationship is quantified as $quantifier"
+            )
+        }
+        for ((objToRel, count) in subjects) {
+            val obj = objToRel.first
+            val relationship = objToRel.second
+
+            val quantifier = relationship.effectiveQuantifier
+            results.checkValid(
+                subjects[obj to relationship]!! <= quantifier.subjCount,
+                "$obj has too many incoming links of $relationship: " +
+                        "it is an object of $count links, but the relationship is quantified as $quantifier"
+            )
+        }
+    }
+}
 
 class ObjectRef(
     val objectName: String,

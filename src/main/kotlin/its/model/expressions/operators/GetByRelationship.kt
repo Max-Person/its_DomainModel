@@ -58,6 +58,14 @@ class GetByRelationship(
             return invalidType
         }
 
+        results.checkValid(
+            relationship.effectiveQuantifier.objCount == 1,
+            "Relationship '$relationshipName' " +
+                    "cannot be used with $description, " +
+                    "as it has to be quantified as many-to-one ( {...->1} ), " +
+                    "in order to be able to determine a single object"
+        )
+
         return ObjectType(relationship.objectClassNames.first())
     }
 
