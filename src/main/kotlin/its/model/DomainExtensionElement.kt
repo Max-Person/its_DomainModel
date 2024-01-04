@@ -1,6 +1,8 @@
 package its.model
 
-import its.model.definition.*
+import its.model.definition.Domain
+import its.model.definition.DomainNonConformityException
+import its.model.definition.DomainUseException
 import java.util.*
 
 /**
@@ -15,7 +17,7 @@ open class InvalidDomainConstructException : DomainUseException {
         if (this === other) return true
         if (other == null) return false
         if (other::class != this::class) return false
-        if ((other as DomainDefinitionException).message != this.message) return false
+        if ((other as InvalidDomainConstructException).message != this.message) return false
         return true
     }
 
