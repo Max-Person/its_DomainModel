@@ -20,6 +20,9 @@ sealed class Range {
     abstract val modString: String
 
     protected fun Double.mapNum() = if (this.rem(1) == 0.0) this.toInt() else this
+
+    abstract override fun hashCode(): Int
+    abstract override fun equals(other: Any?): Boolean
 }
 
 /**
@@ -51,6 +54,20 @@ class DiscreteRange(val values: Set<Double>) : Range() {
 
     override val modString: String
         get() = "{${values.map { it.mapNum() }.joinToString(", ")}}"
+
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as DiscreteRange
+
+        return values == other.values
+    }
+
+    override fun hashCode(): Int {
+        return values.hashCode()
+    }
 }
 
 /**
@@ -81,5 +98,18 @@ class ContinuousRange(boundaries: Pair<Double, Double>) : Range() {
     override val modString: String
         get() = "[${if (boundaries.first.isFinite()) boundaries.first.mapNum() else ""}" +
                 ", ${if (boundaries.second.isFinite()) boundaries.second.mapNum() else ""}]"
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as ContinuousRange
+
+        return boundaries == other.boundaries
+    }
+
+    override fun hashCode(): Int {
+        return boundaries.hashCode()
+    }
 }
 
