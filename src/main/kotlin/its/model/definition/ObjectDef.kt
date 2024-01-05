@@ -51,6 +51,17 @@ class ObjectDef(
         relationshipLinks.addAll(other.relationshipLinks)
     }
 
+    override val isEmpty: Boolean
+        get() = super.isEmpty
+                && definedPropertyValues.isEmpty()
+                && relationshipLinks.isEmpty()
+
+    override fun subtract(other: ObjectDef) {
+        super.subtract(other)
+        definedPropertyValues.subtract(other.definedPropertyValues)
+        relationshipLinks.subtract(other.relationshipLinks)
+    }
+
     //---Операции (на валидном домене)---
 
     /**

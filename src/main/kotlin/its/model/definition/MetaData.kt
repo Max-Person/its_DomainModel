@@ -54,6 +54,19 @@ class MetaData(
         declaredValues.putAll(other.declaredValues)
     }
 
+    fun remove(property: MetadataProperty) {
+        declaredValues.remove(property)
+    }
+
+    fun subtract(other: MetaData) {
+        for ((k, v) in other) {
+            val existing = get(k) ?: continue
+            if (existing == v) {
+                remove(k)
+            }
+        }
+    }
+
     override fun isEmpty() = declaredValues.isEmpty()
     override val entries: Set<Map.Entry<MetadataProperty, Any>>
         get() = declaredValues.entries
@@ -107,5 +120,13 @@ sealed class DomainDefWithMeta<Self : DomainDefWithMeta<Self>> : DomainDef<Self>
     override fun addMerge(other: Self) {
         super.addMerge(other)
         this.metadata.addAll(other.metadata)
+    }
+
+    override val isEmpty: Boolean
+        get() = super.isEmpty && metadata.isEmpty()
+
+    override fun subtract(other: Self) {
+        super.subtract(other)
+        metadata.subtract(other.metadata)
     }
 }

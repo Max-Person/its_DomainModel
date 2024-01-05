@@ -61,6 +61,20 @@ class ClassDef(
         definedPropertyValues.addAll(other.definedPropertyValues)
     }
 
+    override val isEmpty: Boolean
+        get() = super.isEmpty
+                && declaredProperties.isEmpty()
+                && declaredRelationships.isEmpty()
+                && definedPropertyValues.isEmpty()
+
+    override fun subtract(other: ClassDef) {
+        super.subtract(other)
+        declaredProperties.subtract(other.declaredProperties)
+        declaredRelationships.subtract(other.declaredRelationships)
+
+        definedPropertyValues.subtract(other.definedPropertyValues)
+    }
+
     //---Операции (на валидном домене)---
 
     /**

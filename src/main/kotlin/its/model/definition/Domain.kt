@@ -61,4 +61,15 @@ class Domain : DomainElement() {
         separateMetadata.addAll(other.separateMetadata)
         separateClassPropertyValues.addAll(other.separateClassPropertyValues)
     }
+
+    fun subtract(other: Domain) {
+        classes.subtract(other.classes)
+        enums.subtract(other.enums)
+        objects.subtract(other.objects)
+
+        variables.subtract(other.variables)
+
+        separateMetadata.subtract(other.separateMetadata)
+        separateClassPropertyValues.subtract(other.separateClassPropertyValues)
+    }
 }

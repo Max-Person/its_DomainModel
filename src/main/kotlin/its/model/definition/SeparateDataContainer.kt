@@ -3,7 +3,7 @@ package its.model.definition
 /**
  * Контейнер для отдельно хранимых данных (конструкции 'values for ...' и 'meta for ...' в LOQI)
  */
-abstract class SeparateDataContainer<Key : DomainRef<*>, Value : Any>(
+sealed class SeparateDataContainer<Key : DomainRef<*>, Value : Any>(
     override val domain: Domain
 ) : DomainElement(), Map<Key, Value> {
     protected val map: MutableMap<Key, Value> = mutableMapOf()
@@ -27,6 +27,22 @@ abstract class SeparateDataContainer<Key : DomainRef<*>, Value : Any>(
     }
 
     fun addAll(other: Map<Key, Value>) = other.forEach { (k, v) -> add(k, v) }
+
+    fun remove(key: Key) {
+        map.remove(key)
+    }
+
+    protected abstract fun subtractValues(existing: Value, other: Value): Boolean
+
+    fun subtract(other: SeparateDataContainer<Key, Value>) {
+        for ((k, v) in other) {
+            val existing = get(k) ?: continue
+            val shouldDelete = subtractValues(existing, v)
+            if (shouldDelete) {
+                remove(k)
+            }
+        }
+    }
 
     /**
      * Забрать из контейнера и прикрепить данные, принадлежащие владельцу [domainDef], если такие есть
@@ -70,6 +86,11 @@ class SeparateClassPropertyValuesContainer(
         return old.also { it.addAll(new) }
     }
 
+    override fun subtractValues(existing: ClassPropertyValueStatements, other: ClassPropertyValueStatements): Boolean {
+        existing.subtract(other)
+        return existing.isEmpty()
+    }
+
     override fun attachValue(domainDef: DomainDef<*>, value: ClassPropertyValueStatements) {
         if (domainDef !is ClassDef) return
         domainDef.definedPropertyValues.addAll(value)
@@ -87,6 +108,11 @@ class SeparateMetadataContainer(
 ) : SeparateDataContainer<DomainRef<*>, MetaData>(domain) {
     override fun mergeValues(old: MetaData, new: MetaData): MetaData {
         return old.also { it.addAll(new) }
+    }
+
+    override fun subtractValues(existing: MetaData, other: MetaData): Boolean {
+        existing.subtract(other)
+        return existing.isEmpty()
     }
 
     override fun attachValue(domainDef: DomainDef<*>, value: MetaData) {

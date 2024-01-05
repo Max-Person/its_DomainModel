@@ -1,5 +1,7 @@
 package its.model.definition
 
+import java.util.*
+
 /**
  * Утверждение о связи объекта с другими объектами
  */
@@ -68,6 +70,23 @@ class RelationshipLinkStatement(
         }
     }
 
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as RelationshipLinkStatement
+
+        if (owner != other.owner) return false
+        if (relationshipName != other.relationshipName) return false
+        if (objectNames != other.objectNames) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return Objects.hash(owner, relationshipName, objectNames)
+    }
+
     val relationship: RelationshipDef
         get() = getKnownRelationship(DomainValidationResultsThrowImmediately())!!
 
@@ -89,6 +108,12 @@ class RelationshipLinkStatements(owner: ObjectDef) : Statements<ObjectDef, Relat
 
     override fun addToInner(statement: RelationshipLinkStatement) {
         list.add(statement)
+    }
+
+    override fun remove(statement: RelationshipLinkStatement) {
+        if (contains(statement)) {
+            list.remove(statement)
+        }
     }
 
     fun listByName(relationshipName: String): List<RelationshipLinkStatement> {

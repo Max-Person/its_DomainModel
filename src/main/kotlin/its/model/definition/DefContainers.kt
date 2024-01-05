@@ -81,6 +81,28 @@ sealed class DefContainer<T : DomainDef<T>> : DomainElement(), Collection<T> {
      */
     fun addAllMerge(other: DefContainer<T>) = other.forEach { addMerge(it) }
 
+    fun remove(def: T) {
+        if (get(def.name) == def) {
+            remove(def.name)
+        }
+    }
+
+    fun remove(name: String): T? {
+        return values.remove(name)
+    }
+
+    fun subtract(other: DefContainer<T>) {
+        for (def in other) {
+            val existing = get(def.name) ?: continue
+            if (!existing.mergeEquals(def)) continue
+
+            existing.subtract(def)
+            if (existing.isEmpty) {
+                remove(existing)
+            }
+        }
+    }
+
     /**
      * Получить определение по имени
      */

@@ -33,6 +33,15 @@ class EnumDef(
         values.addAllMerge(other.values)
     }
 
+    override val isEmpty: Boolean
+        get() = super.isEmpty
+                && values.isEmpty()
+
+    override fun subtract(other: EnumDef) {
+        if (!this.mergeEquals(other)) return
+        values.subtract(other.values)
+    }
+
 }
 
 class EnumContainer(domain: Domain) : RootDefContainer<EnumDef>(domain) {

@@ -66,6 +66,16 @@ sealed class DomainDef<Self : DomainDef<Self>> : DomainElement(), Cloneable {
         )
     }
 
+    open fun subtract(other: Self) {
+        preventMisuse(
+            this.mergeEquals(other),
+            "'subtract()' should only be called if both defs are 'merge equal'. Use 'mergeEquals' to check"
+        )
+    }
+
+    open val isEmpty: Boolean
+        get() = true
+
     override fun validate(results: DomainValidationResults) {
         results.checkValid(
             name.isValidName(),

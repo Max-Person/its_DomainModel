@@ -1,6 +1,7 @@
 package its.model.definition
 
 import its.model.definition.types.EnumType
+import java.util.*
 
 /**
  * Утверждение о значении свойства
@@ -46,6 +47,23 @@ class PropertyValueStatement<Owner : ClassInheritorDef<Owner>>(
         //Переопределение значений выше? Но можно сказать что это разрешено
         //Проверка на количество значений не выполняется, т.к. PropertyValueStatements гарантирует уникальность
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as PropertyValueStatement<*>
+
+        if (owner != other.owner) return false
+        if (propertyName != other.propertyName) return false
+        if (value != other.value) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return Objects.hash(owner, propertyName, value)
+    }
 }
 
 typealias ClassPropertyValueStatement = PropertyValueStatement<ClassDef>
@@ -75,6 +93,12 @@ class PropertyValueStatements<Owner : ClassInheritorDef<Owner>>(
         add(statement)
     }
 
+    override fun remove(statement: PropertyValueStatement<Owner>) {
+        if (contains(statement)) {
+            map.remove(statement.propertyName)
+        }
+    }
+
     fun get(propertyName: String): PropertyValueStatement<Owner>? {
         return map[propertyName]
     }
@@ -102,6 +126,7 @@ class PropertyValueStatements<Owner : ClassInheritorDef<Owner>>(
 
     override val size: Int
         get() = map.size
+
 
     override fun contains(element: PropertyValueStatement<Owner>): Boolean {
         return map.containsKey(element.propertyName) && map[element.propertyName] == element
