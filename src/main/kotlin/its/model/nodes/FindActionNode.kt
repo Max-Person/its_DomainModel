@@ -3,7 +3,6 @@ package its.model.nodes
 import its.model.TypedVariable
 import its.model.definition.Domain
 import its.model.definition.types.BooleanType
-import its.model.definition.types.ObjectType
 import its.model.expressions.Operator
 import its.model.nodes.visitors.LinkNodeBehaviour
 
@@ -75,30 +74,6 @@ class FindActionNode(
         }
     }
 
-    /**
-     * Присвоение переменной в дереве решений
-     *
-     * Создает или заменяет переменную дерева решений [variable] со значением (объектом), вычисляемым по [valueExpr]
-     *
-     * @param variable определяемая переменная дерева решений
-     * @param valueExpr выражение, вычисляющее значение переменной ([ObjectType])
-     */
-    class DecisionTreeVarAssignment(
-        val variable: TypedVariable,
-        val valueExpr: Operator,
-    ) : HelperDecisionTreeElement() {
-        override fun validate(domain: Domain, results: DecisionTreeValidationResults, context: DecisionTreeContext) {
-            super.validate(domain, results, context)
-            variable.checkValid(domain, results, context, this)
-            val valueType = valueExpr.validateForDecisionTree(domain, results, context)
-            results.checkValid(
-                valueType is ObjectType && ObjectType(variable.className).castFits(valueType, domain),
-                "Value expression in $description ($parent) returns $valueType, but must return " +
-                        "an object of type '${variable.className}' to conform to a variable ${variable.varName}"
-            )
-        }
-    }
-
     override fun validate(domain: Domain, results: DecisionTreeValidationResults, context: DecisionTreeContext) {
         //Сначала валидируются части, в которых находимая переменная неизвестна
         validateLinked(domain, results, context,
@@ -110,16 +85,7 @@ class FindActionNode(
         //Далее части валидируются с добавлением в контекст известных переменных
         context.add(varAssignment.variable)
         validateLinked(domain, results, context, errorCategories)
-        validateLinked(domain, results, context, secondaryAssignments)
-        for ((i, secondaryAssignment) in secondaryAssignments.withIndex()) {
-            val others = secondaryAssignments.subList(i + 1, secondaryAssignments.size)
-            results.checkValid(
-                others.none { it.variable.varName == secondaryAssignment.variable.varName },
-                "Cannot declare multiple secondary assignments " +
-                        "with the same name ${secondaryAssignment.variable.varName} (in $description)"
-            )
-        }
-        secondaryAssignments.forEach { context.add(it.variable) }
+        secondaryAssignments.validate(domain, results, context, this)
         nextIfFound.validate(domain, results, context)
         context.remove(varAssignment.variable)
         secondaryAssignments.forEach { context.remove(it.variable) }

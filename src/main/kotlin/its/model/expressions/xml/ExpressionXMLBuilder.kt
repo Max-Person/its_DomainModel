@@ -78,11 +78,12 @@ object ExpressionXMLBuilder : XMLBuilder<ExpressionXMLBuilder.ExpressionBuildCon
         attr: String,
         childIndex: Int,
     ): String {
-        val childClass = if (attr == VAR_NAME) DecisionTreeVarLiteral::class else StringLiteral::class
         val el = operands.toMutableList()
         return this.findAttribute(attr)
             ?: run {
-                if (operands.size <= childIndex || !childClass.isInstance(operands[childIndex]))
+                if (operands.size <= childIndex
+                    || operands[childIndex].let { it !is ValueLiteral<*, *> && it !is ReferenceLiteral }
+                )
                     throw createException(
                         "$this must either have a '$attr' attribute " +
                                 "or have a named operand (child tag) at index $childIndex"
@@ -192,11 +193,22 @@ object ExpressionXMLBuilder : XMLBuilder<ExpressionXMLBuilder.ExpressionBuildCon
     @BuildForTags(["AssignToProperty"])
     @BuildingClass(AssignProperty::class)
     private fun buildAssignToProperty(el: ExpressionBuildContext): AssignProperty {
-        val propertyName = el.getAttributeOrTakeFromChild(PROPERTY_NAME, 0)
+        val propertyName = el.getAttributeOrTakeFromChild(PROPERTY_NAME, 1)
         return AssignProperty(
             el.op(0),
             propertyName,
             el.op(1),
+        )
+    }
+
+    @BuildForTags(["AddRelationshipLink"])
+    @BuildingClass(AddRelationshipLink::class)
+    private fun buildAddRelationshipLink(el: ExpressionBuildContext): AddRelationshipLink {
+        val relationshipName = el.getAttributeOrTakeFromChild(RELATIONSHIP_NAME, 0)
+        return AddRelationshipLink(
+            el.op(0),
+            relationshipName,
+            el.operands.subList(1, el.operands.size),
         )
     }
 
@@ -350,6 +362,34 @@ object ExpressionXMLBuilder : XMLBuilder<ExpressionXMLBuilder.ExpressionBuildCon
     private fun buildLogicalNot(el: ExpressionBuildContext): LogicalNot {
         return LogicalNot(
             el.op(0),
+        )
+    }
+
+    @BuildForTags(["With"])
+    @BuildingClass(With::class)
+    private fun buildWith(el: ExpressionBuildContext): With {
+        val varName = el.getRequiredAttribute(VAR_NAME)
+        return With(
+            el.op(0),
+            varName,
+            el.op(1),
+        )
+    }
+
+    @BuildForTags(["Block"])
+    @BuildingClass(Block::class)
+    private fun buildBlock(el: ExpressionBuildContext): Block {
+        return Block(
+            el.operands,
+        )
+    }
+
+    @BuildForTags(["IfThen"])
+    @BuildingClass(IfThen::class)
+    private fun buildIfThen(el: ExpressionBuildContext): IfThen {
+        return IfThen(
+            el.op(0),
+            el.op(1),
         )
     }
 

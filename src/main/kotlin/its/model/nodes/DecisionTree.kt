@@ -8,6 +8,7 @@ import its.model.definition.Domain
  */
 class DecisionTree(
     val variables: List<TypedVariable>,
+    val implicitVariables: List<DecisionTreeVarAssignment>,
     val mainBranch: ThoughtBranch,
 ) : DecisionTreeElement() {
     init {
@@ -17,10 +18,14 @@ class DecisionTree(
     }
 
     override val linkedElements: List<DecisionTreeElement>
-        get() = listOf(mainBranch)
+        get() = listOf(mainBranch).plus(implicitVariables)
 
     override fun validate(domain: Domain, results: DecisionTreeValidationResults, context: DecisionTreeContext) {
-        variables.forEach { context.add(it) }
-        validateLinked(domain, results, context)
+        variables.forEach {
+            it.checkValid(domain, results, context, this)
+            context.add(it)
+        }
+        implicitVariables.validate(domain, results, context, this)
+        mainBranch.validate(domain, results, context)
     }
 }

@@ -54,7 +54,7 @@ class CheckRelationship(
         }
 
         val clazz = subjType.findIn(domain)
-        val relationship = getRelationship(domain, clazz, results) ?: return type
+        val relationship = getRelationship(clazz, results) ?: return type
 
         val isCorrectObjectCount = objectExprs.size == relationship.objectClassNames.size
         results.checkConforming(
@@ -69,22 +69,18 @@ class CheckRelationship(
             val expectedClassName = relationship.objectClassNames[i]
             val expectedType = ObjectType(expectedClassName)
             objectType as ObjectType
-            if (objectType.exists(domain)) {
-                if (!expectedType.castFits(objectType, domain) && !expectedType.projectFits(objectType, domain))
-                    results.checkConforming(
-                        ObjectType(expectedClassName).castFits(objectType, domain),
-                        "Link object at index $i in a ${relationship.description} " +
-                                "is expected to be of type $expectedClassName, but was ${objectType.className}; " +
-                                "No valid projections available (in $description)"
-                    )
-            }
+            results.checkConforming(
+                expectedType.castFits(objectType, domain) || expectedType.projectFits(objectType, domain),
+                "Link object at index $i in a ${relationship.description} " +
+                        "is expected to be of type $expectedClassName, but was ${objectType.className}; " +
+                        "No valid projections available (in $description)"
+            )
         }
 
         return type
     }
 
     private fun getRelationship(
-        domain: Domain,
         subjClass: ClassDef,
         results: ExpressionValidationResults,
     ): RelationshipDef? {
@@ -115,8 +111,8 @@ class CheckRelationship(
     /**
      * Получить отношение с учетом проекции
      */
-    fun getRelationship(domain: Domain, subjClass: ClassDef) =
-        getRelationship(domain, subjClass, ExpressionValidationResults(true))!!
+    fun getRelationship(subjClass: ClassDef) =
+        getRelationship(subjClass, ExpressionValidationResults(true))!!
 
     override fun <I> use(behaviour: OperatorBehaviour<I>): I {
         return behaviour.process(this)

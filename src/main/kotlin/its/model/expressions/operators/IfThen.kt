@@ -1,38 +1,43 @@
 package its.model.expressions.operators
 
+import its.model.definition.Domain
+import its.model.definition.types.BooleanType
+import its.model.definition.types.NoneType
+import its.model.definition.types.Type
+import its.model.expressions.ExpressionContext
+import its.model.expressions.ExpressionValidationResults
 import its.model.expressions.Operator
-import its.model.expressions.types.Types
 import its.model.expressions.visitors.OperatorBehaviour
 
 /**
  * Условное выполнение вложенного оператора
+ *
+ * Ничего не возвращает ([NoneType])
+ * @param conditionExpr условие, определяющее выполнение оператора [thenExpr] ([BooleanType])
+ * @param thenExpr оператор-тело условия (тип игнорируется)
  */
-class IfThen(args: List<Operator>) : BaseOperator(args) {
+class IfThen(
+    val conditionExpr: Operator,
+    val thenExpr: Operator,
+) : Operator() {
+    override val children: List<Operator>
+        get() = listOf(conditionExpr, thenExpr)
 
-    override val argsDataTypes
-        get() = listOf(
-            listOf(Types.Boolean, Types.Any),
+    override fun validateAndGetType(
+        domain: Domain,
+        results: ExpressionValidationResults,
+        context: ExpressionContext
+    ): Type<*> {
+        val conditionType = conditionExpr.validateAndGetType(domain, results, context)
+        results.checkValid(
+            conditionType is BooleanType,
+            "Condition argument of a $description should be of boolean type, but was '$conditionType'"
         )
 
-    val conditionExpr get() = arg(0)
-    val thenExpr get() = arg(1)
-
-    override val resultDataType
-        get() = Types.None
-
-    override fun clone(): Operator {
-        val newArgs = ArrayList<Operator>()
-
-        args.forEach { arg ->
-            newArgs.add(arg.clone())
-        }
-
-        return IfThen(newArgs)
+        thenExpr.validateAndGetType(domain, results, context)
+        return NoneType
     }
 
-    override fun clone(newArgs: List<Operator>): Operator {
-        return IfThen(newArgs)
-    }
 
     override fun <I> use(behaviour: OperatorBehaviour<I>): I {
         return behaviour.process(this)

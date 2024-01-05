@@ -37,6 +37,7 @@ sealed class AbstractDecisionTreeXMLBuilder<T : DecisionTreeElement> : XMLBuilde
         const val OUTCOME_TAG = "Outcome"
         const val EXPR_TAG = "Expression"
         const val DECISION_TREE_VAR_DECL_TAG = "DecisionTreeVarDecl"
+        const val ADDITIONAL_DECISION_TREE_VAR_DECL_TAG = "AdditionalVarDecl"
         const val THOUGHT_BRANCH_TAG = "ThoughtBranch"
 
         const val VALUE_ATTR = "value"
@@ -67,6 +68,14 @@ sealed class AbstractDecisionTreeXMLBuilder<T : DecisionTreeElement> : XMLBuilde
         val name = el.getRequiredAttribute(NAME_ATTR)
         val type = el.getRequiredAttribute(TYPE_ATTR)
         return TypedVariable(type, name)
+    }
+
+    protected fun buildVarAssignment(el: Element): DecisionTreeVarAssignment {
+        val el = createBuildContext(el, DecisionTreeVarAssignment::class)
+        val variable = DecisionTreeNodeXMLBuilder.buildTypedVariable(el.el)
+        val valueExpr = el.getRequiredSingleByWrapper(EXPR_TAG).toExpr()
+
+        return DecisionTreeVarAssignment(variable, valueExpr).collectMetadata(el)
     }
 
     protected fun buildThoughtBranch(el: Element): ThoughtBranch {
@@ -102,10 +111,15 @@ object DecisionTreeXMLBuilder : AbstractDecisionTreeXMLBuilder<DecisionTree>() {
     @BuildForTags(["StartNode"])
     @BuildingClass(DecisionTree::class)
     private fun buildDecisionTree(el: ElementBuildContext): DecisionTree {
-        val variables = el.getSeveralByWrapper("InputVariables").map { buildTypedVariable(it) }
+        val variableWrapper = el.findChild("InputVariables")
+        val parameters =
+            variableWrapper?.getChildren(DECISION_TREE_VAR_DECL_TAG)?.map { buildTypedVariable(it) } ?: listOf()
+        val implicitParameters =
+            variableWrapper?.getChildren(ADDITIONAL_DECISION_TREE_VAR_DECL_TAG)?.map { buildVarAssignment(it) }
+                ?: listOf()
         val branch = buildThoughtBranch(el.getRequiredChild(THOUGHT_BRANCH_TAG))
 
-        return DecisionTree(variables, branch)
+        return DecisionTree(parameters, implicitParameters, branch)
     }
 }
 
@@ -264,26 +278,19 @@ object DecisionTreeNodeXMLBuilder : AbstractDecisionTreeXMLBuilder<DecisionTreeN
         return FindActionNode.FindErrorCategory(priority, expr).collectMetadata(el)
     }
 
-    private fun buildVarAssignment(el: ElementBuildContext): FindActionNode.DecisionTreeVarAssignment {
-        val variable = buildTypedVariable(el.el)
-        val valueExpr = el.getRequiredSingleByWrapper(EXPR_TAG).toExpr()
-
-        return FindActionNode.DecisionTreeVarAssignment(variable, valueExpr).collectMetadata(el)
-    }
-
     @BuildForTags(["FindActionNode"])
     @BuildingClass(FindActionNode::class)
     private fun buildFindActionNode(el: ElementBuildContext): FindActionNode {
         val expr = el.getRequiredSingleByWrapper(EXPR_TAG).toExpr()
         val variable = buildTypedVariable(el.getRequiredChild(DECISION_TREE_VAR_DECL_TAG))
-        val mainAssignment = FindActionNode.DecisionTreeVarAssignment(variable, expr)
+        val mainAssignment = DecisionTreeVarAssignment(variable, expr)
 
         val errors = el.getChildren("FindError").map {
             buildFindErrorCategory(createBuildContext(it, FindActionNode.FindErrorCategory::class))
         }
 
-        val secondaryAssignments = el.getChildren("AdditionalVarDecl").map {
-            buildVarAssignment(createBuildContext(it, FindActionNode.DecisionTreeVarAssignment::class))
+        val secondaryAssignments = el.getChildren(ADDITIONAL_DECISION_TREE_VAR_DECL_TAG).map {
+            buildVarAssignment(it)
         }
         val outcomes = Outcomes(el.getOutcomes(String::class).values.map {
             Outcome(it.key == "found", it.node)

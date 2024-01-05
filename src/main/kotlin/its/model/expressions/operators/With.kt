@@ -1,41 +1,49 @@
 package its.model.expressions.operators
 
+import its.model.definition.Domain
+import its.model.definition.types.AnyType
+import its.model.definition.types.ObjectType
+import its.model.definition.types.Type
+import its.model.expressions.ExpressionContext
+import its.model.expressions.ExpressionValidationResults
 import its.model.expressions.Operator
-import its.model.expressions.types.Types
 import its.model.expressions.visitors.OperatorBehaviour
 
 /**
  * Сохранение получаемого объекта в контекстную переменную для дальнейших вычислений
+ *
+ * Возвращает тип вложенного выражения [nestedExpr]
+ * @param objExpr сохраняемый объект ([ObjectType])
+ * @param varName имя контекстной переменной
+ * @param nestedExpr вложенное выражение ([AnyType])
  */
 class With(
+    val objExpr: Operator,
     val varName: String,
-    args: List<Operator>,
-) : BaseOperator(args) {
+    val nestedExpr: Operator,
+) : Operator() {
+    override val children: List<Operator>
+        get() = listOf(objExpr, nestedExpr)
 
-    override val argsDataTypes
-        get() = listOf(
-            listOf(Types.Object, Block::class),
-        )
-
-    val objExpr get() = arg(0)
-    val block get() = arg(1)
-
-    override val resultDataType
-        get() = Types.None
-
-    override fun clone(): Operator {
-        val newArgs = ArrayList<Operator>()
-
-        args.forEach { arg ->
-            newArgs.add(arg.clone())
+    override fun validateAndGetType(
+        domain: Domain,
+        results: ExpressionValidationResults,
+        context: ExpressionContext
+    ): Type<*> {
+        val objType = objExpr.validateAndGetType(domain, results, context)
+        if (objType !is ObjectType) {
+            results.invalid(
+                "Object-argument of $description should be an object, but was $objType"
+            )
+            return AnyType
         }
 
-        return With(varName, newArgs)
+        context.variableTypes[varName] = objType.className
+        val type = nestedExpr.validateAndGetType(domain, results, context)
+        context.variableTypes.remove(varName)
+        return type
     }
 
-    override fun clone(newArgs: List<Operator>): Operator {
-        return With(varName, newArgs)
-    }
 
     override fun <I> use(behaviour: OperatorBehaviour<I>): I {
         return behaviour.process(this)
