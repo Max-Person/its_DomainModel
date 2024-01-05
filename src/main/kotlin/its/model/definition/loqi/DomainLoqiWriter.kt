@@ -26,7 +26,7 @@ enum class LoqiWriteOptions {
 /**
  * Сохранение домена ([Domain]) в LOQI формат
  */
-class LoqiDomainWriter private constructor(
+class DomainLoqiWriter private constructor(
     private val domain: Domain,
     writer: Writer,
     private val saveOptions: Set<LoqiWriteOptions> = emptySet()
@@ -43,7 +43,7 @@ class LoqiDomainWriter private constructor(
     companion object {
         @JvmStatic
         fun saveDomain(domain: Domain, writer: Writer, saveOptions: Set<LoqiWriteOptions> = emptySet()) {
-            LoqiDomainWriter(domain, writer, saveOptions).write()
+            DomainLoqiWriter(domain, writer, saveOptions).write()
         }
     }
 
