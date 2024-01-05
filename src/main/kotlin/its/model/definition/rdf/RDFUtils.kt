@@ -1,5 +1,8 @@
 package its.model.definition.rdf
 
+import org.apache.jena.rdf.model.Resource
+import org.apache.jena.util.SplitIRI
+
 internal object RDFUtils {
     /**
      * POAS префикс
@@ -20,4 +23,7 @@ internal object RDFUtils {
      * RDFS префикс
      */
     const val RDFS_PREF = "http://www.w3.org/2000/01/rdf-schema#"
+
+    val Resource.name: String
+        get() = SplitIRI.localname(this.uri)
 }
