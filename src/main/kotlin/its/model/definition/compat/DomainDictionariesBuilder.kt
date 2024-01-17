@@ -375,6 +375,8 @@ class DomainDictionariesBuilder private constructor(
         return when (this.lowercase()) {
             "onetoone" -> LinkQuantifier.OneToOne()
             "onetomany" -> LinkQuantifier.OneToMany()
+            "manytoone" -> LinkQuantifier.ManyToOne()
+            "manytomany" -> LinkQuantifier.ManyToMany()
             else -> throw IllegalArgumentException("Cannot parse '$this' into a valid relationship link quantifier")
         }
     }
