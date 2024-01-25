@@ -18,7 +18,7 @@ sealed class LinkNode<AnswerType> : DecisionTreeNode() {
      * Дочерние узлы для текущего узла
      */
     val children
-        get() = outcomes.values.map { it.node }
+        get() = outcomes.map { it.node }
 
     abstract fun <I> use(behaviour: LinkNodeBehaviour<I>): I
     override fun <I> use(behaviour: DecisionTreeBehaviour<I>): I {

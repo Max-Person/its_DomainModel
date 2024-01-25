@@ -17,12 +17,12 @@ class PredeterminingFactorsNode(
     override val outcomes: Outcomes<ThoughtBranch?>
 ) : LinkNode<ThoughtBranch?>() {
     override val linkedElements: List<DecisionTreeElement>
-        get() = outcomes.values.toList()
+        get() = outcomes.toList()
 
     val predetermining
         get() = outcomes.filter { it.key != null }
     val undetermined
-        get() = outcomes.values.singleOrNull { it.key == null }
+        get() = outcomes.singleOrNull { it.key == null }
 
     override fun validate(domain: Domain, results: DecisionTreeValidationResults, context: DecisionTreeContext) {
         results.checkValid(

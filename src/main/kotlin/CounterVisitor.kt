@@ -18,7 +18,7 @@ class CounterVisitor{
             process(node.thoughtBranch)
 
         if (node is PredeterminingFactorsNode) {
-            node.outcomes.values.forEach {
+            node.outcomes.forEach {
                 if (it.key != null) process(it.key)
                 process(it.node)
             }

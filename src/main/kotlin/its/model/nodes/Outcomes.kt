@@ -1,5 +1,7 @@
 package its.model.nodes
 
+import its.model.Association
+
 /**
  * Переход из узла дерева мысли ([LinkNode]) в некоторый следующий узел [node]
  * @param key ключ перехода - значение, привязанное к переходу, играющее роль условия перехода (в разных узлах по разному)
@@ -17,4 +19,6 @@ class Outcome<V>(
 /**
  * Набор переходов [Outcome] из узла
  */
-class Outcomes<V>(outcomes: Collection<Outcome<V>>) : Map<V, Outcome<V>> by outcomes.associateBy({ it.key })
+class Outcomes<V>(outcomes: Collection<Outcome<V>>) : Association<V, Outcome<V>>(outcomes) {
+    override fun getKey(element: Outcome<V>) = element.key
+}

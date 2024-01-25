@@ -23,14 +23,14 @@ class QuestionNode(
     val trivialityExpr: Operator? = null,
 ) : LinkNode<Any>() {
     override val linkedElements: List<DecisionTreeElement>
-        get() = outcomes.values.toList()
+        get() = outcomes.toList()
 
     val canBeTrivial: Boolean
         get() = isSwitch || trivialityExpr != null
 
     override fun validate(domain: Domain, results: DecisionTreeValidationResults, context: DecisionTreeContext) {
         val exprType = expr.validateForDecisionTree(domain, results, context)
-        for (outcome in outcomes.values) {
+        for (outcome in outcomes) {
             val outcomeType = Type.of(outcome.key)
             results.checkValid(
                 exprType.castFits(outcomeType, domain),

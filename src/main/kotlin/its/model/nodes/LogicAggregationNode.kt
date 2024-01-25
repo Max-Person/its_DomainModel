@@ -19,7 +19,7 @@ class LogicAggregationNode(
 ) : LinkNode<Boolean>() {
 
     override val linkedElements: List<DecisionTreeElement>
-        get() = thoughtBranches.toList().plus(outcomes.values)
+        get() = thoughtBranches.toList().plus(outcomes)
 
     override fun validate(domain: Domain, results: DecisionTreeValidationResults, context: DecisionTreeContext) {
         results.checkValid(

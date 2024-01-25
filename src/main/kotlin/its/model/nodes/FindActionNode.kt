@@ -26,7 +26,7 @@ class FindActionNode(
     override val outcomes: Outcomes<Boolean>,
 ) : LinkNode<Boolean>() {
     override val linkedElements: List<DecisionTreeElement>
-        get() = listOf(varAssignment).plus(errorCategories).plus(secondaryAssignments).plus(outcomes.values)
+        get() = listOf(varAssignment).plus(errorCategories).plus(secondaryAssignments).plus(outcomes)
 
     val nextIfFound
         get() = outcomes[true]!!

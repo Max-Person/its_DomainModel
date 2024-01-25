@@ -292,7 +292,7 @@ object DecisionTreeNodeXMLBuilder : AbstractDecisionTreeXMLBuilder<DecisionTreeN
         val secondaryAssignments = el.getChildren(ADDITIONAL_DECISION_TREE_VAR_DECL_TAG).map {
             buildVarAssignment(it)
         }
-        val outcomes = Outcomes(el.getOutcomes(String::class).values.map {
+        val outcomes = Outcomes(el.getOutcomes(String::class).map {
             Outcome(it.key.lowercase() == "found", it.node)
         })
 

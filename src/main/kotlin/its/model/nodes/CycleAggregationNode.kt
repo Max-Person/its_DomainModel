@@ -28,7 +28,7 @@ class CycleAggregationNode(
     override val outcomes: Outcomes<Boolean>,
 ) : LinkNode<Boolean>() {
     override val linkedElements: List<DecisionTreeElement>
-        get() = listOf(thoughtBranch).plus(outcomes.values)
+        get() = listOf(thoughtBranch).plus(outcomes)
 
     override fun validate(domain: Domain, results: DecisionTreeValidationResults, context: DecisionTreeContext) {
         variable.checkValid(domain, results, context, this)

@@ -24,7 +24,7 @@ class WhileAggregationNode(
 ) : LinkNode<Boolean>() {
 
     override val linkedElements: List<DecisionTreeElement>
-        get() = listOf(thoughtBranch).plus(outcomes.values)
+        get() = listOf(thoughtBranch).plus(outcomes)
 
     override fun validate(domain: Domain, results: DecisionTreeValidationResults, context: DecisionTreeContext) {
         val conditionType = conditionExpr.validateForDecisionTree(domain, results, context)
