@@ -3,7 +3,7 @@ package its.model.definition.rdf
 import org.apache.jena.rdf.model.Resource
 import org.apache.jena.util.SplitIRI
 
-internal object RDFUtils {
+object RDFUtils {
     /**
      * POAS префикс
      */
