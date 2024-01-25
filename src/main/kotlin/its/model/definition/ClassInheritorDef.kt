@@ -139,6 +139,8 @@ sealed class ClassInheritorDef<Self : ClassInheritorDef<Self>> : DomainDefWithMe
             val found = clazz.definedPropertyValues.get(propertyName)
             if (found != null) return found.value
         }
-        throw ThisShouldNotHappen()
+        nonConforming(
+            "$description does not define a value for property '$propertyName'"
+        )
     }
 }

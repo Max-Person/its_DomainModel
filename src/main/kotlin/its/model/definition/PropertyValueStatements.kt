@@ -106,6 +106,7 @@ class PropertyValueStatements<Owner : ClassInheritorDef<Owner>>(
     override fun validate(results: DomainValidationResults) {
         super.validate(results)
 
+        if (owner is ObjectDef) return //Пока что решили, что объекты не проверяются, и кидается ошибка в рантайме
         if (owner is ClassDef && !owner.isConcrete) return
         //Определяет все нужные свойства
         val topDownLineage = owner.getKnownInheritanceLineage(results).reversed()

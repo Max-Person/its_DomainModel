@@ -36,6 +36,6 @@ internal fun checkConforming(condition: Boolean, message: String) {
     }
 }
 
-internal fun nonConforming(message: String) {
+internal fun nonConforming(message: String): Nothing {
     throw DomainNonConformityException(message)
 }
