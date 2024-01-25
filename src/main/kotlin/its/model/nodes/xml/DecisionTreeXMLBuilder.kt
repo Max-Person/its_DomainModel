@@ -267,7 +267,7 @@ object DecisionTreeNodeXMLBuilder : AbstractDecisionTreeXMLBuilder<DecisionTreeN
     @BuildingClass(PredeterminingFactorsNode::class)
     private fun buildPredeterminingFactorsNode(el: ElementBuildContext): PredeterminingFactorsNode {
         val outcomes = el.getOutcomesNullable(ThoughtBranch::class)
-        return PredeterminingFactorsNode(outcomes)
+        return PredeterminingFactorsNode(outcomes).collectMetadata(el)
     }
 
 
@@ -293,7 +293,7 @@ object DecisionTreeNodeXMLBuilder : AbstractDecisionTreeXMLBuilder<DecisionTreeN
             buildVarAssignment(it)
         }
         val outcomes = Outcomes(el.getOutcomes(String::class).map {
-            Outcome(it.key.lowercase() == "found", it.node)
+            Outcome(it.key.lowercase() == "found", it.node).apply { metadata.addAll(it.metadata) }
         })
 
         return FindActionNode(mainAssignment, errors, secondaryAssignments, outcomes).collectMetadata(el)
