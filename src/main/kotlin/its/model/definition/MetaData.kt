@@ -79,6 +79,16 @@ class MetaData(
 
     override fun containsKey(key: MetadataProperty) = declaredValues.containsKey(key)
     override fun containsValue(value: Any) = declaredValues.containsValue(value)
+
+    companion object {
+        private class SyntheticOwner : MetaOwner {
+            override val metadata = MetaData(this)
+            override val description = "SEPARATE_META_SYNTHETIC_OWNER"
+        }
+
+        @JvmStatic
+        fun separate() = SyntheticOwner().metadata
+    }
 }
 
 /**

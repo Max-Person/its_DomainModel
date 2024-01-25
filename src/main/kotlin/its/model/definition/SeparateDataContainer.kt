@@ -117,10 +117,6 @@ class SeparateMetadataContainer(
 
     override fun attachValue(domainDef: DomainDef<*>, value: MetaData) {
         if (domainDef !is DomainDefWithMeta<*>) return
-        checkValid(
-            domainDef.metadata.isEmpty(),
-            "Attempting to replace metadata for ${domainDef.description}"
-        )
         domainDef.metadata.addAll(value)
     }
 

@@ -13,8 +13,8 @@ class Domain : DomainElement() {
 
     val variables = VariableContainer(this)
 
-    internal val separateMetadata = SeparateMetadataContainer(this)
-    internal val separateClassPropertyValues = SeparateClassPropertyValuesContainer(this)
+    val separateMetadata = SeparateMetadataContainer(this)
+    val separateClassPropertyValues = SeparateClassPropertyValuesContainer(this)
 
     override fun validate(results: DomainValidationResults) {
         classes.validate(results)
