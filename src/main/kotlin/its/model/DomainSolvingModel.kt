@@ -3,6 +3,7 @@ package its.model
 import its.model.Utils.plus
 import its.model.definition.Domain
 import its.model.definition.compat.DomainDictionariesRDFBuilder
+import its.model.definition.loqi.DomainLoqiBuilder
 import its.model.nodes.DecisionTree
 import its.model.nodes.xml.DecisionTreeXMLBuilder
 import java.io.File
@@ -18,6 +19,11 @@ class DomainSolvingModel(
     val decisionTrees: Map<String, DecisionTree>,
 ) {
 
+    enum class BuildMethod {
+        LOQI,
+        DICT_RDF,
+    }
+
     /**
      * Построить модель на основе данных, взятых из директории [directoryUrl]
      *
@@ -26,8 +32,14 @@ class DomainSolvingModel(
      * - RDF-данные аналогично читаются из turtle-файла `'domain.ttl'`
      * - Деревья решений аналогично читаются из XML файлов вида tree_<имя дерева>.xml
      */
-    constructor(directoryURL: URL) : this(
-        DomainDictionariesRDFBuilder.buildDomain(directoryURL),
+    constructor(directoryURL: URL, buildMethod: BuildMethod = BuildMethod.DICT_RDF) : this(
+        when (buildMethod) {
+            BuildMethod.LOQI -> DomainLoqiBuilder.buildDomain(
+                (directoryURL + "domain.loqi").openStream().bufferedReader()
+            )
+
+            BuildMethod.DICT_RDF -> DomainDictionariesRDFBuilder.buildDomain(directoryURL)
+        },
         directoryURL.let {
             val treeRegex = Regex("tree(_\\w+|)\\.xml")
             val trees = mutableMapOf<String, DecisionTree>()
@@ -42,7 +54,8 @@ class DomainSolvingModel(
         },
     )
 
-    constructor(directoryPath: String) : this(File(directoryPath).toURI().toURL())
+    constructor(directoryPath: String, buildMethod: BuildMethod = BuildMethod.DICT_RDF)
+            : this(File(directoryPath).toURI().toURL(), buildMethod)
 
     /**
      * Валидация модели с выкидыванием исключений
