@@ -7,6 +7,7 @@ import its.model.definition.types.ObjectType
 import its.model.definition.types.Type
 import its.model.expressions.ExpressionContext
 import its.model.expressions.ExpressionValidationResults
+import its.model.expressions.HasNegativeForm
 import its.model.expressions.Operator
 import its.model.expressions.visitors.OperatorBehaviour
 
@@ -22,7 +23,14 @@ class CheckPropertyValue(
     val objectExpr: Operator,
     val propertyName: String,
     val valueExpr: Operator,
-) : Operator() {
+    private var isNegative: Boolean = false,
+) : Operator(), HasNegativeForm {
+
+    override fun isNegative(): Boolean = isNegative
+
+    override fun setIsNegative(isNegative: Boolean) {
+        this.isNegative = isNegative
+    }
 
     override val children: List<Operator>
         get() = listOf(objectExpr, valueExpr)
@@ -50,4 +58,8 @@ class CheckPropertyValue(
     override fun <I> use(behaviour: OperatorBehaviour<I>): I {
         return behaviour.process(this)
     }
+
+    override fun clone(): Operator = CheckPropertyValue(objectExpr.clone(), propertyName, valueExpr.clone(), isNegative)
+
+    override fun clone(newArgs: List<Operator>): Operator = CheckPropertyValue(newArgs.first(), propertyName, newArgs.last(), isNegative)
 }
