@@ -27,7 +27,7 @@ class DecisionTreeVarLiteral(name: String) : ReferenceLiteral(name) {
         return ObjectType(context.decisionTreeVariableTypes[name]!!)
     }
 
-    override fun clone(): Operator = VariableLiteral(name)
+    override fun clone(): Operator = DecisionTreeVarLiteral(name)
 
     override fun <I> use(behaviour: LiteralBehaviour<I>): I {
         return behaviour.process(this)

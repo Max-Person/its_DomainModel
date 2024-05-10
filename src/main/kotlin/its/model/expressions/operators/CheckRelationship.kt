@@ -8,6 +8,7 @@ import its.model.definition.types.ObjectType
 import its.model.definition.types.Type
 import its.model.expressions.ExpressionContext
 import its.model.expressions.ExpressionValidationResults
+import its.model.expressions.HasNegativeForm
 import its.model.expressions.Operator
 import its.model.expressions.visitors.OperatorBehaviour
 
@@ -23,7 +24,14 @@ class CheckRelationship(
     val subjectExpr: Operator,
     val relationshipName: String,
     val objectExprs: List<Operator>,
-) : Operator() {
+    private var isNegative: Boolean = false,
+) : Operator(), HasNegativeForm {
+
+    override fun isNegative(): Boolean = isNegative
+
+    override fun setIsNegative(isNegative: Boolean) {
+        this.isNegative = isNegative
+    }
 
     override val children: List<Operator>
         get() = listOf(subjectExpr).plus(objectExprs)
@@ -117,4 +125,8 @@ class CheckRelationship(
     override fun <I> use(behaviour: OperatorBehaviour<I>): I {
         return behaviour.process(this)
     }
+
+    override fun clone(): Operator = CheckRelationship(subjectExpr.clone(), relationshipName, objectExprs.map { arg -> arg.clone() }, isNegative)
+
+    override fun clone(newArgs: List<Operator>): Operator = CheckRelationship(newArgs.first(), relationshipName, newArgs.subList(1, objectExprs.size), isNegative)
 }

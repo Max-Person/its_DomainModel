@@ -4,9 +4,7 @@ import its.model.TypedVariable
 import its.model.definition.Domain
 import its.model.definition.types.BooleanType
 import its.model.definition.types.Type
-import its.model.expressions.ExpressionContext
-import its.model.expressions.ExpressionValidationResults
-import its.model.expressions.Operator
+import its.model.expressions.*
 import its.model.expressions.visitors.OperatorBehaviour
 
 /**
@@ -21,7 +19,19 @@ class ExistenceQuantifier(
     val variable: TypedVariable,
     val selectorExpr: Operator,
     val conditionExpr: Operator,
-) : Operator() {
+    private var isNegative: Boolean = false,
+) : Operator(), HasNegativeForm, HasContext {
+
+    val mContext = HashSet<String>()
+
+    override val context: MutableSet<String>
+        get() = mContext
+
+    override fun isNegative(): Boolean = isNegative
+
+    override fun setIsNegative(isNegative: Boolean) {
+        this.isNegative = isNegative
+    }
 
     override val children: List<Operator>
         get() = listOf(selectorExpr, conditionExpr)
@@ -51,5 +61,14 @@ class ExistenceQuantifier(
 
     override fun <I> use(behaviour: OperatorBehaviour<I>): I {
         return behaviour.process(this)
+    }
+
+    override fun clone(): Operator =
+        ExistenceQuantifier(variable, selectorExpr.clone(), conditionExpr.clone(), isNegative).also {
+            it.mContext.addAll(mContext)
+        }
+
+    override fun clone(newArgs: List<Operator>): Operator = ExistenceQuantifier(variable, newArgs.first(), newArgs.last(), isNegative).also {
+        it.mContext.addAll(mContext)
     }
 }

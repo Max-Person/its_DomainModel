@@ -72,4 +72,8 @@ class GetByRelationship(
     override fun <I> use(behaviour: OperatorBehaviour<I>): I {
         return behaviour.process(this)
     }
+
+    override fun clone(): Operator = GetByRelationship(subjectExpr.clone(), relationshipName)
+
+    override fun clone(newArgs: List<Operator>): Operator = GetByRelationship(newArgs.first(), relationshipName)
 }

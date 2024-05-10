@@ -63,8 +63,16 @@ abstract class Operator : Cloneable, Describable {
      * Создает копию объекта
      * @return Копия
      */
-    override fun clone(): Operator {
+    public override fun clone(): Operator {
         return super.clone() as Operator
+    }
+
+    /**
+     * Создает копию объекта
+     * @return Копия
+     */
+    open fun clone(newArgs: List<Operator>): Operator {
+        return clone()
     }
 
     /**

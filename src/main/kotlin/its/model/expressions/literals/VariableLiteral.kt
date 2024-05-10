@@ -5,6 +5,7 @@ import its.model.definition.types.ObjectType
 import its.model.definition.types.Type
 import its.model.expressions.ExpressionContext
 import its.model.expressions.ExpressionValidationResults
+import its.model.expressions.Operator
 import its.model.expressions.visitors.LiteralBehaviour
 
 /**
@@ -31,4 +32,6 @@ class VariableLiteral(
     override fun <I> use(behaviour: LiteralBehaviour<I>): I {
         return behaviour.process(this)
     }
+
+    override fun clone(): Operator = VariableLiteral(name)
 }

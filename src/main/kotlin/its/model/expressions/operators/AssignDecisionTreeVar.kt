@@ -49,4 +49,8 @@ class AssignDecisionTreeVar(
     override fun <I> use(behaviour: OperatorBehaviour<I>): I {
         return behaviour.process(this)
     }
+
+    override fun clone(): Operator = AssignDecisionTreeVar(variableName, valueExpr.clone())
+
+    override fun clone(newArgs: List<Operator>): Operator = AssignDecisionTreeVar(variableName, newArgs.first())
 }

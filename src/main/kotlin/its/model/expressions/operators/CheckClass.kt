@@ -4,6 +4,7 @@ import its.model.definition.Domain
 import its.model.definition.types.*
 import its.model.expressions.ExpressionContext
 import its.model.expressions.ExpressionValidationResults
+import its.model.expressions.HasNegativeForm
 import its.model.expressions.Operator
 import its.model.expressions.visitors.OperatorBehaviour
 
@@ -17,7 +18,14 @@ import its.model.expressions.visitors.OperatorBehaviour
 class CheckClass(
     val objectExpr: Operator,
     val classExpr: Operator,
-) : Operator() {
+    private var isNegative: Boolean = false,
+) : Operator(), HasNegativeForm {
+
+    override fun isNegative(): Boolean = isNegative
+
+    override fun setIsNegative(isNegative: Boolean) {
+        this.isNegative = isNegative
+    }
 
     override val children: List<Operator>
         get() = listOf(objectExpr, classExpr)
@@ -62,4 +70,8 @@ class CheckClass(
     override fun <I> use(behaviour: OperatorBehaviour<I>): I {
         return behaviour.process(this)
     }
+
+    override fun clone(): Operator = CheckClass(objectExpr.clone(), classExpr.clone(), isNegative)
+
+    override fun clone(newArgs: List<Operator>): Operator = CheckClass(newArgs.first(), newArgs.last(), isNegative)
 }

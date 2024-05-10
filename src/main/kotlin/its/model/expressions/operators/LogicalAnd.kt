@@ -41,4 +41,8 @@ class LogicalAnd(
     override fun <I> use(behaviour: OperatorBehaviour<I>): I {
         return behaviour.process(this)
     }
+
+    override fun clone(): Operator = LogicalAnd(firstExpr.clone(), secondExpr.clone())
+
+    override fun clone(newArgs: List<Operator>): Operator = LogicalAnd(newArgs.first(), newArgs.last())
 }

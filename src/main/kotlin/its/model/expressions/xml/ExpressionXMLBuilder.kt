@@ -7,10 +7,12 @@ import its.model.build.xml.XMLBuilder
 import its.model.definition.ThisShouldNotHappen
 import its.model.definition.types.Comparison
 import its.model.definition.types.EnumValue
+import its.model.expressions.HasContext
 import its.model.expressions.Operator
 import its.model.expressions.getTypesFromConditionExpr
 import its.model.expressions.literals.*
 import its.model.expressions.operators.*
+import its.model.expressions.rec
 import org.w3c.dom.Element
 import kotlin.reflect.KClass
 
@@ -280,6 +282,13 @@ object ExpressionXMLBuilder : XMLBuilder<ExpressionXMLBuilder.ExpressionBuildCon
         val condition = el.op(1)
         val varName = el.getRequiredAttribute(VAR_NAME)
         val type = el.findAttribute(TYPE) ?: el.getTypeFromConditionExpr(selector, varName)
+        listOf(selector, condition).forEach {
+            if (it is HasContext) {
+                it.addToContext(it, varName)
+            } else {
+                it.rec(varName)
+            }
+        }
         return ExistenceQuantifier(TypedVariable(type, varName), selector, condition)
     }
 
@@ -290,6 +299,13 @@ object ExpressionXMLBuilder : XMLBuilder<ExpressionXMLBuilder.ExpressionBuildCon
         val condition = el.op(1)
         val varName = el.getRequiredAttribute(VAR_NAME)
         val type = el.findAttribute(TYPE) ?: el.getTypeFromConditionExpr(selector, varName)
+        listOf(selector, condition).forEach {
+            if (it is HasContext) {
+                it.addToContext(it, varName)
+            } else {
+                it.rec(varName)
+            }
+        }
         return ForAllQuantifier(TypedVariable(type, varName), selector, condition)
     }
 
@@ -299,6 +315,13 @@ object ExpressionXMLBuilder : XMLBuilder<ExpressionXMLBuilder.ExpressionBuildCon
         val condition = el.op(0)
         val varName = el.getRequiredAttribute(VAR_NAME)
         val type = el.findAttribute(TYPE) ?: el.getTypeFromConditionExpr(condition, varName)
+        listOf(condition).forEach {
+            if (it is HasContext) {
+                it.addToContext(it, varName)
+            } else {
+                it.rec(varName)
+            }
+        }
         return GetByCondition(TypedVariable(type, varName), condition)
     }
 

@@ -7,6 +7,7 @@ import its.model.definition.types.ObjectType
 import its.model.definition.types.Type
 import its.model.expressions.ExpressionContext
 import its.model.expressions.ExpressionValidationResults
+import its.model.expressions.HasContext
 import its.model.expressions.Operator
 import its.model.expressions.visitors.OperatorBehaviour
 
@@ -20,7 +21,12 @@ import its.model.expressions.visitors.OperatorBehaviour
 class GetByCondition(
     val variable: TypedVariable,
     val conditionExpr: Operator,
-) : Operator() {
+) : Operator(), HasContext {
+
+    val mContext = HashSet<String>()
+
+    override val context: MutableSet<String>
+        get() = mContext
 
     override val children: List<Operator>
         get() = listOf(conditionExpr)
@@ -45,5 +51,13 @@ class GetByCondition(
 
     override fun <I> use(behaviour: OperatorBehaviour<I>): I {
         return behaviour.process(this)
+    }
+
+    override fun clone(): Operator = GetByCondition(variable, conditionExpr.clone()).also {
+        it.mContext.addAll(mContext)
+    }
+
+    override fun clone(newArgs: List<Operator>): Operator = GetByCondition(variable, newArgs.first()).also {
+        it.mContext.addAll(mContext)
     }
 }

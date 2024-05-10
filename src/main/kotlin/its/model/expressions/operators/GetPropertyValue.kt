@@ -56,4 +56,8 @@ class GetPropertyValue(
     override fun <I> use(behaviour: OperatorBehaviour<I>): I {
         return behaviour.process(this)
     }
+
+    override fun clone(): Operator = GetPropertyValue(objectExpr.clone(), propertyName)
+
+    override fun clone(newArgs: List<Operator>): Operator = GetPropertyValue(newArgs.first(), propertyName)
 }
