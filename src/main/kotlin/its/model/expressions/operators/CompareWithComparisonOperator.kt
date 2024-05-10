@@ -7,6 +7,7 @@ import its.model.definition.types.NumericType
 import its.model.definition.types.Type
 import its.model.expressions.ExpressionContext
 import its.model.expressions.ExpressionValidationResults
+import its.model.expressions.HasNegativeForm
 import its.model.expressions.Operator
 import its.model.expressions.visitors.OperatorBehaviour
 
@@ -22,7 +23,14 @@ class CompareWithComparisonOperator(
     val firstExpr: Operator,
     val operator: ComparisonOperator,
     val secondExpr: Operator,
-) : Operator() {
+    private var isNegative: Boolean = false,
+) : Operator(), HasNegativeForm {
+
+    override fun isNegative(): Boolean = isNegative
+
+    override fun setIsNegative(isNegative: Boolean) {
+        this.isNegative = isNegative
+    }
 
     enum class ComparisonOperator {
 
@@ -98,4 +106,10 @@ class CompareWithComparisonOperator(
     override fun <I> use(behaviour: OperatorBehaviour<I>): I {
         return behaviour.process(this)
     }
+
+    override fun clone(): Operator =
+        CompareWithComparisonOperator(firstExpr.clone(), operator, secondExpr.clone(), isNegative)
+
+    override fun clone(newArgs: List<Operator>): Operator = CompareWithComparisonOperator(newArgs.first(), operator, newArgs.last(), isNegative)
+
 }
