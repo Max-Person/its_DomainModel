@@ -128,5 +128,5 @@ class CheckRelationship(
 
     override fun clone(): Operator = CheckRelationship(subjectExpr.clone(), relationshipName, objectExprs.map { arg -> arg.clone() }, isNegative)
 
-    override fun clone(newArgs: List<Operator>): Operator = CheckRelationship(newArgs.first(), relationshipName, newArgs.subList(1, objectExprs.size), isNegative)
+    override fun clone(newArgs: List<Operator>): Operator = CheckRelationship(newArgs.first(), relationshipName, newArgs.drop(1), isNegative)
 }
