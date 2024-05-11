@@ -4,6 +4,7 @@ import its.model.definition.*
 import its.model.definition.rdf.DomainRDFWriter.Option
 import its.model.definition.rdf.RDFUtils.XSD_PREF
 import its.model.definition.types.EnumValue
+import org.apache.jena.datatypes.xsd.XSDDatatype
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.rdf.model.Resource
@@ -62,8 +63,14 @@ class DomainRDFWriter private constructor(
 
         domain.classes.forEach { it.writeClass() }
         domain.objects.forEach { it.writeObject() }
+        domain.variables.forEach { it.writeVariable() }
 
         return rdfModel
+    }
+
+    private fun VariableDef.writeVariable() {
+        val varRdfProp = rdfModel.getProperty(basePrefix, "var...")
+        findResource(valueObjectName).addProperty(varRdfProp, name, XSDDatatype.XSDstring)
     }
 
     private fun ClassDef.writeClass() {
