@@ -182,12 +182,11 @@ class DomainRDFFiller private constructor(
             }
         }
 
-        val varStatement = resource.getProperty(varRdfProp)
-        if (varStatement != null) {
-            val varName = varStatement.`object`.asLiteral().string
+        resource.listProperties(varRdfProp).toList().forEach {
+            val varName = it.`object`.asLiteral().string
             domain.variables.add(VariableDef(varName, obj.name))
-            usedRdfProperties.add(varRdfProp)
         }
+        usedRdfProperties.add(varRdfProp)
 
         fillMeta(obj, resource, usedRdfProperties)
     }
