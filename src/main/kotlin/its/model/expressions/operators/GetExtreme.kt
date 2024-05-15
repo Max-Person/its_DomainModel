@@ -29,7 +29,7 @@ class GetExtreme(
 ) : Operator() {
 
     override val children: List<Operator>
-        get() = listOf(conditionExpr)
+        get() = listOf(conditionExpr, extremeConditionExpr)
 
     override fun validateAndGetType(
         domain: Domain,
@@ -60,4 +60,8 @@ class GetExtreme(
     override fun <I> use(behaviour: OperatorBehaviour<I>): I {
         return behaviour.process(this)
     }
+
+    override fun clone(): Operator = GetExtreme(className, varName, conditionExpr.clone(), extremeVarName, extremeConditionExpr.clone())
+
+    override fun clone(newArgs: List<Operator>): Operator = GetExtreme(className, varName, newArgs.first(), extremeVarName, newArgs.last())
 }
