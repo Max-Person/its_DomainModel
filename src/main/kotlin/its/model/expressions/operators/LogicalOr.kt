@@ -40,4 +40,9 @@ class LogicalOr(
     override fun <I> use(behaviour: OperatorBehaviour<I>): I {
         return behaviour.process(this)
     }
+
+
+    override fun clone(): Operator = LogicalOr(firstExpr.clone(), secondExpr.clone())
+
+    override fun clone(newArgs: List<Operator>): Operator = LogicalOr(newArgs.first(), newArgs.last())
 }
