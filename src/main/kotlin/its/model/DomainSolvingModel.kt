@@ -40,22 +40,31 @@ class DomainSolvingModel(
 
             BuildMethod.DICT_RDF -> DomainDictionariesRDFBuilder.buildDomain(directoryURL)
         },
-        directoryURL.let {
+        directoryURL
+    )
+
+    constructor(directoryPath: String, buildMethod: BuildMethod = BuildMethod.DICT_RDF)
+            : this(File(directoryPath).toURI().toURL(), buildMethod)
+
+    constructor(domain: Domain, decisionTreeDirectoryURL: URL) : this(
+        domain,
+        decisionTreeDirectoryURL.run {
             val treeRegex = Regex("tree(_\\w+|)\\.xml")
             val trees = mutableMapOf<String, DecisionTree>()
-            directoryURL.openStream().bufferedReader().lines().forEach {
+            openStream().bufferedReader().lines().forEach {
                 if (treeRegex.matches(it)) {
                     var (name) = treeRegex.find(it)!!.destructured
                     if (name.startsWith("_")) name = name.substring(1)
-                    trees[name] = DecisionTreeXMLBuilder.fromXMLFile((directoryURL + it).toURI().toString())
+                    trees[name] = DecisionTreeXMLBuilder.fromXMLFile((this + it).toURI().toString())
                 }
             }
             trees
         },
     )
 
-    constructor(directoryPath: String, buildMethod: BuildMethod = BuildMethod.DICT_RDF)
-            : this(File(directoryPath).toURI().toURL(), buildMethod)
+    constructor(domain: Domain, decisionTreeDirectoryPath: String)
+            : this(domain, File(decisionTreeDirectoryPath).toURI().toURL())
+
 
     /**
      * Валидация модели с выкидыванием исключений
