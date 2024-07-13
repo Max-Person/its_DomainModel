@@ -32,38 +32,51 @@ class DomainSolvingModel(
      * - RDF-данные аналогично читаются из turtle-файла `'domain.ttl'`
      * - Деревья решений аналогично читаются из XML файлов вида tree_<имя дерева>.xml
      */
-    constructor(directoryURL: URL, buildMethod: BuildMethod = BuildMethod.DICT_RDF) : this(
-        when (buildMethod) {
-            BuildMethod.LOQI -> DomainLoqiBuilder.buildDomain(
-                (directoryURL + "domain.loqi").openStream().bufferedReader()
-            )
-
-            BuildMethod.DICT_RDF -> DomainDictionariesRDFBuilder.buildDomain(directoryURL)
-        },
-        directoryURL
-    )
+    constructor(directoryURL: URL, buildMethod: BuildMethod = BuildMethod.DICT_RDF)
+            : this(collectDomain(directoryURL, buildMethod), directoryURL)
 
     constructor(directoryPath: String, buildMethod: BuildMethod = BuildMethod.DICT_RDF)
             : this(File(directoryPath).toURI().toURL(), buildMethod)
 
-    constructor(domain: Domain, decisionTreeDirectoryURL: URL) : this(
-        domain,
-        decisionTreeDirectoryURL.run {
-            val treeRegex = Regex("tree(_\\w+|)\\.xml")
-            val trees = mutableMapOf<String, DecisionTree>()
-            openStream().bufferedReader().lines().forEach {
-                if (treeRegex.matches(it)) {
-                    var (name) = treeRegex.find(it)!!.destructured
-                    if (name.startsWith("_")) name = name.substring(1)
-                    trees[name] = DecisionTreeXMLBuilder.fromXMLFile((this + it).toURI().toString())
-                }
-            }
-            trees
-        },
-    )
+
+    constructor(domain: Domain, decisionTreeDirectoryURL: URL)
+            : this(domain, collectTrees(decisionTreeDirectoryURL))
 
     constructor(domain: Domain, decisionTreeDirectoryPath: String)
             : this(domain, File(decisionTreeDirectoryPath).toURI().toURL())
+
+
+    companion object {
+        /**
+         * Построить домен на основе файлов в директории
+         */
+        @JvmStatic
+        fun collectDomain(directoryURL: URL, buildMethod: BuildMethod = BuildMethod.DICT_RDF): Domain {
+            return when (buildMethod) {
+                BuildMethod.LOQI -> DomainLoqiBuilder.buildDomain(
+                    (directoryURL + "domain.loqi").openStream().bufferedReader()
+                )
+
+                BuildMethod.DICT_RDF -> DomainDictionariesRDFBuilder.buildDomain(directoryURL)
+            }
+        }
+
+        /**
+         * Построить набор деревьев решений на основе файлов в директории
+         */
+        @JvmStatic
+        fun collectTrees(directoryURL: URL): Map<String, DecisionTree> {
+            return DirectoryScanUtils.findFilesMatching(directoryURL, Regex("tree(_\\w+|)\\.xml"))
+                .map { (fileUrl, regexMatch) ->
+                    var (name) = regexMatch.destructured
+                    if (name.startsWith("_")) {
+                        name = name.substring(1)
+                    }
+                    name to DecisionTreeXMLBuilder.fromXMLFile(fileUrl.toURI().toString())
+                }
+                .toMap()
+        }
+    }
 
 
     /**
