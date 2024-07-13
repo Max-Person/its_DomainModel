@@ -1,5 +1,6 @@
 package its.model.nodes
 
+import its.model.ValueTuple
 import its.model.definition.Domain
 import its.model.definition.types.BooleanType
 import its.model.definition.types.Type
@@ -9,19 +10,27 @@ import its.model.nodes.visitors.LinkNodeBehaviour
 /**
  * Узел вопроса
  *
- * Вычисляет выражение [expr] и совершает переход, чей ключ соответствует вычисленному результату
+ * Вычисляет выражения [expressions] и совершает переход, чей ключ соответствует вычисленному результату
+ * Если выражений несколько, то переход осуществляется по кортежу, составленному из их результатов
  *
- * @param [expr] выражение, вычисляемое в узле
+ * @param [expressions] выражения, вычисляемое в узле
  * @param [isSwitch] является ли узел 'switch'-узлом. 'switch'-узлы считаются тривиальными (см. [trivialityExpr])
  * @param [trivialityExpr] условие тривиальности узла ([BooleanType]).
  * Если узел тривиален, на нем не должно заостряться внимание студента
  */
 class QuestionNode(
-    val expr: Operator,
+    val expressions: List<Operator>,
     override val outcomes: Outcomes<Any>,
     val isSwitch: Boolean = false,
     val trivialityExpr: Operator? = null,
 ) : LinkNode<Any>() {
+
+    val isTuple: Boolean
+        get() = expressions.size > 1
+
+    val expr: Operator
+        get() = expressions.first()
+
     override val linkedElements: List<DecisionTreeElement>
         get() = outcomes.toList()
 
@@ -29,13 +38,32 @@ class QuestionNode(
         get() = isSwitch || trivialityExpr != null
 
     override fun validate(domain: Domain, results: DecisionTreeValidationResults, context: DecisionTreeContext) {
-        val exprType = expr.validateForDecisionTree(domain, results, context)
+        results.checkValid(expressions.isNotEmpty(), "$description must contain at least one expression")
+        val exprTypes = expressions.map { it.validateForDecisionTree(domain, results, context) }
         for (outcome in outcomes) {
-            val outcomeType = Type.of(outcome.key)
-            results.checkValid(
-                exprType.castFits(outcomeType, domain),
-                "Outcome key '${outcome.key}' cannot be cast to the node's type '$exprType' (in $description)"
-            )
+            if (isTuple) {
+                results.checkValid(
+                    outcome.key is ValueTuple,
+                    "Outcome key for a node with multiple expressions should be a ValueTuple, " +
+                            "was '${outcome.key}' (in $description)"
+                )
+                outcome.key as ValueTuple
+                results.checkValid(
+                    outcome.key.size == expressions.size,
+                    "A ValueTuple outcome key '${outcome.key}' must contain as many values " +
+                            "as there are expressions in the node; ${expressions.size} were expected, " +
+                            "but ${outcome.key.size} were found (in $description)"
+                )
+            }
+            exprTypes.forEachIndexed { i, exprType ->
+                val outcomeValue = if (!isTuple) outcome.key else ((outcome.key as ValueTuple)[i] ?: return)
+                val outcomeType = Type.of(outcomeValue)
+                results.checkValid(
+                    exprType.castFits(outcomeType, domain),
+                    "Outcome value '${outcomeValue}' cannot be cast to the type '$exprType' " +
+                            "of a corresponding expression in $description"
+                )
+            }
         }
         if (trivialityExpr != null) {
             val trivialityType = trivialityExpr.validateForDecisionTree(domain, results, context)

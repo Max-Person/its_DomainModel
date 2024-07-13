@@ -1,6 +1,7 @@
 package its.model.nodes.xml
 
 import its.model.TypedVariable
+import its.model.ValueTuple
 import its.model.build.xml.ElementBuildContext
 import its.model.build.xml.XMLBuildException
 import its.model.build.xml.XMLBuilder
@@ -145,6 +146,13 @@ object DecisionTreeNodeXMLBuilder : AbstractDecisionTreeXMLBuilder<DecisionTreeN
     @JvmStatic
     fun build(el: Element) = buildFromElement(el)
 
+    private fun String.parseTupleValue(): Any? {
+        if (this.startsWith('(') && this.endsWith(')'))
+            throw createException("Cannot have tuples inside tuples")
+        if (this == "*") return null
+        return this.parseValue();
+    }
+
     private fun String.parseValue(): Any {
         if (this.lowercase().toBooleanStrictOrNull() != null) return this.lowercase().toBooleanStrict()
         if (this.toIntOrNull() != null) return this.toInt()
@@ -160,6 +168,13 @@ object DecisionTreeNodeXMLBuilder : AbstractDecisionTreeXMLBuilder<DecisionTreeN
         if (this.matches("obj \\w+".toRegex())) {
             val split = this.split(" ", limit = 2)
             return Obj(split[1])
+        }
+        if (this.startsWith('(') && this.endsWith(')')) {
+            return ValueTuple(
+                this.substring(1, length - 1)
+                    .split(';')
+                    .map { it.trim().parseTupleValue() }
+            )
         }
         return this
     }
@@ -256,7 +271,7 @@ object DecisionTreeNodeXMLBuilder : AbstractDecisionTreeXMLBuilder<DecisionTreeN
     @BuildForTags(["QuestionNode"])
     @BuildingClass(QuestionNode::class)
     private fun buildQuestionNode(el: ElementBuildContext): QuestionNode {
-        val expr = el.getRequiredSingleByWrapper(EXPR_TAG).toExpr()
+        val expr = el.getSeveralByWrapper(EXPR_TAG).map { it.toExpr() }
         val isSwitch = el.findAttribute("isSwitch")?.toBoolean() ?: false
         val outcomes = el.getOutcomes(Any::class)
         val trivialityExpr: Operator? = el.findSingleByWrapper("Triviality")?.toExpr()

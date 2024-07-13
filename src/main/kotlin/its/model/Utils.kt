@@ -105,3 +105,26 @@ abstract class Association<K, V> : MutableCollection<V> {
         return removed
     }
 }
+
+/**
+ * Кортеж значений
+ */
+class ValueTuple() : MutableList<Any?> by mutableListOf() {
+    constructor(other: List<Any?>) : this() {
+        this.addAll(other)
+    }
+
+    /**
+     * "Подходит" ли данный кортеж к другому [other], с учетом того, что null в данном кортеже
+     * считается подходящим любому элементу в другом кортеже (например, (*, 2) подходит к (1, 2) и (2, 2) и т.п.)
+     */
+    fun matches(other: List<*>): Boolean {
+        if (this.size != other.size) return false
+        return this.mapIndexed { i, el -> el == null || el == other[i] }
+            .all { isTrue -> isTrue }
+    }
+
+    override fun toString(): String {
+        return "(${this.map { it ?: "*" }.joinToString(";")})"
+    }
+}
