@@ -72,7 +72,7 @@ class DomainLoqiBuilder private constructor(
             parentName = ctx.id(1).getName()
         }
 
-        val clazz = domainOpAt(line) { domain.classes.add(ClassDef(name, parentName)) }
+        val clazz = domainOpAt(line) { domain.classes.added(ClassDef(name, parentName)) }
 
         for (classMember in ctx.classMemberDecl()) {
             if (classMember.propertyDecl() != null)
@@ -96,7 +96,7 @@ class DomainLoqiBuilder private constructor(
         val type = if (ctx.type() != null) ctx.type().getType() else ctx.value().getTypeAndValue().type
         val value = ctx.value()?.getTypeAndValue()?.value
 
-        val property = domainOpAt(line) { clazz.declaredProperties.add(PropertyDef(clazz.name, name, type, kind)) }
+        val property = domainOpAt(line) { clazz.declaredProperties.added(PropertyDef(clazz.name, name, type, kind)) }
         value?.also {
             val tmpStatement = ClassPropertyValueStatement(clazz, name, it)
             domainOpAt(ctx.value().start.line) { clazz.definedPropertyValues.add(tmpStatement) }
@@ -111,7 +111,7 @@ class DomainLoqiBuilder private constructor(
         val kind = ctx.relationshipKind()?.getRelationshipKind(clazz.name) ?: BaseRelationshipKind()
 
         val relationship = domainOpAt(line) {
-            clazz.declaredRelationships.add(RelationshipDef(clazz.name, name, objTypeNames, kind))
+            clazz.declaredRelationships.added(RelationshipDef(clazz.name, name, objTypeNames, kind))
         }
         relationship.fillMetadata(ctx.metadataSection())
     }
@@ -128,11 +128,11 @@ class DomainLoqiBuilder private constructor(
         val line = ctx.id().start.line
         val name = ctx.id().getName()
 
-        val enum = domainOpAt(line) { domain.enums.add(EnumDef(name)) }
+        val enum = domainOpAt(line) { domain.enums.added(EnumDef(name)) }
 
         for (enumValueDecl in ctx.enumMemberList()?.enumMemberDecl() ?: emptyList()) {
             val tmpValue = EnumValueDef(enum.name, enumValueDecl.id().getName())
-            val value = domainOpAt(enumValueDecl.start.line) { enum.values.add(tmpValue) }
+            val value = domainOpAt(enumValueDecl.start.line) { enum.values.added(tmpValue) }
             value.fillMetadata(enumValueDecl.metadataSection())
         }
 
@@ -144,7 +144,7 @@ class DomainLoqiBuilder private constructor(
         val name = ctx.id(0).getName()
         val className = ctx.id(1).getName()
 
-        val obj = domainOpAt(line) { domain.objects.add(ObjectDef(name, className)) }
+        val obj = domainOpAt(line) { domain.objects.added(ObjectDef(name, className)) }
 
         for (objStatement in ctx.objStatement()) {
             if (objStatement.propertyValueStatement() != null)

@@ -116,7 +116,7 @@ class DomainRDFFiller private constructor(
         for (objResource in findAllObjectResources()) {
             val obj = domain.objects.get(objResource.name) ?: run {
                 val className = objResource.getProperty(typeRdfProp).`object`.asResource().name
-                domain.objects.add(ObjectDef(objResource.name, className))
+                domain.objects.added(ObjectDef(objResource.name, className))
             }
             objToResource.add(obj to objResource)
         }

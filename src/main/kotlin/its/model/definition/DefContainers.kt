@@ -4,7 +4,7 @@ package its.model.definition
 /**
  * Хранилище определений в домене
  */
-sealed class DefContainer<T : DomainDef<T>> : DomainElement(), Collection<T> {
+sealed class DefContainer<T : DomainDef<T>> : DomainElement(), MutableCollection<T> {
     private val values: MutableMap<String, T> = mutableMapOf()
     override fun iterator() = values.values.iterator()
 
@@ -24,9 +24,21 @@ sealed class DefContainer<T : DomainDef<T>> : DomainElement(), Collection<T> {
     /**
      * Добавить определение (при добавлении определение валидируется)
      * @throws DomainDefinitionException если такое определение уже есть, или если возникли ошибки валидации
+     * @see added
      * @see addMerge
      */
-    fun add(def: T) = add(def, false)
+    override fun add(element: T): Boolean {
+        added(element)
+        return true
+    }
+
+    /**
+     * Добавить определение (при добавлении определение валидируется)
+     * Метод аналогичен [add], но возвращает добавленный элемент, поэтому удобен при наполнении моделей.
+     * @throws DomainDefinitionException если такое определение уже есть, или если возникли ошибки валидации
+     * @see addMerge
+     */
+    fun added(def: T) = add(def, false)
 
     /**
      * Добавить определение (при добавлении определение валидируется);
@@ -74,24 +86,40 @@ sealed class DefContainer<T : DomainDef<T>> : DomainElement(), Collection<T> {
     /**
      * @see add
      */
-    fun addAll(other: DefContainer<T>) = other.forEach { add(it) }
+    override fun addAll(elements: Collection<T>): Boolean {
+        elements.forEach { add(it) }
+        return true
+    }
 
     /**
      * @see addMerge
      */
-    fun addAllMerge(other: DefContainer<T>) = other.forEach { addMerge(it) }
+    fun addAllMerge(other: Collection<T>) = other.forEach { addMerge(it) }
 
-    fun remove(def: T) {
-        if (get(def.name) == def) {
-            remove(def.name)
+    override fun remove(element: T): Boolean {
+        if (get(element.name) == element) {
+            return remove(element.name) != null
         }
+        return false;
     }
 
     fun remove(name: String): T? {
         return values.remove(name)
     }
 
-    fun subtract(other: DefContainer<T>) {
+    override fun removeAll(elements: Collection<T>): Boolean {
+        return elements.any { remove(it) }
+    }
+
+    override fun retainAll(elements: Collection<T>): Boolean {
+        return this.any { if (!elements.contains(it)) remove(it) else false }
+    }
+
+    override fun clear() {
+        values.clear()
+    }
+
+    fun subtract(other: Collection<T>) {
         for (def in other) {
             val existing = get(def.name) ?: continue
             if (!existing.mergeEquals(def)) continue
