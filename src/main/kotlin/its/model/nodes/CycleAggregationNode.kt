@@ -24,9 +24,14 @@ class CycleAggregationNode(
     val logicalOp: LogicalOp,
     val selectorExpr: Operator,
     val variable: TypedVariable,
+    val errorCategories: List<FindErrorCategory>,
     val thoughtBranch: ThoughtBranch,
     override val outcomes: Outcomes<Boolean>,
 ) : LinkNode<Boolean>() {
+    init {
+        errorCategories.forEach { it.initCheckedVariable(variable.className) }
+    }
+
     override val linkedElements: List<DecisionTreeElement>
         get() = listOf(thoughtBranch).plus(outcomes)
 
@@ -48,6 +53,8 @@ class CycleAggregationNode(
             outcomes.containsKey(true) && outcomes.containsKey(false),
             "$description has to have both true and false outcomes"
         )
+
+        validateLinked(domain, results, context, errorCategories)
 
         context.add(variable)
         thoughtBranch.validate(domain, results, context)

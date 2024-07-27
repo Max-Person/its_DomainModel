@@ -1,9 +1,6 @@
 package its.model.nodes
 
-import its.model.TypedVariable
 import its.model.definition.Domain
-import its.model.definition.types.BooleanType
-import its.model.expressions.Operator
 import its.model.nodes.visitors.LinkNodeBehaviour
 
 /**
@@ -25,6 +22,11 @@ class FindActionNode(
     val secondaryAssignments: List<DecisionTreeVarAssignment>,
     override val outcomes: Outcomes<Boolean>,
 ) : LinkNode<Boolean>() {
+
+    init {
+        errorCategories.forEach { it.initCheckedVariable(varAssignment.variable.className) }
+    }
+
     override val linkedElements: List<DecisionTreeElement>
         get() = listOf(varAssignment).plus(errorCategories).plus(secondaryAssignments).plus(outcomes)
 
@@ -32,47 +34,6 @@ class FindActionNode(
         get() = outcomes[true]!!
     val nextIfNone
         get() = outcomes[false]
-
-    /**
-     * Категория ошибок в узле [FindActionNode]
-     *
-     * В случае, если студент неправильно выполнил действие в узле и выбрал не тот объект, который нужно,
-     * то любой выбранный объект должен соответствовать одной или нескольким категориям ошибок
-     *
-     * @param priority приоритет данной категории ошибок - если объект соответствует нескольким категориям,
-     * то будет выбрана категория с наивысшим приоритетом (1 считается наивысшим приоритетом, и далее 2, 3.. по убыванию)
-     * @param selectorExpr условие (предикат) для проверки соответствия объекта категории ([BooleanType]);
-     * проверяемый объект подставляется в предикат как контекстная переменная 'checked', чей тип соответствует основной переменной узла
-     */
-    class FindErrorCategory(
-        val priority: Int,
-        val selectorExpr: Operator,
-    ) : HelperDecisionTreeElement() {
-        private val parentNode
-            get() = (parent as FindActionNode)
-
-        companion object {
-            const val CHECKED_OBJ = "checked"
-        }
-
-        val checkedVariable
-            get() = TypedVariable(parentNode.varAssignment.variable.className, CHECKED_OBJ)
-
-        override fun validate(domain: Domain, results: DecisionTreeValidationResults, context: DecisionTreeContext) {
-            super.validate(domain, results, context)
-            val selectorType = selectorExpr.validateForDecisionTree(
-                domain,
-                results,
-                context,
-                withVariables = mapOf(checkedVariable.varName to checkedVariable.className)
-            )
-            results.checkValid(
-                selectorType is BooleanType,
-                "Selector expression in a $description returns $selectorType, but must return a boolean " +
-                        "(be a predicate with respect to variable '$CHECKED_OBJ')"
-            )
-        }
-    }
 
     override fun validate(domain: Domain, results: DecisionTreeValidationResults, context: DecisionTreeContext) {
         //Сначала валидируются части, в которых находимая переменная неизвестна

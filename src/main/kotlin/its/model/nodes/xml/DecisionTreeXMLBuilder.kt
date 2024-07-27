@@ -251,9 +251,12 @@ object DecisionTreeNodeXMLBuilder : AbstractDecisionTreeXMLBuilder<DecisionTreeN
             ?: throw createException("$el must have a valid logical operator described in its '$LOGICAL_OP_ATTR' attribute")
         val selector = el.getRequiredSingleByWrapper("SelectorExpression").toExpr()
         val variable = buildTypedVariable(el.getRequiredChild(DECISION_TREE_VAR_DECL_TAG))
+        val errors = el.getChildren("FindError").map {
+            buildFindErrorCategory(createBuildContext(it, FindErrorCategory::class))
+        }
         val branch = buildThoughtBranch(el.getRequiredChild(THOUGHT_BRANCH_TAG))
         val outcomes = el.getOutcomes(Boolean::class)
-        return CycleAggregationNode(op, selector, variable, branch, outcomes).collectMetadata(el)
+        return CycleAggregationNode(op, selector, variable, errors, branch, outcomes).collectMetadata(el)
     }
 
     @BuildForTags(["WhileAggregationNode"])
@@ -286,11 +289,13 @@ object DecisionTreeNodeXMLBuilder : AbstractDecisionTreeXMLBuilder<DecisionTreeN
     }
 
 
-    private fun buildFindErrorCategory(el: ElementBuildContext): FindActionNode.FindErrorCategory {
+    private fun buildFindErrorCategory(el: ElementBuildContext): FindErrorCategory {
         val priority = el.getRequiredAttributeAs("priority", Int::class)
         val expr = el.getRequiredSingleByWrapper(EXPR_TAG).toExpr()
 
-        return FindActionNode.FindErrorCategory(priority, expr).collectMetadata(el)
+        return FindErrorCategory(priority, expr)
+            .collectMetadata(el)
+            .also { category -> el.findAttribute(TYPE_ATTR)?.also { category.initCheckedVariable(it) } }
     }
 
     @BuildForTags(["FindActionNode"])
@@ -301,7 +306,7 @@ object DecisionTreeNodeXMLBuilder : AbstractDecisionTreeXMLBuilder<DecisionTreeN
         val mainAssignment = DecisionTreeVarAssignment(variable, expr)
 
         val errors = el.getChildren("FindError").map {
-            buildFindErrorCategory(createBuildContext(it, FindActionNode.FindErrorCategory::class))
+            buildFindErrorCategory(createBuildContext(it, FindErrorCategory::class))
         }
 
         val secondaryAssignments = el.getChildren(ADDITIONAL_DECISION_TREE_VAR_DECL_TAG).map {
