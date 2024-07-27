@@ -16,6 +16,7 @@ import java.net.URL
  */
 class DomainSolvingModel(
     val domain: Domain,
+    val tagsData: Map<String, Domain>,
     val decisionTrees: Map<String, DecisionTree>,
 ) {
 
@@ -32,15 +33,18 @@ class DomainSolvingModel(
      * - RDF-данные аналогично читаются из turtle-файла `'domain.ttl'`
      * - Деревья решений аналогично читаются из XML файлов вида tree_<имя дерева>.xml
      */
-    constructor(directoryURL: URL, buildMethod: BuildMethod = BuildMethod.DICT_RDF)
-            : this(collectDomain(directoryURL, buildMethod), directoryURL)
+    constructor(directoryURL: URL, buildMethod: BuildMethod = BuildMethod.DICT_RDF) : this(
+        collectDomain(directoryURL, buildMethod),
+        collectTags(directoryURL),
+        collectTrees(directoryURL)
+    )
 
     constructor(directoryPath: String, buildMethod: BuildMethod = BuildMethod.DICT_RDF)
             : this(File(directoryPath).toURI().toURL(), buildMethod)
 
 
     constructor(domain: Domain, decisionTreeDirectoryURL: URL)
-            : this(domain, collectTrees(decisionTreeDirectoryURL))
+            : this(domain, emptyMap(), collectTrees(decisionTreeDirectoryURL))
 
     constructor(domain: Domain, decisionTreeDirectoryPath: String)
             : this(domain, File(decisionTreeDirectoryPath).toURI().toURL())
@@ -61,12 +65,22 @@ class DomainSolvingModel(
             }
         }
 
+        @JvmStatic
+        fun collectTags(directoryURL: URL): Map<String, Domain> {
+            return DirectoryScanUtils.findFilesMatching(directoryURL, Regex("tag_(\\S+)\\.loqi"))
+                .map { (fileUrl, regexMatch) ->
+                    val (name) = regexMatch.destructured
+                    name to DomainLoqiBuilder.buildDomain(fileUrl.openStream().bufferedReader())
+                }
+                .toMap()
+        }
+
         /**
          * Построить набор деревьев решений на основе файлов в директории
          */
         @JvmStatic
         fun collectTrees(directoryURL: URL): Map<String, DecisionTree> {
-            return DirectoryScanUtils.findFilesMatching(directoryURL, Regex("tree(_\\w+|)\\.xml"))
+            return DirectoryScanUtils.findFilesMatching(directoryURL, Regex("tree(_\\S+|)\\.xml"))
                 .map { (fileUrl, regexMatch) ->
                     var (name) = regexMatch.destructured
                     if (name.startsWith("_")) {
@@ -85,6 +99,11 @@ class DomainSolvingModel(
      */
     fun validate(): DomainSolvingModel {
         domain.validateAndThrow()
+        tagsData.values.forEach { tagDomain ->
+            tagDomain.copy()
+                .apply { addMerge(this@DomainSolvingModel.domain) }
+                .validateAndThrow()
+        }
         decisionTrees.values.forEach { it.validate(domain) }
         return this
     }
