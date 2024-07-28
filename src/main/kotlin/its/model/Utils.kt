@@ -33,7 +33,32 @@ object Utils {
             }
         }
     }
+
+    fun <V> getCollectionsDifference(first: Collection<V>, second: Collection<V>): CollectionsDifference<V> {
+        val all = first.toMutableSet().also { it.addAll(second) }
+        val onlyInFirst = mutableSetOf<V>()
+        val inBoth = mutableSetOf<V>()
+        val onlyInSecond = mutableSetOf<V>()
+        for (item in all) {
+            val inFirst = first.contains(item)
+            val inSecond = second.contains(item)
+            if (inFirst && inSecond) {
+                inBoth.add(item)
+            } else if (inFirst) {
+                onlyInFirst.add(item)
+            } else {
+                onlyInSecond.add(item)
+            }
+        }
+        return CollectionsDifference(onlyInFirst, inBoth, onlyInSecond)
+    }
 }
+
+data class CollectionsDifference<V>(
+    val onlyInFirst: Set<V>,
+    val inBoth: Set<V>,
+    val onlyInSecond: Set<V>
+)
 
 abstract class Association<K, V> : MutableCollection<V> {
 
