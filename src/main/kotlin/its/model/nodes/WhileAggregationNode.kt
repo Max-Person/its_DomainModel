@@ -17,11 +17,11 @@ import its.model.nodes.visitors.LinkNodeBehaviour
  * @param thoughtBranch ветвь мысли, представляющая тело цикла
  */
 class WhileAggregationNode(
-    val logicalOp: LogicalOp,
+    override val logicalOp: LogicalOp,
     val conditionExpr: Operator,
     val thoughtBranch: ThoughtBranch,
     override val outcomes: Outcomes<Boolean>,
-) : LinkNode<Boolean>() {
+) : AggregationNode() {
 
     override val linkedElements: List<DecisionTreeElement>
         get() = listOf(thoughtBranch).plus(outcomes)

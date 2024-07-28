@@ -13,10 +13,10 @@ import its.model.nodes.visitors.LinkNodeBehaviour
  * @param thoughtBranches ветви мысли, результаты которых агрегируются в данном узле
  */
 class LogicAggregationNode(
-    val logicalOp: LogicalOp,
+    override val logicalOp: LogicalOp,
     val thoughtBranches: List<ThoughtBranch>,
     override val outcomes: Outcomes<Boolean>,
-) : LinkNode<Boolean>() {
+) : AggregationNode() {
 
     override val linkedElements: List<DecisionTreeElement>
         get() = thoughtBranches.toList().plus(outcomes)

@@ -21,13 +21,13 @@ import its.model.nodes.visitors.LinkNodeBehaviour
  * @param thoughtBranch тело цикла: ветвь мысли, выполняемая для каждого перебираемого объекта
  */
 class CycleAggregationNode(
-    val logicalOp: LogicalOp,
+    override val logicalOp: LogicalOp,
     val selectorExpr: Operator,
     val variable: TypedVariable,
     val errorCategories: List<FindErrorCategory>,
     val thoughtBranch: ThoughtBranch,
     override val outcomes: Outcomes<Boolean>,
-) : LinkNode<Boolean>() {
+) : AggregationNode() {
     init {
         errorCategories.forEach { it.initCheckedVariable(variable.className) }
     }
