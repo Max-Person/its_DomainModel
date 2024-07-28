@@ -401,9 +401,13 @@ class DomainLoqiWriter private constructor(
         return if (asInt) this.toInt().toString() else this.toString()
     }
 
+    //String, Integer, Double, Boolean, EnumValueRef
     private fun Any.toLoqiValue(): String {
-        if (this is String) return "\"${this.insertEscapes()}\""
-        return this.toString()
+        return when (this) {
+            is String -> "\"${this.insertEscapes()}\""
+            is EnumValueRef -> this.toLoqiString()
+            else -> this.toString()
+        }
     }
 
     private fun LinkQuantifier.toLoqi(): String {
