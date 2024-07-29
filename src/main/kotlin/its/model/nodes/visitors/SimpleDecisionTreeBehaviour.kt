@@ -1,5 +1,6 @@
 package its.model.nodes.visitors
 
+import its.model.ValueTuple
 import its.model.nodes.*
 
 /**
@@ -32,6 +33,10 @@ interface SimpleDecisionTreeBehaviour<Info> : DecisionTreeBehaviour<Info> {
 
     override fun process(node: QuestionNode): Info {
         return process(node as LinkNode<Any>)
+    }
+
+    override fun processTupleQuestionNode(node: TupleQuestionNode): Info {
+        return process(node as LinkNode<ValueTuple>)
     }
 
     fun <AnswerType> process(node: LinkNode<AnswerType>): Info

@@ -274,11 +274,29 @@ object DecisionTreeNodeXMLBuilder : AbstractDecisionTreeXMLBuilder<DecisionTreeN
     @BuildForTags(["QuestionNode"])
     @BuildingClass(QuestionNode::class)
     private fun buildQuestionNode(el: ElementBuildContext): QuestionNode {
-        val expr = el.getSeveralByWrapper(EXPR_TAG).map { it.toExpr() }
+        val expr = el.getRequiredSingleByWrapper(EXPR_TAG).toExpr()
         val isSwitch = el.findAttribute("isSwitch")?.toBoolean() ?: false
         val outcomes = el.getOutcomes(Any::class)
         val trivialityExpr: Operator? = el.findSingleByWrapper("Triviality")?.toExpr()
         return QuestionNode(expr, outcomes, isSwitch, trivialityExpr).collectMetadata(el)
+    }
+
+    @BuildForTags(["TupleQuestionNode"])
+    @BuildingClass(TupleQuestionNode::class)
+    private fun buildTupleQuestionNode(el: ElementBuildContext): TupleQuestionNode {
+        val parts = el.getChildren("Part")
+            .map { buildTupleQuestionNodePart(createBuildContext(it, TupleQuestionNode.TupleQuestionPart::class)) }
+        val outcomes = el.getOutcomes(ValueTuple::class)
+        return TupleQuestionNode(parts, outcomes).collectMetadata(el)
+    }
+
+    private fun buildTupleQuestionNodePart(el: ElementBuildContext): TupleQuestionNode.TupleQuestionPart {
+        val expr = el.getRequiredSingleByWrapper(EXPR_TAG).toExpr()
+        val outcomes = el.getChildren(OUTCOME_TAG)
+            .map {
+                TupleQuestionNode.TupleQuestionOutcome(it.getAttribute(VALUE_ATTR).parseValue()).collectMetadata(it)
+            }
+        return TupleQuestionNode.TupleQuestionPart(expr, outcomes).collectMetadata(el)
     }
 
     @BuildForTags(["PredeterminingFactorsNode"])

@@ -15,4 +15,5 @@ interface LinkNodeBehaviour<Info> {
     fun process(node: LogicAggregationNode): Info
     fun process(node: PredeterminingFactorsNode): Info
     fun process(node: QuestionNode): Info
+    fun processTupleQuestionNode(node: TupleQuestionNode): Info
 }
