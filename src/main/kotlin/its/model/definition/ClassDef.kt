@@ -102,11 +102,10 @@ class ClassDef(
         get() = domain.objects.filter { obj -> obj.className == this.name }
 
     /**
-     * Является ли класс конкретным (финальным в некоторой цепочке наследования)
+     * Является ли класс конкретным (имеет ли объекты-экземпляры)
      */
     val isConcrete: Boolean
-        get() = domain.classes.none { clazz -> clazz.parentName == this.name } //Нет детей
-                || domain.objects.any { obj -> obj.className == this.name } //есть экземпляры
+        get() = domain.objects.any { obj -> obj.className == this.name } //есть экземпляры
 
     /**
      * Все отношения данного класса, с помощью которых возможна проекция;
