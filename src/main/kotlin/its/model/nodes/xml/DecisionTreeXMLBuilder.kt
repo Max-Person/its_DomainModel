@@ -5,7 +5,7 @@ import its.model.ValueTuple
 import its.model.build.xml.ElementBuildContext
 import its.model.build.xml.XMLBuildException
 import its.model.build.xml.XMLBuilder
-import its.model.definition.MetadataProperty
+import its.model.definition.build.DomainBuilderUtils
 import its.model.definition.types.Clazz
 import its.model.definition.types.EnumValue
 import its.model.definition.types.Obj
@@ -55,10 +55,12 @@ sealed class AbstractDecisionTreeXMLBuilder<T : DecisionTreeElement> : XMLBuilde
         for (i in 0 until el.attributes.length) {
             val attr = el.attributes.item(i)
             if (attr.nodeName.startsWith(ADDITIONAL_INFO_PREFIX)) {
-                val metadataName = attr.nodeName.drop(ADDITIONAL_INFO_PREFIX.length)
-                    .replace(ADDITIONAL_INFO_PREFIX, MetadataProperty.LOC_CODE_DELIMITER)
+                val (locCode, metaPropertyName) = DomainBuilderUtils.splitMetadataPropertyName(
+                    attr.nodeName.drop(ADDITIONAL_INFO_PREFIX.length),
+                    delimiter = '.'
+                )
 
-                metadata.add(MetadataProperty(metadataName), attr.nodeValue)
+                metadata.add(locCode, metaPropertyName, attr.nodeValue)
             }
         }
         return this

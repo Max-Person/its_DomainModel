@@ -308,9 +308,9 @@ class DomainLoqiWriter private constructor(
         if (this.isEmpty()) return
         writeln(" [")
         indent()
-        this.forEach { (property, value) ->
-            property.locCode?.also { write("${it.toLoqiName()}.") }
-            writeln("${property.name.toLoqiName()} = ${value.toLoqiValue()} ;")
+        this.entries.forEach { (locCode, propertyName, value) ->
+            locCode?.also { write("${it.toLoqiName()}.") }
+            writeln("${propertyName.toLoqiName()} = ${value.toLoqiValue()} ;")
         }
         unindent()
         write("]")

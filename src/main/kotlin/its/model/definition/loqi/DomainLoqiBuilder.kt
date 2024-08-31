@@ -248,7 +248,7 @@ class DomainLoqiBuilder private constructor(
 
             val value = metadataPropertyDecl.value().getTypeAndValue().value
 
-            this.metadata.add(MetadataProperty(propName, locCode), value)
+            this.metadata.add(locCode, propName, value)
         }
     }
 

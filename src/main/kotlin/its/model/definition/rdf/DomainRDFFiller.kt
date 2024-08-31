@@ -2,6 +2,7 @@ package its.model.definition.rdf
 
 import its.model.Utils.permutations
 import its.model.definition.*
+import its.model.definition.build.DomainBuilderUtils
 import its.model.definition.rdf.RDFUtils.POAS_PREF
 import its.model.definition.rdf.RDFUtils.RDFS_PREF
 import its.model.definition.rdf.RDFUtils.RDF_PREF
@@ -210,12 +211,9 @@ class DomainRDFFiller private constructor(
                 }
                 continue
             }
-            //Пытаемся распознать код локализации
-            val metaName = rdfStatement.predicate.name.replaceFirst("^([A-Z]{2})_(.+)".toRegex(), "$1.$2")
-            def.metadata.add(
-                MetadataProperty(metaName),
-                obj.asLiteral().value
-            )
+
+            val (locCode, metaProperty) = DomainBuilderUtils.splitMetadataPropertyName(rdfStatement.predicate.name)
+            def.metadata.add(locCode, metaProperty, obj.asLiteral().value)
         }
     }
 

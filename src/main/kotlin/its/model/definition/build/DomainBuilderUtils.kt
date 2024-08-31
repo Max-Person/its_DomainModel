@@ -25,12 +25,12 @@ object DomainBuilderUtils {
 
     @JvmStatic
     fun <O : DomainDefWithMeta<O>> O.addMeta(locCode: String, metaPropertyName: String, value: Any) {
-        metadata.add(MetadataProperty(metaPropertyName, locCode), value)
+        metadata.add(locCode, metaPropertyName, value)
     }
 
     @JvmStatic
     fun <O : DomainDefWithMeta<O>> O.addMeta(metaPropertyName: String, value: Any) {
-        metadata.add(MetadataProperty(metaPropertyName), value)
+        metadata.add(metaPropertyName, value)
     }
 
     @JvmStatic
@@ -57,5 +57,17 @@ object DomainBuilderUtils {
     @JvmStatic
     fun ObjectDef.addRelationship(relationshipName: String, vararg objectNames: String) {
         relationshipLinks.add(RelationshipLinkStatement(this, relationshipName, objectNames.toList()))
+    }
+
+
+    @JvmStatic
+    fun splitMetadataPropertyName(propertyName: String, delimiter: Char = '_'): MetadataProperty {
+        val splitRegex = "([A-Z]{2})$delimiter(.+)".toRegex()
+        val splitMatchResult = splitRegex.matchEntire(propertyName)
+        if (splitMatchResult != null) {
+            val (locCode, property) = splitMatchResult.destructured
+            return MetadataProperty(locCode, property)
+        }
+        return MetadataProperty(null, propertyName)
     }
 }

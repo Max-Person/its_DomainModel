@@ -1,6 +1,7 @@
 package its.model
 
 import java.net.URL
+import java.util.*
 
 /**
  * Общие вспомогательные функции
@@ -51,6 +52,10 @@ object Utils {
             }
         }
         return CollectionsDifference(onlyInFirst, inBoth, onlyInSecond)
+    }
+
+    fun <A, B> Pair<A, B>.toEntry(): Map.Entry<A, B> {
+        return AbstractMap.SimpleImmutableEntry(first, second)
     }
 }
 

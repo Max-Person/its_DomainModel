@@ -97,20 +97,15 @@ class DomainRDFWriter private constructor(
     }
 
     private fun MetaOwner.writeMetadata(ownerResource: Resource) {
-        for (meta in metadata) {
-            meta.writeProperty(ownerResource)
+        metadata.entries.forEach { (locCode, propertyName, value) ->
+            val metaName = (locCode?.plus("_") ?: "") + propertyName
+            return writeProperty(ownerResource, metaName, value)
         }
     }
 
     private fun PropertyValueStatement<*>.writeProperty(ownerResource: Resource) {
         return writeProperty(ownerResource, propertyName, value)
     }
-
-    private fun Map.Entry<MetadataProperty, Any>.writeProperty(ownerResource: Resource) {
-        val metaName = (key.locCode?.plus("_") ?: "") + key.name
-        return writeProperty(ownerResource, metaName, value)
-    }
-
     private fun writeProperty(ownerResource: Resource, propertyName: String, value: Any) {
         val rdfProp = rdfModel.getProperty(basePrefix, propertyName)
         when (value) {

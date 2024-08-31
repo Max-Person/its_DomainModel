@@ -11,15 +11,30 @@ package its.model.definition
  */
 class MetaData(
     private val owner: MetaOwner,
-) : Map<MetadataProperty, Any> {
-    private val declaredValues = mutableMapOf<MetadataProperty, Any>()
+) {
+    private val propertyNamesToLocalizations = mutableMapOf<String, MutableMap<String?, Any>>()
 
     /**
-     * Получить метаданные
+     * Получить список всех локализаций переданного свойства
+     * Возвращает мапу {код локализации -> значение свойства}
      */
-    override fun get(key: MetadataProperty): Any? {
-        return if (declaredValues.containsKey(key)) {
-            declaredValues[key]!!
+    fun getLocalizations(propertyName: String): Map<String?, Any> {
+        return propertyNamesToLocalizations[propertyName] ?: emptyMap()
+    }
+
+    /**
+     * Получить список всех локализаций переданного свойства, с предположением что они все строковые
+     * Возвращает мапу {код локализации -> значение свойства}
+     */
+    fun getStringLocalizations(propertyName: String): Map<String?, String> {
+        return getLocalizations(propertyName)
+            .map { (locCode, value) -> locCode to value as String }
+            .toMap()
+    }
+
+    private operator fun get(key: MetadataProperty): Any? {
+        return if (getLocalizations(key.name).containsKey(key.locCode)) {
+            getLocalizations(key.name)[key.locCode]
         } else if (owner is ClassInheritorDef<*> && owner.parentClass != null) {
             owner.parentClass!!.metadata[key]
         } else {
@@ -27,58 +42,109 @@ class MetaData(
         }
     }
 
-    operator fun get(key: String) = get(MetadataProperty(key))
+    /**
+     * Получить нелокализованные метаданные
+     */
+    operator fun get(name: String) = get(MetadataProperty(null, name))
 
     /**
-     * Получить метаданные, при уверенности что они есть
-     * @throws [NoMetadataException] если метаданных не оказалось
+     * Получить локализированные метаданные
      */
-    fun getAsserted(property: MetadataProperty): Any {
-        return get(property)
-            ?: throw NoMetadataException("No metadata property ${property.name} found for ${owner.description}")
-    }
-
-    fun getAsserted(property: String) = getAsserted(MetadataProperty(property))
+    operator fun get(locCode: String?, name: String) = get(MetadataProperty(locCode, name))
 
     /**
-     * Добавить метаданные
+     * Получить нелокализованные строковые метаданные
      */
-    fun add(property: MetadataProperty, value: Any) {
-        declaredValues[property] = value
+    fun getString(name: String) = get(name)!! as String
+
+    /**
+     * Получить локализированные строковые метаданные
+     */
+    fun getString(locCode: String?, name: String) = get(locCode, name)!! as String
+
+    private fun add(property: MetadataProperty, value: Any) {
+        propertyNamesToLocalizations.merge(
+            property.name,
+            mutableMapOf(property.locCode to value)
+        ) { thisLocCodes, otherLocCodes ->
+            thisLocCodes.apply { putAll(otherLocCodes) }
+        }
     }
+
+    /**
+     * Добавить нелокализованные метаданные
+     */
+    fun add(name: String, value: Any) = add(MetadataProperty(null, name), value)
+
+    /**
+     * Добавить локализированные метаданные
+     */
+    fun add(locCode: String?, name: String, value: Any) = add(MetadataProperty(locCode, name), value)
 
     /**
      * Добавить (без очистки, с перезаписью) метаданные из [other]
      */
     fun addAll(other: MetaData) {
-        declaredValues.putAll(other.declaredValues)
-    }
-
-    fun remove(property: MetadataProperty) {
-        declaredValues.remove(property)
-    }
-
-    fun subtract(other: MetaData) {
-        for ((k, v) in other) {
-            val existing = get(k) ?: continue
-            if (existing == v) {
-                remove(k)
+        other.propertyNamesToLocalizations.forEach { name, locCodes ->
+            this.propertyNamesToLocalizations.merge(name, locCodes) { thisLocCodes, otherLocCodes ->
+                thisLocCodes.apply { putAll(otherLocCodes) }
             }
         }
     }
 
-    override fun isEmpty() = declaredValues.isEmpty()
-    override val entries: Set<Map.Entry<MetadataProperty, Any>>
-        get() = declaredValues.entries
-    override val keys: Set<MetadataProperty>
-        get() = declaredValues.keys
-    override val size: Int
-        get() = declaredValues.size
-    override val values: Collection<Any>
-        get() = declaredValues.values
+    private fun remove(property: MetadataProperty) {
+        propertyNamesToLocalizations[property.name]?.apply {
+            remove(property.locCode)
+            if (isEmpty()) {
+                propertyNamesToLocalizations.remove(property.name)
+            }
+        }
+    }
 
-    override fun containsKey(key: MetadataProperty) = declaredValues.containsKey(key)
-    override fun containsValue(value: Any) = declaredValues.containsValue(value)
+    fun subtract(other: MetaData) {
+        for (propertyValue in other.entries) {
+            val key = propertyValue.justProperty()
+            val existing = get(key) ?: continue
+            if (existing == propertyValue.value) {
+                remove(key)
+            }
+        }
+    }
+
+    /**
+     * Есть ли в метаданных свойство [propertyName]
+     */
+    fun containsAny(propertyName: String): Boolean {
+        return propertyNamesToLocalizations.containsKey(propertyName)
+    }
+
+    /**
+     * Есть ли в метаданных нелокализованныое свойство [propertyName]
+     */
+    fun containsUnlocalized(propertyName: String): Boolean {
+        return get(propertyName) != null
+    }
+
+    /**
+     * Есть ли в метаданных локализованныое свойство [locCode].[propertyName]
+     */
+    fun containsLocalized(locCode: String, propertyName: String): Boolean {
+        return get(locCode, propertyName) != null
+    }
+
+    val size: Int
+        get() = propertyNamesToLocalizations.size
+
+    fun isEmpty() = propertyNamesToLocalizations.isEmpty()
+    fun isNotEmpty() = !isEmpty()
+
+    val entries: Set<MetadataPropertyValue>
+        get() = propertyNamesToLocalizations.flatMap { nameToLocCodes ->
+            nameToLocCodes.value.map { locCodeToValue ->
+                MetadataPropertyValue(locCodeToValue.key, nameToLocCodes.key, locCodeToValue.value)
+            }
+        }.toSet()
+
 
     companion object {
         private class SyntheticOwner : MetaOwner {
@@ -92,26 +158,27 @@ class MetaData(
 }
 
 /**
- * Свойство в метаданных
- * @param name Имя свойства
+ * Вспомогательный класс - свойство в метаданных
  * @param locCode Код локализации свойства (для локализируемых)
+ * @param name Имя свойства
  */
 data class MetadataProperty(
+    val locCode: String?,
     val name: String,
-    val locCode: String? = null,
+)
+
+/**
+ * Значение свойства в метаданных
+ * @param locCode Код локализации свойства (для локализируемых)
+ * @param propertyName Имя свойства
+ * @param value Значение свойства
+ */
+data class MetadataPropertyValue(
+    val locCode: String?,
+    val propertyName: String,
+    val value: Any,
 ) {
-
-    constructor(string: String) : this(
-        if (string.split(LOC_CODE_DELIMITER, limit = 2).size < 2) string
-        else string.split(LOC_CODE_DELIMITER, limit = 2)[1],
-
-        if (string.split(LOC_CODE_DELIMITER, limit = 2).size < 2) null
-        else string.split(LOC_CODE_DELIMITER, limit = 2)[0],
-    )
-
-    companion object {
-        const val LOC_CODE_DELIMITER = "."
-    }
+    fun justProperty() = MetadataProperty(locCode, propertyName)
 }
 
 /**
