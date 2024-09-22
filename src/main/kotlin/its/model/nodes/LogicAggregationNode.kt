@@ -1,6 +1,6 @@
 package its.model.nodes
 
-import its.model.definition.Domain
+import its.model.definition.DomainModel
 import its.model.nodes.visitors.LinkNodeBehaviour
 
 /**
@@ -21,7 +21,11 @@ class LogicAggregationNode(
     override val linkedElements: List<DecisionTreeElement>
         get() = thoughtBranches.toList().plus(outcomes)
 
-    override fun validate(domain: Domain, results: DecisionTreeValidationResults, context: DecisionTreeContext) {
+    override fun validate(
+        domainModel: DomainModel,
+        results: DecisionTreeValidationResults,
+        context: DecisionTreeContext
+    ) {
         results.checkValid(
             outcomes.containsKey(true) && outcomes.containsKey(false),
             "$description has to have both true and false outcomes"
@@ -31,7 +35,7 @@ class LogicAggregationNode(
             "$description has to have at least one ThoughtBranch"
         )
 
-        validateLinked(domain, results, context)
+        validateLinked(domainModel, results, context)
     }
 
     override fun <I> use(behaviour: LinkNodeBehaviour<I>): I {

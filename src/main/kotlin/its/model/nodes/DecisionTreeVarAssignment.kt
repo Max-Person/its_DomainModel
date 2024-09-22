@@ -1,7 +1,7 @@
 package its.model.nodes
 
 import its.model.TypedVariable
-import its.model.definition.Domain
+import its.model.definition.DomainModel
 import its.model.definition.types.ObjectType
 import its.model.expressions.Operator
 
@@ -18,12 +18,16 @@ class DecisionTreeVarAssignment(
     val variable: TypedVariable,
     val valueExpr: Operator,
 ) : HelperDecisionTreeElement() {
-    override fun validate(domain: Domain, results: DecisionTreeValidationResults, context: DecisionTreeContext) {
-        super.validate(domain, results, context)
-        variable.checkValid(domain, results, context, this)
-        val valueType = valueExpr.validateForDecisionTree(domain, results, context)
+    override fun validate(
+        domainModel: DomainModel,
+        results: DecisionTreeValidationResults,
+        context: DecisionTreeContext
+    ) {
+        super.validate(domainModel, results, context)
+        variable.checkValid(domainModel, results, context, this)
+        val valueType = valueExpr.validateForDecisionTree(domainModel, results, context)
         results.checkValid(
-            valueType is ObjectType && ObjectType(variable.className).castFits(valueType, domain),
+            valueType is ObjectType && ObjectType(variable.className).castFits(valueType, domainModel),
             "Value expression in $description ($parent) returns $valueType, but must return " +
                     "an object of type '${variable.className}' to conform to a variable ${variable.varName}"
         )
@@ -31,12 +35,12 @@ class DecisionTreeVarAssignment(
 }
 
 internal fun List<DecisionTreeVarAssignment>.validate(
-    domain: Domain,
+    domainModel: DomainModel,
     results: DecisionTreeValidationResults,
     context: DecisionTreeContext,
     owner: DecisionTreeElement
 ) {
-    forEach { it.validate(domain, results, context) }
+    forEach { it.validate(domainModel, results, context) }
     for ((i, secondaryAssignment) in this.withIndex()) {
         val others = this.subList(i + 1, this.size)
         results.checkValid(

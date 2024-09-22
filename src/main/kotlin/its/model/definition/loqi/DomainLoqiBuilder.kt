@@ -12,10 +12,10 @@ import java.io.Reader
 import java.util.concurrent.Callable
 
 /**
- * Построение объекта [Domain] на основе языка LOQI
+ * Построение объекта [DomainModel] на основе языка LOQI
  */
 class DomainLoqiBuilder private constructor(
-    val domain: Domain = Domain(),
+    val domainModel: DomainModel = DomainModel(),
 ) : LoqiGrammarBaseVisitor<Any?>() {
 
     companion object {
@@ -31,7 +31,7 @@ class DomainLoqiBuilder private constructor(
          * @throws LoqiDomainBuildException в случае возникновении ошибок при построении модели
          */
         @JvmStatic
-        fun buildDomain(reader: Reader): Domain {
+        fun buildDomain(reader: Reader): DomainModel {
             val lexer = LoqiGrammarLexer(CharStreams.fromReader(reader))
             val tokens = CommonTokenStream(lexer)
             val parser = LoqiGrammarParser(tokens)
@@ -46,7 +46,7 @@ class DomainLoqiBuilder private constructor(
             val builder = DomainLoqiBuilder()
             tree.accept(builder)
 
-            val domain = builder.domain
+            val domain = builder.domainModel
             builder.domainOpAt { domain.validateAndThrowInvalid() }
             return domain
         }
@@ -72,7 +72,7 @@ class DomainLoqiBuilder private constructor(
             parentName = ctx.id(1).getName()
         }
 
-        val clazz = domainOpAt(line) { domain.classes.added(ClassDef(name, parentName)) }
+        val clazz = domainOpAt(line) { domainModel.classes.added(ClassDef(name, parentName)) }
 
         for (classMember in ctx.classMemberDecl()) {
             if (classMember.propertyDecl() != null)
@@ -128,7 +128,7 @@ class DomainLoqiBuilder private constructor(
         val line = ctx.id().start.line
         val name = ctx.id().getName()
 
-        val enum = domainOpAt(line) { domain.enums.added(EnumDef(name)) }
+        val enum = domainOpAt(line) { domainModel.enums.added(EnumDef(name)) }
 
         for (enumValueDecl in ctx.enumMemberList()?.enumMemberDecl() ?: emptyList()) {
             val tmpValue = EnumValueDef(enum.name, enumValueDecl.id().getName())
@@ -144,7 +144,7 @@ class DomainLoqiBuilder private constructor(
         val name = ctx.id(0).getName()
         val className = ctx.id(1).getName()
 
-        val obj = domainOpAt(line) { domain.objects.added(ObjectDef(name, className)) }
+        val obj = domainOpAt(line) { domainModel.objects.added(ObjectDef(name, className)) }
 
         for (objStatement in ctx.objStatement()) {
             if (objStatement.propertyValueStatement() != null)
@@ -159,7 +159,7 @@ class DomainLoqiBuilder private constructor(
 
         if (ctx.varLeftPart() != null) {
             for (varId in ctx.varLeftPart().idList().id()) {
-                domainOpAt(varId.start.line) { domain.variables.add(VariableDef(varId.getName(), obj.name)) }
+                domainOpAt(varId.start.line) { domainModel.variables.add(VariableDef(varId.getName(), obj.name)) }
             }
         }
     }
@@ -183,7 +183,7 @@ class DomainLoqiBuilder private constructor(
     override fun visitVarDecl(ctx: VarDeclContext) {
         val valueObjectName = ctx.id().getName()
         for (id in ctx.varLeftPart().idList().id()) {
-            domainOpAt(id.start.line) { domain.variables.add(VariableDef(id.getName(), valueObjectName)) }
+            domainOpAt(id.start.line) { domainModel.variables.add(VariableDef(id.getName(), valueObjectName)) }
         }
     }
 
@@ -194,7 +194,7 @@ class DomainLoqiBuilder private constructor(
 
         if (syntheticObj.metadata.isEmpty()) return //Пустые метаданные игнорируем
 
-        domainOpAt(ctx.metaRef().start.line) { domain.separateMetadata.add(ref, syntheticObj.metadata) }
+        domainOpAt(ctx.metaRef().start.line) { domainModel.separateMetadata.add(ref, syntheticObj.metadata) }
     }
 
     override fun visitAddClassDataDecl(ctx: AddClassDataDeclContext) {
@@ -212,7 +212,7 @@ class DomainLoqiBuilder private constructor(
         if (syntheticClass.definedPropertyValues.isEmpty()) return //пустые стейтменты игнорируем
 
         domainOpAt(ctx.id().start.line) {
-            domain.separateClassPropertyValues.add(ref, syntheticClass.definedPropertyValues)
+            domainModel.separateClassPropertyValues.add(ref, syntheticClass.definedPropertyValues)
         }
     }
 

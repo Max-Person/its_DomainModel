@@ -1,6 +1,6 @@
 package its.model.expressions.operators
 
-import its.model.definition.Domain
+import its.model.definition.DomainModel
 import its.model.definition.types.NoneType
 import its.model.definition.types.Type
 import its.model.expressions.ExpressionContext
@@ -21,11 +21,11 @@ class Block(
         get() = nestedExprs
 
     override fun validateAndGetType(
-        domain: Domain,
+        domainModel: DomainModel,
         results: ExpressionValidationResults,
         context: ExpressionContext
     ): Type<*> {
-        nestedExprs.forEach { it.validateAndGetType(domain, results, context) }
+        nestedExprs.forEach { it.validateAndGetType(domainModel, results, context) }
         return NoneType
     }
 

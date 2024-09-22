@@ -1,6 +1,6 @@
 package its.model.nodes
 
-import its.model.definition.Domain
+import its.model.definition.DomainModel
 import its.model.definition.types.BooleanType
 import its.model.expressions.Operator
 import its.model.nodes.visitors.LinkNodeBehaviour
@@ -26,8 +26,12 @@ class WhileAggregationNode(
     override val linkedElements: List<DecisionTreeElement>
         get() = listOf(thoughtBranch).plus(outcomes)
 
-    override fun validate(domain: Domain, results: DecisionTreeValidationResults, context: DecisionTreeContext) {
-        val conditionType = conditionExpr.validateForDecisionTree(domain, results, context)
+    override fun validate(
+        domainModel: DomainModel,
+        results: DecisionTreeValidationResults,
+        context: DecisionTreeContext
+    ) {
+        val conditionType = conditionExpr.validateForDecisionTree(domainModel, results, context)
         results.checkValid(
             conditionType is BooleanType,
             "Condition expression for the $description returns $conditionType, but must return a boolean"
@@ -37,7 +41,7 @@ class WhileAggregationNode(
             "$description has to have both true and false outcomes"
         )
 
-        validateLinked(domain, results, context)
+        validateLinked(domainModel, results, context)
     }
 
     override fun <I> use(behaviour: LinkNodeBehaviour<I>): I {

@@ -1,6 +1,6 @@
 package its.model.expressions.operators
 
-import its.model.definition.Domain
+import its.model.definition.DomainModel
 import its.model.definition.types.ClassType
 import its.model.definition.types.ObjectType
 import its.model.definition.types.Type
@@ -25,18 +25,18 @@ class Cast(
         get() = listOf(objectExpr, classExpr)
 
     override fun validateAndGetType(
-        domain: Domain,
+        domainModel: DomainModel,
         results: ExpressionValidationResults,
         context: ExpressionContext
     ): Type<*> {
-        val objType = objectExpr.validateAndGetType(domain, results, context)
+        val objType = objectExpr.validateAndGetType(domainModel, results, context)
         val objIsOfObjectType = objType is ObjectType
         results.checkValid(
             objIsOfObjectType,
             "Object-argument of $description should be an object, but was $objType"
         )
 
-        val classType = classExpr.validateAndGetType(domain, results, context)
+        val classType = classExpr.validateAndGetType(domainModel, results, context)
         val classIsOfClassType = classType is ClassType
         results.checkValid(
             classIsOfClassType,
@@ -49,10 +49,10 @@ class Cast(
         if (!objIsOfObjectType) return type
 
         objType as ObjectType
-        if (!objType.exists(domain) || !classType.exists(domain)) return type
+        if (!objType.exists(domainModel) || !classType.exists(domainModel)) return type
 
         results.checkConforming(
-            objType.castFits(type, domain),
+            objType.castFits(type, domainModel),
             "$description casts an object of type '${objType.className}' to type '${classType.className}'," +
                     "which can never succeed, as '${classType.className}' is not a subtype of '${objType.className}'"
         )

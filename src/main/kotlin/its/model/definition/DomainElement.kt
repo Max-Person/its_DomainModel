@@ -3,15 +3,15 @@ package its.model.definition
 import its.model.Describable
 
 /**
- * Любой элемент домена
+ * Любой элемент модели домена [DomainModel]
  *
  * Имеет ссылку на домен, в котором содержится, и функции для валидации
  */
 abstract class DomainElement : Describable {
     /**
-     * Домен, в котором содержится элемент
+     * Модель домена, в которой содержится элемент
      */
-    abstract val domain: Domain
+    abstract val domainModel: DomainModel
 
     /**
      * Строковое описание элемента домена

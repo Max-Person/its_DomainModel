@@ -1,7 +1,7 @@
 package its.model.expressions
 
 import its.model.Describable
-import its.model.definition.Domain
+import its.model.definition.DomainModel
 import its.model.definition.types.Type
 import its.model.expressions.visitors.OperatorBehaviour
 
@@ -31,32 +31,32 @@ abstract class Operator : Cloneable, Describable {
     /**
      * Динамически определяемый тип данных оператора
      */
-    open fun resolvedType(domain: Domain): Type<*> =
-        validateAndGetType(domain, ExpressionValidationResults(true), ExpressionContext())
+    open fun resolvedType(domainModel: DomainModel): Type<*> =
+        validateAndGetType(domainModel, ExpressionValidationResults(true), ExpressionContext())
 
     /**
      * Валидация - провалидировать выражение (с учетом контекста [context]) и положить все потенциальные ошибки в [results]
      */
     internal abstract fun validateAndGetType(
-        domain: Domain,
+        domainModel: DomainModel,
         results: ExpressionValidationResults,
         context: ExpressionContext,
     ): Type<*>
 
     fun validateAndGet(
-        domain: Domain,
+        domainModel: DomainModel,
         context: ExpressionContext = ExpressionContext(),
     ): Pair<Type<*>, ExpressionValidationResults> {
         val results = ExpressionValidationResults()
-        val type = validateAndGetType(domain, results, context)
+        val type = validateAndGetType(domainModel, results, context)
         return type to results
     }
 
     /**
      * Валидация - провалидировать выражение (с учетом контекста [context])
      */
-    fun validate(domain: Domain, context: ExpressionContext = ExpressionContext()) {
-        validateAndGetType(domain, ExpressionValidationResults(true), context)
+    fun validate(domainModel: DomainModel, context: ExpressionContext = ExpressionContext()) {
+        validateAndGetType(domainModel, ExpressionValidationResults(true), context)
     }
 
     /**

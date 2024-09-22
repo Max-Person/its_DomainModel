@@ -1,7 +1,7 @@
 package its.model
 
 import its.model.Utils.plus
-import its.model.definition.Domain
+import its.model.definition.DomainModel
 import its.model.definition.compat.DomainDictionariesRDFBuilder
 import its.model.definition.loqi.DomainLoqiBuilder
 import its.model.nodes.DecisionTree
@@ -11,13 +11,13 @@ import java.net.URL
 
 /**
  * Решение задач в предметной области
- * @param domain описание предметной области (домена), общее для всех ситуаций применения
+ * @param domainModel описание предметной области (домена), общее для всех ситуаций применения
  * @param tagsData части предметной области, специфичные для отдельных ситуаций применения (т.н. теги)
  * @param decisionTrees деревья решений, описывающие решение задач в предметной области
  */
 class DomainSolvingModel(
-    val domain: Domain,
-    val tagsData: Map<String, Domain>,
+    val domainModel: DomainModel,
+    val tagsData: Map<String, DomainModel>,
     val decisionTrees: Map<String, DecisionTree>,
 ) {
 
@@ -44,11 +44,11 @@ class DomainSolvingModel(
             : this(File(directoryPath).toURI().toURL(), buildMethod)
 
 
-    constructor(domain: Domain, decisionTreeDirectoryURL: URL)
-            : this(domain, emptyMap(), collectTrees(decisionTreeDirectoryURL))
+    constructor(domainModel: DomainModel, decisionTreeDirectoryURL: URL)
+            : this(domainModel, emptyMap(), collectTrees(decisionTreeDirectoryURL))
 
-    constructor(domain: Domain, decisionTreeDirectoryPath: String)
-            : this(domain, File(decisionTreeDirectoryPath).toURI().toURL())
+    constructor(domainModel: DomainModel, decisionTreeDirectoryPath: String)
+            : this(domainModel, File(decisionTreeDirectoryPath).toURI().toURL())
 
 
     companion object {
@@ -56,7 +56,7 @@ class DomainSolvingModel(
          * Построить домен на основе файлов в директории
          */
         @JvmStatic
-        fun collectDomain(directoryURL: URL, buildMethod: BuildMethod = BuildMethod.DICT_RDF): Domain {
+        fun collectDomain(directoryURL: URL, buildMethod: BuildMethod = BuildMethod.DICT_RDF): DomainModel {
             return when (buildMethod) {
                 BuildMethod.LOQI -> DomainLoqiBuilder.buildDomain(
                     (directoryURL + "domain.loqi").openStream().bufferedReader()
@@ -67,7 +67,7 @@ class DomainSolvingModel(
         }
 
         @JvmStatic
-        fun collectTags(directoryURL: URL): Map<String, Domain> {
+        fun collectTags(directoryURL: URL): Map<String, DomainModel> {
             return DirectoryScanUtils.findFilesMatching(directoryURL, Regex("tag_(\\S+)\\.loqi"))
                 .map { (fileUrl, regexMatch) ->
                     val (name) = regexMatch.destructured
@@ -99,13 +99,13 @@ class DomainSolvingModel(
      * @return this
      */
     fun validate(): DomainSolvingModel {
-        domain.validateAndThrow()
+        domainModel.validateAndThrow()
         tagsData.values.forEach { tagDomain ->
             tagDomain.copy()
-                .apply { addMerge(this@DomainSolvingModel.domain) }
+                .apply { addMerge(this@DomainSolvingModel.domainModel) }
                 .validateAndThrow()
         }
-        decisionTrees.values.forEach { it.validate(domain) }
+        decisionTrees.values.forEach { it.validate(domainModel) }
         return this
     }
 
@@ -128,11 +128,11 @@ class DomainSolvingModel(
 
     /**
      * Получить обобщенную модель домена,
-     * созданную из [domain]-модели и тег-модели из [tagsData] по переданному имени [name]
+     * созданную из [domainModel]-модели и тег-модели из [tagsData] по переданному имени [name]
      */
-    fun getMergedTagDomain(name: String): Domain {
+    fun getMergedTagDomain(name: String): DomainModel {
         require(tagsData.containsKey(name)) { "DomainSolvingModel does not have a tag Domain model named '$name'" }
-        return domain.copy().apply { addMerge(tagsData[name]!!) }
+        return domainModel.copy().apply { addMerge(tagsData[name]!!) }
     }
 
 }

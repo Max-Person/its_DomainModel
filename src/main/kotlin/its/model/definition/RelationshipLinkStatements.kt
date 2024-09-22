@@ -25,7 +25,7 @@ class RelationshipLinkStatement(
 
     internal fun getKnownObjects(results: DomainValidationResults): List<ObjectDef?> {
         return objectNames.map { objectName ->
-            val obj = domain.objects.get(objectName)
+            val obj = domainModel.objects.get(objectName)
             results.checkKnown(
                 obj != null,
                 "No object definition '$objectName' found, while $description uses it as one of its objects"

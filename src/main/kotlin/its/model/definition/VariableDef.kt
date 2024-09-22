@@ -10,7 +10,7 @@ class VariableDef(
     override val reference = VariableRef(name)
 
     internal fun getKnownValueObject(results: DomainValidationResults): ObjectDef? {
-        val obj = domain.objects.get(valueObjectName)
+        val obj = domainModel.objects.get(valueObjectName)
         results.checkKnown(
             obj != null,
             "No object definition '$valueObjectName' found for variable $name"
@@ -33,12 +33,12 @@ class VariableDef(
         get() = getKnownValueObject(DomainValidationResultsThrowImmediately())!!
 }
 
-class VariableContainer(domain: Domain) : RootDefContainer<VariableDef>(domain)
+class VariableContainer(domainModel: DomainModel) : RootDefContainer<VariableDef>(domainModel)
 
 class VariableRef(
     val varName: String,
 ) : DomainRef<VariableDef> {
-    override fun findIn(domain: Domain) = domain.variables.get(varName)
+    override fun findIn(domainModel: DomainModel) = domainModel.variables.get(varName)
     override fun toString() = "variable $varName"
 
     override fun equals(other: Any?): Boolean {

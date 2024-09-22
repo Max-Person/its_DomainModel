@@ -1,6 +1,6 @@
 package its.model.expressions.literals
 
-import its.model.definition.Domain
+import its.model.definition.DomainModel
 import its.model.definition.types.ObjectType
 import its.model.definition.types.Type
 import its.model.expressions.ExpressionContext
@@ -15,7 +15,7 @@ import its.model.expressions.visitors.LiteralBehaviour
 class DecisionTreeVarLiteral(name: String) : ReferenceLiteral(name) {
 
     override fun validateAndGetType(
-        domain: Domain,
+        domainModel: DomainModel,
         results: ExpressionValidationResults,
         context: ExpressionContext
     ): Type<*> {

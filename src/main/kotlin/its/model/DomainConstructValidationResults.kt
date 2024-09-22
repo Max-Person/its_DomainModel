@@ -1,12 +1,12 @@
 package its.model
 
-import its.model.definition.Domain
+import its.model.definition.DomainModel
 import its.model.definition.DomainNonConformityException
 import its.model.definition.DomainUseException
 import java.util.*
 
 /**
- * Ошибка построения зависимой от домена [Domain] структуры
+ * Ошибка построения зависимой от домена [DomainModel] структуры
  */
 open class InvalidDomainConstructException : DomainUseException {
     constructor() : super()
@@ -27,7 +27,7 @@ open class InvalidDomainConstructException : DomainUseException {
 }
 
 /**
- * Хранилище ошибок валидации зависимой от домена [Domain] структуры
+ * Хранилище ошибок валидации зависимой от домена [DomainModel] структуры
  */
 open class DomainConstructValidationResults(val throwImmediately: Boolean = false) {
     val invalids = mutableSetOf<InvalidDomainConstructException>()

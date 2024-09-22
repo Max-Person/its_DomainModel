@@ -1,7 +1,7 @@
 package its.model.expressions.operators
 
 import its.model.definition.ClassDef
-import its.model.definition.Domain
+import its.model.definition.DomainModel
 import its.model.definition.RelationshipDef
 import its.model.definition.types.BooleanType
 import its.model.definition.types.ObjectType
@@ -29,13 +29,13 @@ class CheckRelationship(
         get() = listOf(subjectExpr).plus(objectExprs)
 
     override fun validateAndGetType(
-        domain: Domain,
+        domainModel: DomainModel,
         results: ExpressionValidationResults,
         context: ExpressionContext
     ): Type<*> {
         val type = BooleanType
 
-        val objectTypes = objectExprs.map { it.validateAndGetType(domain, results, context) }
+        val objectTypes = objectExprs.map { it.validateAndGetType(domainModel, results, context) }
         val areAllObjectsOfObjectType = objectTypes.all { it is ObjectType }
         results.checkValid(
             areAllObjectsOfObjectType,
@@ -43,17 +43,17 @@ class CheckRelationship(
                     "but were ${objectTypes.joinToString(", ")}"
         )
 
-        val subjType = subjectExpr.validateAndGetType(domain, results, context)
+        val subjType = subjectExpr.validateAndGetType(domainModel, results, context)
         if (subjType !is ObjectType) {
             results.invalid("Subject-argument of $description should be an object, but was $subjType")
             return type
         }
-        if (!subjType.exists(domain)) {
+        if (!subjType.exists(domainModel)) {
             //Если невалидный класс, это кинется где-то ниже (где этот тип создавался)
             return type
         }
 
-        val clazz = subjType.findIn(domain)
+        val clazz = subjType.findIn(domainModel)
         val relationship = getRelationship(clazz, results) ?: return type
 
         val isCorrectObjectCount = objectExprs.size == relationship.objectClassNames.size
@@ -70,7 +70,7 @@ class CheckRelationship(
             val expectedType = ObjectType(expectedClassName)
             objectType as ObjectType
             results.checkConforming(
-                expectedType.castFits(objectType, domain) || expectedType.projectFits(objectType, domain),
+                expectedType.castFits(objectType, domainModel) || expectedType.projectFits(objectType, domainModel),
                 "Link object at index $i in a ${relationship.description} " +
                         "is expected to be of type $expectedClassName, but was ${objectType.className}; " +
                         "No valid projections available (in $description)"

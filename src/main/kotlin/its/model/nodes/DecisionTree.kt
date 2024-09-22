@@ -1,7 +1,7 @@
 package its.model.nodes
 
 import its.model.TypedVariable
-import its.model.definition.Domain
+import its.model.definition.DomainModel
 
 /**
  * Дерево решений (рассуждений/мысли), описывающее решение задач внутри домена
@@ -20,12 +20,16 @@ class DecisionTree(
     override val linkedElements: List<DecisionTreeElement>
         get() = listOf(mainBranch).plus(implicitVariables)
 
-    override fun validate(domain: Domain, results: DecisionTreeValidationResults, context: DecisionTreeContext) {
+    override fun validate(
+        domainModel: DomainModel,
+        results: DecisionTreeValidationResults,
+        context: DecisionTreeContext
+    ) {
         variables.forEach {
-            it.checkValid(domain, results, context, this)
+            it.checkValid(domainModel, results, context, this)
             context.add(it)
         }
-        implicitVariables.validate(domain, results, context, this)
-        mainBranch.validate(domain, results, context)
+        implicitVariables.validate(domainModel, results, context, this)
+        mainBranch.validate(domainModel, results, context)
     }
 }

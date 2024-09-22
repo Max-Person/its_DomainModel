@@ -1,6 +1,6 @@
 package its.model.expressions.operators
 
-import its.model.definition.Domain
+import its.model.definition.DomainModel
 import its.model.definition.types.AnyType
 import its.model.definition.types.BooleanType
 import its.model.definition.types.NumericType
@@ -81,12 +81,12 @@ class CompareWithComparisonOperator(
         get() = listOf(firstExpr, secondExpr)
 
     override fun validateAndGetType(
-        domain: Domain,
+        domainModel: DomainModel,
         results: ExpressionValidationResults,
         context: ExpressionContext
     ): Type<*> {
-        val firstType = firstExpr.validateAndGetType(domain, results, context)
-        val secondType = secondExpr.validateAndGetType(domain, results, context)
+        val firstType = firstExpr.validateAndGetType(domainModel, results, context)
+        val secondType = secondExpr.validateAndGetType(domainModel, results, context)
         results.checkValid(
             operator.isEquality || (firstType is NumericType && secondType is NumericType),
             "Comparison operator $operator is not compatible with non-numeric types " +

@@ -1,7 +1,7 @@
 package its.model.nodes
 
 import its.model.TypedVariable
-import its.model.definition.Domain
+import its.model.definition.DomainModel
 import its.model.definition.types.BooleanType
 import its.model.expressions.Operator
 import its.model.nodes.visitors.LinkNodeBehaviour
@@ -35,11 +35,15 @@ class CycleAggregationNode(
     override val linkedElements: List<DecisionTreeElement>
         get() = listOf(thoughtBranch).plus(outcomes)
 
-    override fun validate(domain: Domain, results: DecisionTreeValidationResults, context: DecisionTreeContext) {
-        variable.checkValid(domain, results, context, this)
+    override fun validate(
+        domainModel: DomainModel,
+        results: DecisionTreeValidationResults,
+        context: DecisionTreeContext
+    ) {
+        variable.checkValid(domainModel, results, context, this)
 
         val selectorType = selectorExpr.validateForDecisionTree(
-            domain,
+            domainModel,
             results,
             context,
             withVariables = mapOf(variable.varName to variable.className)
@@ -54,12 +58,12 @@ class CycleAggregationNode(
             "$description has to have both true and false outcomes"
         )
 
-        validateLinked(domain, results, context, errorCategories)
+        validateLinked(domainModel, results, context, errorCategories)
 
         context.add(variable)
-        thoughtBranch.validate(domain, results, context)
+        thoughtBranch.validate(domainModel, results, context)
         context.remove(variable)
-        validateLinked(domain, results, context, linkedElements.minus(thoughtBranch))
+        validateLinked(domainModel, results, context, linkedElements.minus(thoughtBranch))
     }
 
     override fun <I> use(behaviour: LinkNodeBehaviour<I>): I {

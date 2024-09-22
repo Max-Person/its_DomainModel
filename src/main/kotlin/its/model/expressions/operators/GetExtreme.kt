@@ -1,7 +1,7 @@
 package its.model.expressions.operators
 
 import its.model.TypedVariable
-import its.model.definition.Domain
+import its.model.definition.DomainModel
 import its.model.definition.types.BooleanType
 import its.model.definition.types.ObjectType
 import its.model.definition.types.Type
@@ -32,22 +32,22 @@ class GetExtreme(
         get() = listOf(conditionExpr)
 
     override fun validateAndGetType(
-        domain: Domain,
+        domainModel: DomainModel,
         results: ExpressionValidationResults,
         context: ExpressionContext
     ): Type<*> {
-        TypedVariable(className, varName).checkValid(domain, results, context, this)
+        TypedVariable(className, varName).checkValid(domainModel, results, context, this)
         context.variableTypes[varName] = className
-        val conditionType = conditionExpr.validateAndGetType(domain, results, context)
+        val conditionType = conditionExpr.validateAndGetType(domainModel, results, context)
         context.variableTypes.remove(varName)
         results.checkValid(
             conditionType is BooleanType,
             "Condition argument of $description should be of boolean type, but was '$conditionType'"
         )
 
-        TypedVariable(className, extremeVarName).checkValid(domain, results, context, this)
+        TypedVariable(className, extremeVarName).checkValid(domainModel, results, context, this)
         context.variableTypes[extremeVarName] = className
-        val extremeConditionType = extremeConditionExpr.validateAndGetType(domain, results, context)
+        val extremeConditionType = extremeConditionExpr.validateAndGetType(domainModel, results, context)
         context.variableTypes.remove(extremeVarName)
         results.checkValid(
             extremeConditionType is BooleanType,

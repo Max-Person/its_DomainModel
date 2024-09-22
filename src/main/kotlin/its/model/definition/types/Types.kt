@@ -14,7 +14,7 @@ sealed class Type<T : Any>(
     /**
      * Можно ли привести значение [value] к данному типу
      */
-    open fun fits(value: Any, inDomain: Domain): Boolean {
+    open fun fits(value: Any, inDomainModel: DomainModel): Boolean {
         return fits(value)
     }
 
@@ -28,7 +28,7 @@ sealed class Type<T : Any>(
     /**
      * Можно ли привести тип [subType] к данному типу
      */
-    open fun castFits(subType: Type<*>, inDomain: Domain): Boolean {
+    open fun castFits(subType: Type<*>, inDomainModel: DomainModel): Boolean {
         return castFits(subType)
     }
 
@@ -161,20 +161,20 @@ sealed class DomainRefType<Value : Any, Ref : DomainRef<Def>, Def : DomainDef<De
     /**
      * Существует ли тип в домене
      */
-    open fun exists(domain: Domain): Boolean = reference.findIn(domain) != null
+    open fun exists(domainModel: DomainModel): Boolean = reference.findIn(domainModel) != null
 
     /**
      * Найти соответствующее типу определение в домене
      */
-    fun findIn(domain: Domain): Def = reference.findInOrUnkown(domain)
+    fun findIn(domainModel: DomainModel): Def = reference.findInOrUnkown(domainModel)
 
-    override fun fits(value: Any, inDomain: Domain): Boolean {
-        if (!this.exists(inDomain)) return false
-        return super.fits(value, inDomain)
+    override fun fits(value: Any, inDomainModel: DomainModel): Boolean {
+        if (!this.exists(inDomainModel)) return false
+        return super.fits(value, inDomainModel)
     }
 
-    override fun castFits(subType: Type<*>, inDomain: Domain): Boolean {
-        if (!this.exists(inDomain)) return false
+    override fun castFits(subType: Type<*>, inDomainModel: DomainModel): Boolean {
+        if (!this.exists(inDomainModel)) return false
         return super.castFits(subType)
     }
 }
@@ -192,12 +192,12 @@ open class EnumType(
     override val reference: EnumRef
         get() = EnumRef(enumName)
 
-    override fun fits(value: Any, inDomain: Domain): Boolean {
-        if (!super.fits(value, inDomain)) return false
+    override fun fits(value: Any, inDomainModel: DomainModel): Boolean {
+        if (!super.fits(value, inDomainModel)) return false
 
         value as EnumValue
 
-        val enum = this.findIn(inDomain)
+        val enum = this.findIn(inDomainModel)
         return enum.name == value.enumName && enum.values.get(value.valueName) != null
     }
 
@@ -247,25 +247,25 @@ sealed class ClassInheritorType<Value : DomainRef<Inheritor>, Inheritor : ClassI
     protected val isUntyped
         get() = className == UNTYPED
 
-    override fun exists(domain: Domain): Boolean = !isUntyped && super.exists(domain)
+    override fun exists(domainModel: DomainModel): Boolean = !isUntyped && super.exists(domainModel)
 
     override val reference: ClassRef
         get() = ClassRef(className)
 
-    override fun fits(value: Any, inDomain: Domain): Boolean {
-        if (!super.fits(value, inDomain)) return false
+    override fun fits(value: Any, inDomainModel: DomainModel): Boolean {
+        if (!super.fits(value, inDomainModel)) return false
         value as Value
 
-        return value.findIn(inDomain)?.inheritsFrom(this.findIn(inDomain)) ?: false
+        return value.findIn(inDomainModel)?.inheritsFrom(this.findIn(inDomainModel)) ?: false
     }
 
-    override fun castFits(subType: Type<*>, inDomain: Domain): Boolean {
+    override fun castFits(subType: Type<*>, inDomainModel: DomainModel): Boolean {
         if (subType::class != this::class) return false
         subType as ClassInheritorType<Value, Inheritor>
-        if (!this.exists(inDomain) || !subType.exists(inDomain)) return false
+        if (!this.exists(inDomainModel) || !subType.exists(inDomainModel)) return false
 
-        val thisClazz = this.findIn(inDomain)
-        val otherClazz = subType.findIn(inDomain)
+        val thisClazz = this.findIn(inDomainModel)
+        val otherClazz = subType.findIn(inDomainModel)
         return otherClazz.isSubclassOf(thisClazz)
     }
 
@@ -318,13 +318,13 @@ class ObjectType(className: String) : ClassInheritorType<Obj, ObjectDef>(classNa
         fun untyped() = ObjectType(UNTYPED)
     }
 
-    fun projectFits(subType: Type<*>, inDomain: Domain): Boolean {
+    fun projectFits(subType: Type<*>, inDomainModel: DomainModel): Boolean {
         if (subType::class != this::class) return false
         subType as ObjectType
-        if (!this.exists(inDomain) || !subType.exists(inDomain)) return false
+        if (!this.exists(inDomainModel) || !subType.exists(inDomainModel)) return false
 
-        val thisClazz = this.findIn(inDomain)
-        val otherClazz = subType.findIn(inDomain)
+        val thisClazz = this.findIn(inDomainModel)
+        val otherClazz = subType.findIn(inDomainModel)
         return otherClazz.canBeProjectedOnto(thisClazz)
     }
 }

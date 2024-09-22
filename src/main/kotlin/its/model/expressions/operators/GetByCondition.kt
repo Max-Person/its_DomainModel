@@ -1,7 +1,7 @@
 package its.model.expressions.operators
 
 import its.model.TypedVariable
-import its.model.definition.Domain
+import its.model.definition.DomainModel
 import its.model.definition.types.BooleanType
 import its.model.definition.types.ObjectType
 import its.model.definition.types.Type
@@ -26,14 +26,14 @@ class GetByCondition(
         get() = listOf(conditionExpr)
 
     override fun validateAndGetType(
-        domain: Domain,
+        domainModel: DomainModel,
         results: ExpressionValidationResults,
         context: ExpressionContext
     ): Type<*> {
-        variable.checkValid(domain, results, context, this)
+        variable.checkValid(domainModel, results, context, this)
 
         context.variableTypes[variable.varName] = variable.className
-        val conditionType = conditionExpr.validateAndGetType(domain, results, context)
+        val conditionType = conditionExpr.validateAndGetType(domainModel, results, context)
         context.variableTypes.remove(variable.varName)
         results.checkValid(
             conditionType is BooleanType,

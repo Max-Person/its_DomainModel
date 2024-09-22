@@ -1,7 +1,7 @@
 package its.model.nodes
 
 import its.model.ValueTuple
-import its.model.definition.Domain
+import its.model.definition.DomainModel
 import its.model.definition.types.Type
 import its.model.expressions.Operator
 import its.model.nodes.visitors.LinkNodeBehaviour
@@ -35,13 +35,17 @@ class TupleQuestionNode(
         override val description: String
             get() = "${owner.description} (${super.description})"
 
-        override fun validate(domain: Domain, results: DecisionTreeValidationResults, context: DecisionTreeContext) {
-            val exprType = expr.validateForDecisionTree(domain, results, context)
+        override fun validate(
+            domainModel: DomainModel,
+            results: DecisionTreeValidationResults,
+            context: DecisionTreeContext
+        ) {
+            val exprType = expr.validateForDecisionTree(domainModel, results, context)
             results.checkValid(possibleOutcomes.size >= 2, "$description must contain at least two outcomes")
             for (outcome in possibleOutcomes) {
                 val outcomeType = Type.of(outcome.value)
                 results.checkValid(
-                    exprType.castFits(outcomeType, domain),
+                    exprType.castFits(outcomeType, domainModel),
                     "Outcome key '${outcome.value}' cannot be cast to the expression's type '$exprType' (in $description)"
                 )
             }
@@ -52,13 +56,17 @@ class TupleQuestionNode(
         val value: Any
     ) : HelperDecisionTreeElement()
 
-    override fun validate(domain: Domain, results: DecisionTreeValidationResults, context: DecisionTreeContext) {
+    override fun validate(
+        domainModel: DomainModel,
+        results: DecisionTreeValidationResults,
+        context: DecisionTreeContext
+    ) {
         results.checkValid(
             parts.size >= 2,
             "$description must contain at least two question parts (for a single part use a regular QuestionNode)"
         )
-        validateLinked(domain, results, context, parts)
-        val exprTypes = parts.map { it.expr.validateForDecisionTree(domain, results, context) }
+        validateLinked(domainModel, results, context, parts)
+        val exprTypes = parts.map { it.expr.validateForDecisionTree(domainModel, results, context) }
         for (outcome in outcomes) {
             results.checkValid(
                 outcome.key.size == parts.size,
@@ -70,13 +78,13 @@ class TupleQuestionNode(
                 val outcomeValue = outcome.key[i] ?: return
                 val outcomeType = Type.of(outcomeValue)
                 results.checkValid(
-                    exprType.castFits(outcomeType, domain),
+                    exprType.castFits(outcomeType, domainModel),
                     "Outcome value '${outcomeValue}' cannot be cast to the type '$exprType' " +
                             "of a corresponding expression in $description"
                 )
             }
         }
-        validateLinked(domain, results, context)
+        validateLinked(domainModel, results, context)
     }
 
 

@@ -11,23 +11,23 @@ sealed class DomainDef<Self : DomainDef<Self>> : DomainElement(), Cloneable {
     override fun toString() = description
     abstract val reference: DomainRef<Self>
 
-    internal var belongsToDomain: Domain? = null
+    internal var domainModelInternal: DomainModel? = null
         private set
 
-    override var domain: Domain
+    override var domainModel: DomainModel
         internal set(value) {
             preventMisuse(
-                this.belongsToDomain == null || this.belongsToDomain == value,
+                this.domainModelInternal == null || this.domainModelInternal == value,
                 "Attempting to change the 'domain' property of a $description once it's set"
             )
-            this.belongsToDomain = value
+            this.domainModelInternal = value
         }
-        get() : Domain {
+        get() : DomainModel {
             preventMisuse(
-                this.belongsToDomain != null,
+                this.domainModelInternal != null,
                 "Attempting to access the 'domain' property of a $description before it is set"
             )
-            return this.belongsToDomain!!
+            return this.domainModelInternal!!
         }
 
     /**
@@ -36,7 +36,11 @@ sealed class DomainDef<Self : DomainDef<Self>> : DomainElement(), Cloneable {
      */
     fun deepCopy() = plainCopy().also { it.addMerge(this as Self) }
 
-    internal fun copyForDomain(domain: Domain) = plainCopy().also { it.domain = domain; it.addMerge(this as Self) }
+    internal fun copyForDomain(domainModel: DomainModel) =
+        plainCopy().also {
+            it.domainModel = domainModel
+            it.addMerge(this as Self)
+        }
 
     /**
      * Создать базовую копию данного определения;
@@ -96,12 +100,12 @@ sealed class DomainDef<Self : DomainDef<Self>> : DomainElement(), Cloneable {
  */
 sealed interface DomainRef<Def : DomainDef<Def>> {
     /**
-     * Найти в домене [domain] определение, на которое ссылается эта ссылка, если оно есть
+     * Найти в домене [domainModel] определение, на которое ссылается эта ссылка, если оно есть
      */
-    fun findIn(domain: Domain): Def?
+    fun findIn(domainModel: DomainModel): Def?
 
-    fun findInOrUnkown(domain: Domain): Def {
-        val found = findIn(domain)
+    fun findInOrUnkown(domainModel: DomainModel): Def {
+        val found = findIn(domainModel)
         checkKnown(
             found != null,
             "No definition for reference '$this' found in domain"

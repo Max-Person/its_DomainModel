@@ -1,6 +1,6 @@
 package its.model.expressions.operators
 
-import its.model.definition.Domain
+import its.model.definition.DomainModel
 import its.model.definition.types.AnyType
 import its.model.definition.types.ObjectType
 import its.model.definition.types.Type
@@ -26,11 +26,11 @@ class With(
         get() = listOf(objExpr, nestedExpr)
 
     override fun validateAndGetType(
-        domain: Domain,
+        domainModel: DomainModel,
         results: ExpressionValidationResults,
         context: ExpressionContext
     ): Type<*> {
-        val objType = objExpr.validateAndGetType(domain, results, context)
+        val objType = objExpr.validateAndGetType(domainModel, results, context)
         if (objType !is ObjectType) {
             results.invalid(
                 "Object-argument of $description should be an object, but was $objType"
@@ -39,7 +39,7 @@ class With(
         }
 
         context.variableTypes[varName] = objType.className
-        val type = nestedExpr.validateAndGetType(domain, results, context)
+        val type = nestedExpr.validateAndGetType(domainModel, results, context)
         context.variableTypes.remove(varName)
         return type
     }

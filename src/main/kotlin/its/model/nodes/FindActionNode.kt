@@ -1,6 +1,6 @@
 package its.model.nodes
 
-import its.model.definition.Domain
+import its.model.definition.DomainModel
 import its.model.nodes.visitors.LinkNodeBehaviour
 
 /**
@@ -35,9 +35,14 @@ class FindActionNode(
     val nextIfNone
         get() = outcomes[false]
 
-    override fun validate(domain: Domain, results: DecisionTreeValidationResults, context: DecisionTreeContext) {
+    override fun validate(
+        domainModel: DomainModel,
+        results: DecisionTreeValidationResults,
+        context: DecisionTreeContext
+    ) {
         //Сначала валидируются части, в которых находимая переменная неизвестна
-        validateLinked(domain, results, context,
+        validateLinked(
+            domainModel, results, context,
             mutableListOf<DecisionTreeElement>(varAssignment).also {
                 if (nextIfNone != null) it.add(nextIfNone!!)
             }
@@ -45,9 +50,9 @@ class FindActionNode(
 
         //Далее части валидируются с добавлением в контекст известных переменных
         context.add(varAssignment.variable)
-        validateLinked(domain, results, context, errorCategories)
-        secondaryAssignments.validate(domain, results, context, this)
-        nextIfFound.validate(domain, results, context)
+        validateLinked(domainModel, results, context, errorCategories)
+        secondaryAssignments.validate(domainModel, results, context, this)
+        nextIfFound.validate(domainModel, results, context)
         context.remove(varAssignment.variable)
         secondaryAssignments.forEach { context.remove(it.variable) }
     }

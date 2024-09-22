@@ -1,6 +1,6 @@
 package its.model.expressions.operators
 
-import its.model.definition.Domain
+import its.model.definition.DomainModel
 import its.model.definition.types.AnyType
 import its.model.definition.types.BooleanType
 import its.model.definition.types.ObjectType
@@ -28,18 +28,18 @@ class CheckPropertyValue(
         get() = listOf(objectExpr, valueExpr)
 
     override fun validateAndGetType(
-        domain: Domain,
+        domainModel: DomainModel,
         results: ExpressionValidationResults,
         context: ExpressionContext
     ): Type<*> {
         val type = BooleanType
         //т.к. CheckPropertyValue это синтаксический сахар, то валидация такая же как и у GetPropertyValue
-        val propertyType = GetPropertyValue(objectExpr, propertyName).validateAndGetType(domain, results, context)
+        val propertyType = GetPropertyValue(objectExpr, propertyName).validateAndGetType(domainModel, results, context)
         if (propertyType is AnyType) return type
 
-        val valueType = valueExpr.validateAndGetType(domain, results, context)
+        val valueType = valueExpr.validateAndGetType(domainModel, results, context)
         results.checkConforming(
-            propertyType.castFits(valueType, domain),
+            propertyType.castFits(valueType, domainModel),
             "$description checks for a value of type $valueType in a property $propertyName, " +
                     "which has a non-compatible type '$propertyType'"
         )

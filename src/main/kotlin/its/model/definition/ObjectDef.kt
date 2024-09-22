@@ -3,7 +3,7 @@ package its.model.definition
 import java.util.*
 
 /**
- * Модель объекта в домене ([Domain])
+ * Модель объекта в домене ([DomainModel])
  */
 class ObjectDef(
     override val name: String,
@@ -82,7 +82,7 @@ class ObjectDef(
     fun isInstanceOf(classDef: ClassDef) = inheritsFrom(classDef)
 }
 
-class ObjectContainer(domain: Domain) : RootDefContainer<ObjectDef>(domain) {
+class ObjectContainer(domainModel: DomainModel) : RootDefContainer<ObjectDef>(domainModel) {
     override fun validate(results: DomainValidationResults) {
         super.validate(results)
 
@@ -129,7 +129,7 @@ class ObjectContainer(domain: Domain) : RootDefContainer<ObjectDef>(domain) {
 class ObjectRef(
     val objectName: String,
 ) : DomainRef<ObjectDef> {
-    override fun findIn(domain: Domain) = domain.objects.get(objectName)
+    override fun findIn(domainModel: DomainModel) = domainModel.objects.get(objectName)
     override fun toString() = "object $objectName"
 
     override fun equals(other: Any?): Boolean {

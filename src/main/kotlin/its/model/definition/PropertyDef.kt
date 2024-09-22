@@ -35,7 +35,7 @@ class PropertyDef(
      * или добавить сообщение о его неизвестности в [results]
      */
     internal fun getKnownDeclaringClass(results: DomainValidationResults): ClassDef? {
-        val clazz = domain.classes.get(declaringClassName)
+        val clazz = domainModel.classes.get(declaringClassName)
         results.checkKnown(
             clazz != null,
             "No class definition '$declaringClassName' found, while $description is said to be declared in it"
@@ -52,7 +52,7 @@ class PropertyDef(
         //Существование енама
         if (type is EnumType) {
             results.checkKnown(
-                type.exists(domain),
+                type.exists(domainModel),
                 "No enum definition '${type.enumName}' found"
             )
         }
@@ -101,8 +101,8 @@ class PropertyRef(
     val className: String,
     val propertyName: String,
 ) : DomainRef<PropertyDef> {
-    override fun findIn(domain: Domain): PropertyDef? {
-        val clazz = ClassRef(className).findIn(domain) ?: return null
+    override fun findIn(domainModel: DomainModel): PropertyDef? {
+        val clazz = ClassRef(className).findIn(domainModel) ?: return null
         return clazz.declaredProperties.get(propertyName)
     }
 

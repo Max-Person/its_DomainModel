@@ -1,6 +1,6 @@
 package its.model.expressions.literals
 
-import its.model.definition.Domain
+import its.model.definition.DomainModel
 import its.model.definition.types.EnumType
 import its.model.definition.types.EnumValue
 import its.model.definition.types.Type
@@ -15,11 +15,11 @@ import its.model.expressions.visitors.LiteralBehaviour
 class EnumLiteral(value: EnumValue) : ValueLiteral<EnumValue, EnumType>(value, EnumType(value.enumName)) {
 
     override fun validateAndGetType(
-        domain: Domain,
+        domainModel: DomainModel,
         results: ExpressionValidationResults,
         context: ExpressionContext
     ): Type<*> {
-        if (!type.exists(domain)) {
+        if (!type.exists(domainModel)) {
             results.invalid(
                 "No enum '${value.enumName}' found in domain, " +
                         "but it is used as an owner enum in $description"
@@ -27,7 +27,7 @@ class EnumLiteral(value: EnumValue) : ValueLiteral<EnumValue, EnumType>(value, E
             return type
         }
 
-        val enum = type.findIn(domain)
+        val enum = type.findIn(domainModel)
         results.checkConforming(
             enum.values.get(value.valueName) != null,
             "Enum '${value.enumName}' does not contain a '${value.valueName}' value, " +

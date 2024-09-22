@@ -11,13 +11,13 @@ import java.net.URL
 import java.util.concurrent.Callable
 
 /**
- * Построение объекта [Domain] на основе словарей (для обратной совместимости)
+ * Построение объекта [DomainModel] на основе словарей (для обратной совместимости)
  *
  * Под словарем понимается CSV файл, столбцы которого разделены символами `'|'`.
  * Данные внутри ячеек словаря могут быть разделены символами `';'`
  */
 class DomainDictionariesBuilder private constructor(
-    val domain: Domain = Domain(),
+    val domainModel: DomainModel = DomainModel(),
     val enumsDictReader: Reader,
     val classesDictReader: Reader,
     val propertiesDictReader: Reader,
@@ -38,16 +38,16 @@ class DomainDictionariesBuilder private constructor(
             classesDictReader: Reader,
             propertiesDictReader: Reader,
             relationshipsDictReader: Reader,
-        ): Domain {
+        ): DomainModel {
             val builder = DomainDictionariesBuilder(
-                Domain(),
+                DomainModel(),
                 enumsDictReader,
                 classesDictReader,
                 propertiesDictReader,
                 relationshipsDictReader
             )
             builder.build()
-            val domain = builder.domain
+            val domain = builder.domainModel
             domain.validateAndThrowInvalid()
             return domain
         }
@@ -120,7 +120,7 @@ class DomainDictionariesBuilder private constructor(
             "Enum dictionary must contain at least two columns: [enum name | list of enum value names]"
         )
         val enumName = csvRow[0]
-        val enum = domain.enums.added(EnumDef(enumName))
+        val enum = domainModel.enums.added(EnumDef(enumName))
 
         val enumValueNames = csvRow[1].split(LIST_ITEMS_SEPARATOR)
         enumValueNames.forEach { valueName -> enum.values.add(EnumValueDef(enumName, valueName)) }
@@ -138,7 +138,7 @@ class DomainDictionariesBuilder private constructor(
         val parentName = if (csvRow[1].isNullOrBlank()) null else csvRow[1]
 
         domainOpAt(rowNum, dictName) {
-            domain.classes.add(ClassDef(className, parentName))
+            domainModel.classes.add(ClassDef(className, parentName))
         }
     }
 
@@ -160,7 +160,7 @@ class DomainDictionariesBuilder private constructor(
         val declaringClassNames = csvRow[4].split(LIST_ITEMS_SEPARATOR)
         for (declaringClassName in declaringClassNames) {
             val declaringClass = domainOpAt(rowNum, dictName) {
-                ClassRef(declaringClassName).findInOrUnkown(domain)
+                ClassRef(declaringClassName).findInOrUnkown(domainModel)
             } as ClassDef
 
             domainOpAt(rowNum, dictName) {
@@ -196,7 +196,7 @@ class DomainDictionariesBuilder private constructor(
         val kind = BaseRelationshipKind(scaleType, quantifier)
 
         val subjectClass =
-            domainOpAt(rowNum, dictName) { ClassRef(subjectClassName).findInOrUnkown(domain) } as ClassDef
+            domainOpAt(rowNum, dictName) { ClassRef(subjectClassName).findInOrUnkown(domainModel) } as ClassDef
         domainOpAt(rowNum, dictName) {
             subjectClass.declaredRelationships.add(RelationshipDef(subjectClassName, name, objectClassNames, kind))
         }

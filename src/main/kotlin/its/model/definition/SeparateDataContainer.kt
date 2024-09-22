@@ -4,7 +4,7 @@ package its.model.definition
  * Контейнер для отдельно хранимых данных (конструкции 'values for ...' и 'meta for ...' в LOQI)
  */
 sealed class SeparateDataContainer<Key : DomainRef<*>, Value : Any>(
-    override val domain: Domain
+    override val domainModel: DomainModel
 ) : DomainElement(), Map<Key, Value> {
     protected val map: MutableMap<Key, Value> = mutableMapOf()
 
@@ -12,7 +12,7 @@ sealed class SeparateDataContainer<Key : DomainRef<*>, Value : Any>(
      * Добавить данные (или сразу же прикрепить их к владельцу, если он есть)
      */
     fun add(key: Key, value: Value) {
-        val owner = key.findIn(domain)
+        val owner = key.findIn(domainModel)
         if (owner != null) {
             attachValue(owner, value)
         } else if (map.containsKey(key)) {
@@ -76,8 +76,8 @@ sealed class SeparateDataContainer<Key : DomainRef<*>, Value : Any>(
 }
 
 class SeparateClassPropertyValuesContainer(
-    domain: Domain
-) : SeparateDataContainer<ClassRef, ClassPropertyValueStatements>(domain) {
+    domainModel: DomainModel
+) : SeparateDataContainer<ClassRef, ClassPropertyValueStatements>(domainModel) {
 
     override fun mergeValues(
         old: ClassPropertyValueStatements,
@@ -104,8 +104,8 @@ class SeparateClassPropertyValuesContainer(
 }
 
 class SeparateMetadataContainer(
-    domain: Domain
-) : SeparateDataContainer<DomainRef<*>, MetaData>(domain) {
+    domainModel: DomainModel
+) : SeparateDataContainer<DomainRef<*>, MetaData>(domainModel) {
     override fun mergeValues(old: MetaData, new: MetaData): MetaData {
         return old.also { it.addAll(new) }
     }

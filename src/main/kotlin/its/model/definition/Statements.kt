@@ -5,8 +5,8 @@ package its.model.definition
  */
 abstract class Statement<Owner : DomainDef<Owner>> : DomainElement() {
     abstract val owner: Owner
-    override val domain: Domain
-        get() = owner.domain
+    override val domainModel: DomainModel
+        get() = owner.domainModel
 
     internal abstract fun copyForOwner(owner: Owner): Statement<Owner>
 
@@ -24,8 +24,8 @@ abstract class Statements<Owner : DomainDef<Owner>, S : Statement<Owner>>(
 ) : DomainElement(), MutableCollection<S> {
     override fun toString() = description
 
-    override val domain: Domain
-        get() = owner.domain
+    override val domainModel: DomainModel
+        get() = owner.domainModel
 
     protected fun copyForOwner(statement: S): S =
         if (statement.owner != owner) statement.copyForOwner(owner) as S else statement

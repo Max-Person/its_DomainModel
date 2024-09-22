@@ -1,6 +1,6 @@
 package its.model
 
-import its.model.definition.Domain
+import its.model.definition.DomainModel
 import its.model.nodes.DecisionTreeContext
 
 data class TypedVariable(
@@ -8,13 +8,13 @@ data class TypedVariable(
     val varName: String,
 ) {
     fun checkValid(
-        domain: Domain,
+        domainModel: DomainModel,
         results: DomainConstructValidationResults,
         context: DecisionTreeContext,
         owner: Describable,
     ): Boolean {
         var valid = true
-        if (domain.classes.get(className) == null) {
+        if (domainModel.classes.get(className) == null) {
             results.nonConforming(
                 "No class of name '$className' found in domain, " +
                         "but it was declared as a type for variable in ${owner.description}"

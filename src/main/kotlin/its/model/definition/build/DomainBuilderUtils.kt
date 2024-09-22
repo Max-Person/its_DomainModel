@@ -4,22 +4,22 @@ import its.model.definition.*
 import its.model.definition.types.EnumValue
 
 /**
- * Утилитарные функции для наполнения информацией домена [Domain]
+ * Утилитарные функции для наполнения информацией домена [DomainModel]
  */
 object DomainBuilderUtils {
 
     @JvmStatic
-    fun Domain.newClass(className: String, parentName: String? = null): ClassDef {
+    fun DomainModel.newClass(className: String, parentName: String? = null): ClassDef {
         return classes.added(ClassDef(className, parentName))
     }
 
     @JvmStatic
-    fun Domain.newObject(objectName: String, className: String): ObjectDef {
+    fun DomainModel.newObject(objectName: String, className: String): ObjectDef {
         return objects.added(ObjectDef(objectName, className))
     }
 
     @JvmStatic
-    fun Domain.newVariable(varName: String, objectName: String): VariableDef {
+    fun DomainModel.newVariable(varName: String, objectName: String): VariableDef {
         return variables.added(VariableDef(varName, objectName))
     }
 

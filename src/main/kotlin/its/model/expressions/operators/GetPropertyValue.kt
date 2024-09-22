@@ -1,6 +1,6 @@
 package its.model.expressions.operators
 
-import its.model.definition.Domain
+import its.model.definition.DomainModel
 import its.model.definition.types.AnyType
 import its.model.definition.types.ObjectType
 import its.model.definition.types.Type
@@ -25,22 +25,22 @@ class GetPropertyValue(
         get() = listOf(objectExpr)
 
     override fun validateAndGetType(
-        domain: Domain,
+        domainModel: DomainModel,
         results: ExpressionValidationResults,
         context: ExpressionContext
     ): Type<*> {
         val invalidType = AnyType
-        val objType = objectExpr.validateAndGetType(domain, results, context)
+        val objType = objectExpr.validateAndGetType(domainModel, results, context)
         if (objType !is ObjectType) {
             results.invalid("Argument of $description should be an object, but was $objType")
             return invalidType
         }
-        if (!objType.exists(domain)) {
+        if (!objType.exists(domainModel)) {
             //Если невалидный класс, это кинется где-то ниже (где этот тип создавался)
             return invalidType
         }
 
-        val clazz = objType.findIn(domain)
+        val clazz = objType.findIn(domainModel)
         val property = clazz.findPropertyDef(propertyName)
         if (property == null) {
             results.nonConforming(

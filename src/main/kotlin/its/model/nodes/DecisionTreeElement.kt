@@ -1,7 +1,7 @@
 package its.model.nodes
 
 import its.model.Describable
-import its.model.definition.Domain
+import its.model.definition.DomainModel
 import its.model.definition.MetaData
 import its.model.definition.MetaOwner
 import its.model.definition.types.Type
@@ -66,30 +66,30 @@ sealed class DecisionTreeElement : MetaOwner, Describable {
      * Валидация - провалидировать дерево решений (с учетом контекста [context]) и положить все потенциальные ошибки в [results]
      */
     internal open fun validate(
-        domain: Domain,
+        domainModel: DomainModel,
         results: DecisionTreeValidationResults,
         context: DecisionTreeContext,
     ) {
-        validateLinked(domain, results, context)
+        validateLinked(domainModel, results, context)
     }
 
     protected fun validateLinked(
-        domain: Domain,
+        domainModel: DomainModel,
         results: DecisionTreeValidationResults,
         context: DecisionTreeContext,
         linked: List<DecisionTreeElement> = linkedElements,
     ) {
-        linked.forEach { it.validate(domain, results, context) }
+        linked.forEach { it.validate(domainModel, results, context) }
     }
 
     protected fun Operator.validateForDecisionTree(
-        domain: Domain,
+        domainModel: DomainModel,
         results: DecisionTreeValidationResults,
         context: DecisionTreeContext,
         withVariables: Map<String, String> = emptyMap(),
     ): Type<*> {
         val (exprType, exprResults) = this.validateAndGet(
-            domain,
+            domainModel,
             ExpressionContext.from(context).apply { variableTypes.putAll(withVariables) }
         )
         results.addAll(exprResults)
@@ -100,10 +100,10 @@ sealed class DecisionTreeElement : MetaOwner, Describable {
      * Валидация - провалидировать дерево решений (с учетом контекста [context]) и получить все ошибки
      */
     fun validateAndGet(
-        domain: Domain,
+        domainModel: DomainModel,
         context: DecisionTreeContext = DecisionTreeContext()
     ): DecisionTreeValidationResults {
-        return DecisionTreeValidationResults().also { validate(domain, it, context) }
+        return DecisionTreeValidationResults().also { validate(domainModel, it, context) }
     }
 
     /**
@@ -111,8 +111,8 @@ sealed class DecisionTreeElement : MetaOwner, Describable {
      * @throws InvalidDecisionTreeException в случае невалидности конструкций в дереве
      * @throws DomainNonConformityException в случае несоответствий конструкций дерева объявленным в домене определениям
      */
-    fun validate(domain: Domain, context: DecisionTreeContext = DecisionTreeContext()) {
-        validate(domain, DecisionTreeValidationResults(true), context)
+    fun validate(domainModel: DomainModel, context: DecisionTreeContext = DecisionTreeContext()) {
+        validate(domainModel, DecisionTreeValidationResults(true), context)
     }
 }
 

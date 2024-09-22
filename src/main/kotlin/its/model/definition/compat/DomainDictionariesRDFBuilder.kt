@@ -1,7 +1,7 @@
 package its.model.definition.compat
 
 import its.model.Utils.plus
-import its.model.definition.Domain
+import its.model.definition.DomainModel
 import its.model.definition.rdf.DomainRDFFiller
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.ModelFactory
@@ -32,7 +32,7 @@ object DomainDictionariesRDFBuilder {
         relationshipsDictReader: Reader,
         rdfModel: Model,
         rdfFillOptions: Set<DomainRDFFiller.Option> = setOf(DomainRDFFiller.Option.NARY_RELATIONSHIPS_OLD_COMPAT),
-    ): Domain {
+    ): DomainModel {
         val domain = DomainDictionariesBuilder.buildDomain(
             enumsDictReader,
             classesDictReader,
@@ -54,7 +54,7 @@ object DomainDictionariesRDFBuilder {
     fun buildDomain(
         directoryUrl: URL,
         rdfFillOptions: Set<DomainRDFFiller.Option> = setOf(DomainRDFFiller.Option.NARY_RELATIONSHIPS_OLD_COMPAT),
-    ): Domain {
+    ): DomainModel {
         val domain = DomainDictionariesBuilder.buildDomain(directoryUrl)
         val rdfModel = ModelFactory.createDefaultModel()
             .read((directoryUrl + "domain.ttl").openStream().buffered(), null, "TTL")

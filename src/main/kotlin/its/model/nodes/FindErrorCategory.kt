@@ -1,7 +1,7 @@
 package its.model.nodes
 
 import its.model.TypedVariable
-import its.model.definition.Domain
+import its.model.definition.DomainModel
 import its.model.definition.types.BooleanType
 import its.model.expressions.Operator
 import mp.utils.SetOnce
@@ -31,10 +31,14 @@ class FindErrorCategory(
         checkedVariable = TypedVariable(className, variableName)
     }
 
-    override fun validate(domain: Domain, results: DecisionTreeValidationResults, context: DecisionTreeContext) {
-        super.validate(domain, results, context)
+    override fun validate(
+        domainModel: DomainModel,
+        results: DecisionTreeValidationResults,
+        context: DecisionTreeContext
+    ) {
+        super.validate(domainModel, results, context)
         val selectorType = selectorExpr.validateForDecisionTree(
-            domain,
+            domainModel,
             results,
             context,
             withVariables = mapOf(checkedVariable.varName to checkedVariable.className)

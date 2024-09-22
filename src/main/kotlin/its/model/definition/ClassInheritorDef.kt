@@ -15,7 +15,7 @@ sealed class ClassInheritorDef<Self : ClassInheritorDef<Self>> : DomainDefWithMe
     internal fun getKnownParentClass(results: DomainValidationResults): ClassDef? {
         if (parentClassName == null) return null
 
-        val clazz = domain.classes.get(parentClassName!!)
+        val clazz = domainModel.classes.get(parentClassName!!)
         results.checkKnown(
             clazz != null,
             "No class definition '${parentClassName}' found to be defined as $name's parent class"

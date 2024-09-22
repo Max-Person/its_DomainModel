@@ -1,6 +1,6 @@
 package its.model.expressions.literals
 
-import its.model.definition.Domain
+import its.model.definition.DomainModel
 import its.model.definition.types.ClassType
 import its.model.definition.types.Type
 import its.model.expressions.ExpressionContext
@@ -15,13 +15,13 @@ import its.model.expressions.visitors.LiteralBehaviour
 class ClassLiteral(name: String) : ReferenceLiteral(name) {
 
     override fun validateAndGetType(
-        domain: Domain,
+        domainModel: DomainModel,
         results: ExpressionValidationResults,
         context: ExpressionContext
     ): Type<*> {
         val type = ClassType(name)
         results.checkConforming(
-            type.exists(domain),
+            type.exists(domainModel),
             "No class of name '$name' found in domain, " +
                     "but it is used in $description"
         )

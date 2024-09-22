@@ -37,8 +37,8 @@ class EnumValueRef(
     val enumName: String,
     val valueName: String,
 ) : DomainRef<EnumValueDef> {
-    override fun findIn(domain: Domain): EnumValueDef? {
-        val enum = EnumRef(enumName).findIn(domain) ?: return null
+    override fun findIn(domainModel: DomainModel): EnumValueDef? {
+        val enum = EnumRef(enumName).findIn(domainModel) ?: return null
         return enum.values.get(valueName)
     }
 

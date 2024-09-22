@@ -1,7 +1,6 @@
 package its.model.expressions.operators
 
-import its.model.definition.Domain
-import its.model.definition.types.BooleanType
+import its.model.definition.DomainModel
 import its.model.definition.types.ClassType
 import its.model.definition.types.ObjectType
 import its.model.definition.types.Type
@@ -24,11 +23,11 @@ class GetClass(
         get() = listOf(objectExpr)
 
     override fun validateAndGetType(
-        domain: Domain,
+        domainModel: DomainModel,
         results: ExpressionValidationResults,
         context: ExpressionContext
     ): Type<*> {
-        val objType = objectExpr.validateAndGetType(domain, results, context)
+        val objType = objectExpr.validateAndGetType(domainModel, results, context)
         if (objType !is ObjectType) {
             results.invalid("Argument of $description should be an object, but was $objType")
             return ClassType.untyped()

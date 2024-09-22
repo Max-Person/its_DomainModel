@@ -67,17 +67,17 @@ sealed class DefContainer<T : DomainDef<T>> : DomainElement(), MutableCollection
 
     private fun addNew(def: T, addTo: MutableMap<String, T>): T {
         //Приведение к нужному хранимому виду
-        val belongsToDomain = def.belongsToDomain
-        val added = if (belongsToDomain == domain) {
+        val ownerDomainModel = def.domainModelInternal
+        val added = if (ownerDomainModel == domainModel) {
             def
         } else {
-            def.copyForDomain(domain)
+            def.copyForDomain(domainModel)
         }
         added.validateAndThrowInvalid()
 
         //добавление
-        if (added is DomainDefWithMeta<*> && domain.separateMetadata != null) { //Проверка на нулл нужна, т.к. при добавлении встроенных значений domain.separateMetadata еще может быть не инициализирован
-            domain.separateMetadata.claimIfPresent(added)
+        if (added is DomainDefWithMeta<*> && domainModel.separateMetadata != null) { //Проверка на нулл нужна, т.к. при добавлении встроенных значений domain.separateMetadata еще может быть не инициализирован
+            domainModel.separateMetadata.claimIfPresent(added)
         }
         addTo[added.name] = added
         return added
@@ -163,14 +163,14 @@ sealed class DefContainer<T : DomainDef<T>> : DomainElement(), MutableCollection
     }
 }
 
-sealed class RootDefContainer<T : DomainDef<T>>(override val domain: Domain) : DefContainer<T>() {
+sealed class RootDefContainer<T : DomainDef<T>>(override val domainModel: DomainModel) : DefContainer<T>() {
     override fun KEY_REPEAT_MESSAGE(def: T) = "Domain already contains definition for ${def.description}"
 }
 
 sealed class ChildDefContainer<T : DomainDef<T>, Owner : DomainDef<Owner>>(private val owner: Owner) :
     DefContainer<T>() {
-    override val domain: Domain
-        get() = owner.domain
+    override val domainModel: DomainModel
+        get() = owner.domainModel
 
     override fun KEY_REPEAT_MESSAGE(def: T) = "${owner.description} already contains definition for ${def.description}"
 }

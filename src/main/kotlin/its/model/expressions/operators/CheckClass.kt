@@ -1,7 +1,10 @@
 package its.model.expressions.operators
 
-import its.model.definition.Domain
-import its.model.definition.types.*
+import its.model.definition.DomainModel
+import its.model.definition.types.BooleanType
+import its.model.definition.types.ClassType
+import its.model.definition.types.ObjectType
+import its.model.definition.types.Type
 import its.model.expressions.ExpressionContext
 import its.model.expressions.ExpressionValidationResults
 import its.model.expressions.Operator
@@ -23,20 +26,20 @@ class CheckClass(
         get() = listOf(objectExpr, classExpr)
 
     override fun validateAndGetType(
-        domain: Domain,
+        domainModel: DomainModel,
         results: ExpressionValidationResults,
         context: ExpressionContext
     ): Type<*> {
         val type = BooleanType
 
-        val objType = objectExpr.validateAndGetType(domain, results, context)
+        val objType = objectExpr.validateAndGetType(domainModel, results, context)
         val objIsOfObjectType = objType is ObjectType
         results.checkValid(
             objIsOfObjectType,
             "Object-argument of $description should be an object, but was $objType"
         )
 
-        val classType = classExpr.validateAndGetType(domain, results, context)
+        val classType = classExpr.validateAndGetType(domainModel, results, context)
         val classIsOfClassType = classType is ClassType
         results.checkValid(
             classIsOfClassType,
@@ -47,11 +50,11 @@ class CheckClass(
 
         objType as ObjectType
         classType as ClassType
-        if (!objType.exists(domain) || !classType.exists(domain)) return type
+        if (!objType.exists(domainModel) || !classType.exists(domainModel)) return type
 
         val objClassType = objType.toClassType()
         results.checkConforming(
-            objClassType.castFits(classType, domain),
+            objClassType.castFits(classType, domainModel),
             "$description checks for a class ${classType.className} on an object " +
                     "of a non-compatible type '${objType.className}'"
         )

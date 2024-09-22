@@ -3,8 +3,8 @@ package its.model.definition
 /**
  * Домен - модель предметной области
  */
-class Domain : DomainElement() {
-    override val domain = this
+class DomainModel : DomainElement() {
+    override val domainModel = this
     override val description = "Domain"
 
     val classes = ClassContainer(this)
@@ -30,13 +30,13 @@ class Domain : DomainElement() {
     /**
      * Создать глубокую копию этого домена
      */
-    fun copy() = Domain().also { it.add(this) }
+    fun copy() = DomainModel().also { it.add(this) }
 
     /**
      * Добавить все определения из [other]
      * @see DefContainer.add
      */
-    fun add(other: Domain) {
+    fun add(other: DomainModel) {
         classes.addAll(other.classes)
         enums.addAll(other.enums)
         objects.addAll(other.objects)
@@ -51,7 +51,7 @@ class Domain : DomainElement() {
      * Добавить все определения из [other] со слитием
      * @see DefContainer.addMerge
      */
-    fun addMerge(other: Domain) {
+    fun addMerge(other: DomainModel) {
         classes.addAllMerge(other.classes)
         enums.addAllMerge(other.enums)
         objects.addAllMerge(other.objects)
@@ -62,7 +62,7 @@ class Domain : DomainElement() {
         separateClassPropertyValues.addAll(other.separateClassPropertyValues)
     }
 
-    fun subtract(other: Domain) {
+    fun subtract(other: DomainModel) {
         classes.subtract(other.classes)
         enums.subtract(other.enums)
         objects.subtract(other.objects)

@@ -31,7 +31,7 @@ import java.io.File
  * декларативную информацию о типах и форматах ожидаемых данных. Поэтому RDF используется для **заполнения**
  */
 class DomainRDFFiller private constructor(
-    val domain: Domain,
+    val domainModel: DomainModel,
     val rdfModel: Model,
     basePrefix: String?,
     val options: Set<Option> = emptySet(),
@@ -50,18 +50,18 @@ class DomainRDFFiller private constructor(
 
     companion object {
         /**
-         * Заполнить домен [domain] данными из RDF-модели [rdfModel]
+         * Заполнить домен [domainModel] данными из RDF-модели [rdfModel]
          * @param options параметры заполнения данных
          */
         @JvmStatic
         fun fillDomain(
-            domain: Domain,
+            domainModel: DomainModel,
             rdfModel: Model,
             options: Set<Option> = emptySet(),
             basePrefix: String? = null,
         ) {
-            DomainRDFFiller(domain, rdfModel, basePrefix, options).fill()
-            domain.validateAndThrowInvalid()
+            DomainRDFFiller(domainModel, rdfModel, basePrefix, options).fill()
+            domainModel.validateAndThrowInvalid()
         }
 
         /**
@@ -69,13 +69,13 @@ class DomainRDFFiller private constructor(
          */
         @JvmStatic
         fun fillDomain(
-            domain: Domain,
+            domainModel: DomainModel,
             turtleFilePath: String,
             options: Set<Option> = emptySet(),
             basePrefix: String? = null,
         ) {
             fillDomain(
-                domain,
+                domainModel,
                 ModelFactory.createDefaultModel().read(
                     File(turtleFilePath).toURI().toURL().openStream().buffered(),
                     null,
@@ -93,7 +93,7 @@ class DomainRDFFiller private constructor(
     }
 
     private fun fillClasses() {
-        for (clazz in domain.classes) {
+        for (clazz in domainModel.classes) {
             val resource = findRdfResource(clazz.name) ?: continue
             fillClass(clazz, resource)
         }
@@ -115,9 +115,9 @@ class DomainRDFFiller private constructor(
     private fun createAndFillObjects() {
         val objToResource = mutableSetOf<Pair<ObjectDef, Resource>>()
         for (objResource in findAllObjectResources()) {
-            val obj = domain.objects.get(objResource.name) ?: run {
+            val obj = domainModel.objects.get(objResource.name) ?: run {
                 val className = objResource.getProperty(typeRdfProp).`object`.asResource().name
-                domain.objects.added(ObjectDef(objResource.name, className))
+                domainModel.objects.added(ObjectDef(objResource.name, className))
             }
             objToResource.add(obj to objResource)
         }
@@ -185,7 +185,7 @@ class DomainRDFFiller private constructor(
 
         resource.listProperties(varRdfProp).toList().forEach {
             val varName = it.`object`.asLiteral().string
-            domain.variables.add(VariableDef(varName, obj.name))
+            domainModel.variables.add(VariableDef(varName, obj.name))
         }
         usedRdfProperties.add(varRdfProp)
 
@@ -242,7 +242,7 @@ class DomainRDFFiller private constructor(
         //объектами считаются все ресурсы, являющиеся инстансом другого ресурса (т.е. субьекты свойства "тип")
         return rdfModel.listSubjectsWithProperty(typeRdfProp).filterKeep {
             val classResource = it.getProperty(typeRdfProp).`object`
-            classResource.isResource && domain.classes.get(classResource.asResource().name) != null
+            classResource.isResource && domainModel.classes.get(classResource.asResource().name) != null
         }.toList()
     }
 

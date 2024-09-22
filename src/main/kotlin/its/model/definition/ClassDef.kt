@@ -3,7 +3,7 @@ package its.model.definition
 import java.util.*
 
 /**
- * Класс в домене ([Domain])
+ * Класс в домене ([DomainModel])
  */
 class ClassDef(
     override val name: String,
@@ -93,19 +93,19 @@ class ClassDef(
      * Прямые классы-наследники данного класса
      */
     val children: List<ClassDef>
-        get() = domain.classes.filter { clazz -> clazz.parentName == this.name }
+        get() = domainModel.classes.filter { clazz -> clazz.parentName == this.name }
 
     /**
      * Прямые экземпляры данного класса
      */
     val directInstances: List<ObjectDef>
-        get() = domain.objects.filter { obj -> obj.className == this.name }
+        get() = domainModel.objects.filter { obj -> obj.className == this.name }
 
     /**
      * Является ли класс конкретным (имеет ли объекты-экземпляры)
      */
     val isConcrete: Boolean
-        get() = domain.objects.any { obj -> obj.className == this.name } //есть экземпляры
+        get() = domainModel.objects.any { obj -> obj.className == this.name } //есть экземпляры
 
     /**
      * Все отношения данного класса, с помощью которых возможна проекция;
@@ -158,16 +158,16 @@ class ClassDef(
 
 }
 
-class ClassContainer(domain: Domain) : RootDefContainer<ClassDef>(domain) {
+class ClassContainer(domainModel: DomainModel) : RootDefContainer<ClassDef>(domainModel) {
     override fun addNew(def: ClassDef): ClassDef {
-        return super.addNew(def).also { domain.separateClassPropertyValues.claimIfPresent(it) }
+        return super.addNew(def).also { domainModel.separateClassPropertyValues.claimIfPresent(it) }
     }
 }
 
 class ClassRef(
     val className: String,
 ) : DomainRef<ClassDef> {
-    override fun findIn(domain: Domain) = domain.classes.get(className)
+    override fun findIn(domainModel: DomainModel) = domainModel.classes.get(className)
     override fun toString() = "class $className"
 
     override fun equals(other: Any?): Boolean {

@@ -24,10 +24,10 @@ enum class LoqiWriteOptions {
 }
 
 /**
- * Сохранение домена ([Domain]) в LOQI формат
+ * Сохранение домена ([DomainModel]) в LOQI формат
  */
 class DomainLoqiWriter private constructor(
-    private val domain: Domain,
+    private val domainModel: DomainModel,
     writer: Writer,
     private val saveOptions: Set<LoqiWriteOptions> = emptySet()
 ) {
@@ -42,8 +42,8 @@ class DomainLoqiWriter private constructor(
 
     companion object {
         @JvmStatic
-        fun saveDomain(domain: Domain, writer: Writer, saveOptions: Set<LoqiWriteOptions> = emptySet()) {
-            DomainLoqiWriter(domain, writer, saveOptions).write()
+        fun saveDomain(domainModel: DomainModel, writer: Writer, saveOptions: Set<LoqiWriteOptions> = emptySet()) {
+            DomainLoqiWriter(domainModel, writer, saveOptions).write()
         }
     }
 
@@ -65,13 +65,13 @@ class DomainLoqiWriter private constructor(
     }
 
     private fun writeClassSection() {
-        if (domain.classes.isEmpty()) return
+        if (domainModel.classes.isEmpty()) return
         writeCommentDelimiter("static (class) section")
-        domain.enums.sortedBy { it.name }.forEach {
+        domainModel.enums.sortedBy { it.name }.forEach {
             it.writeEnum()
             skipLines()
         }
-        domain.classes.sortedBy { (it.parentName ?: "!") + it.name }.forEach {
+        domainModel.classes.sortedBy { (it.parentName ?: "!") + it.name }.forEach {
             it.writeClass()
             skipLines()
         }
@@ -140,13 +140,13 @@ class DomainLoqiWriter private constructor(
 
     private fun writeClassPropertyValuesSection() {
         if (!hasOption(LoqiWriteOptions.SEPARATE_CLASS_PROPERTY_VALUES)
-            && domain.separateClassPropertyValues.isEmpty()
+            && domainModel.separateClassPropertyValues.isEmpty()
         ) return
         writeCommentDelimiter("separate static (class) property values section")
         if (hasOption(LoqiWriteOptions.SEPARATE_CLASS_PROPERTY_VALUES)) {
-            domain.classes.forEach { writeSeparateClassPropertyValues(it.reference, it.definedPropertyValues) }
+            domainModel.classes.forEach { writeSeparateClassPropertyValues(it.reference, it.definedPropertyValues) }
         }
-        domain.separateClassPropertyValues.forEach { (ref, values) ->
+        domainModel.separateClassPropertyValues.forEach { (ref, values) ->
             writeSeparateClassPropertyValues(ref, values)
         }
     }
@@ -210,16 +210,16 @@ class DomainLoqiWriter private constructor(
     }
 
     private fun writeObjectSection() {
-        if (domain.objects.isEmpty()) return
+        if (domainModel.objects.isEmpty()) return
         writeCommentDelimiter("object section")
-        domain.objects.sortedBy { it.className + it.name }.forEach {
+        domainModel.objects.sortedBy { it.className + it.name }.forEach {
             it.writeObject()
             skipLines()
         }
     }
 
     private fun ObjectDef.writeObject() {
-        val variables = domain.variables.filter { it.valueObjectName == this.name }.map { it.name.toLoqiName() }
+        val variables = domainModel.variables.filter { it.valueObjectName == this.name }.map { it.name.toLoqiName() }
         if (variables.isNotEmpty()) writeln("var ${variables.joinToString(", ")} = ")
 
         write("$OBJ ${name.toLoqiName()} : ${className.toLoqiName()}")
@@ -248,7 +248,7 @@ class DomainLoqiWriter private constructor(
     }
 
     private fun writeVariableSection() {
-        val separateVariables = domain.variables.filter { domain.objects.get(it.valueObjectName) == null }
+        val separateVariables = domainModel.variables.filter { domainModel.objects.get(it.valueObjectName) == null }
         if (separateVariables.isEmpty()) return
 
         writeCommentDelimiter("separate variables")
@@ -261,38 +261,38 @@ class DomainLoqiWriter private constructor(
 
     private fun writeSeparateStaticMetadataSection() {
         if (!hasOption(LoqiWriteOptions.SEPARATE_METADATA)
-            && domain.separateMetadata.filterKeys { it !is ObjectRef }.isEmpty()
+            && domainModel.separateMetadata.filterKeys { it !is ObjectRef }.isEmpty()
         ) return
         writeCommentDelimiter("separate static (class) metadata section")
         if (hasOption(LoqiWriteOptions.SEPARATE_METADATA)) {
-            domain.enums.forEach { enum ->
+            domainModel.enums.forEach { enum ->
                 writeSeparateMetadata(enum.reference, enum.metadata)
                 enum.values.forEach { writeSeparateMetadata(it.reference, it.metadata) }
             }
-            domain.classes.forEach { clazz ->
+            domainModel.classes.forEach { clazz ->
                 writeSeparateMetadata(clazz.reference, clazz.metadata)
                 clazz.declaredProperties.forEach { writeSeparateMetadata(it.reference, it.metadata) }
                 clazz.declaredRelationships.forEach { writeSeparateMetadata(it.reference, it.metadata) }
             }
         }
         newLine()
-        domain.separateMetadata.filterKeys { it !is ObjectRef }.forEach { (ref, values) ->
+        domainModel.separateMetadata.filterKeys { it !is ObjectRef }.forEach { (ref, values) ->
             writeSeparateMetadata(ref, values)
         }
     }
 
     private fun writeSeparateObjectMetadataSection() {
         if ((!hasOption(LoqiWriteOptions.SEPARATE_METADATA)
-                    || domain.objects.filter { it.metadata.isNotEmpty() }.isEmpty())
-            && domain.separateMetadata.filterKeys { it is ObjectRef }.isEmpty()
+                    || domainModel.objects.filter { it.metadata.isNotEmpty() }.isEmpty())
+            && domainModel.separateMetadata.filterKeys { it is ObjectRef }.isEmpty()
         ) return
 
         writeCommentDelimiter("separate object metadata section")
         if (hasOption(LoqiWriteOptions.SEPARATE_METADATA)) {
-            domain.objects.forEach { writeSeparateMetadata(it.reference, it.metadata) }
+            domainModel.objects.forEach { writeSeparateMetadata(it.reference, it.metadata) }
         }
         newLine()
-        domain.separateMetadata.filterKeys { it is ObjectRef }.forEach { (ref, values) ->
+        domainModel.separateMetadata.filterKeys { it is ObjectRef }.forEach { (ref, values) ->
             writeSeparateMetadata(ref, values)
         }
     }

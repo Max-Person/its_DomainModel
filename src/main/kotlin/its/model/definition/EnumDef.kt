@@ -5,7 +5,7 @@ import its.model.definition.types.EnumValue
 import java.util.*
 
 /**
- * Перечисление в домене ([Domain])
+ * Перечисление в домене ([DomainModel])
  */
 class EnumDef(
     override val name: String,
@@ -44,7 +44,7 @@ class EnumDef(
 
 }
 
-class EnumContainer(domain: Domain) : RootDefContainer<EnumDef>(domain) {
+class EnumContainer(domainModel: DomainModel) : RootDefContainer<EnumDef>(domainModel) {
     init {
         fun EnumValue.toDef() = EnumValueDef(enumName, valueName)
 
@@ -59,7 +59,7 @@ class EnumContainer(domain: Domain) : RootDefContainer<EnumDef>(domain) {
 class EnumRef(
     val enumName: String,
 ) : DomainRef<EnumDef> {
-    override fun findIn(domain: Domain) = domain.enums.get(enumName)
+    override fun findIn(domainModel: DomainModel) = domainModel.enums.get(enumName)
     override fun toString() = "enum $enumName"
 
     override fun equals(other: Any?): Boolean {

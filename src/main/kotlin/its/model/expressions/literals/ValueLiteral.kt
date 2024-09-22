@@ -1,10 +1,10 @@
 package its.model.expressions.literals
 
-import its.model.definition.Domain
+import its.model.definition.DomainModel
 import its.model.definition.types.Type
 import its.model.expressions.ExpressionContext
 import its.model.expressions.ExpressionValidationResults
-import java.util.Objects
+import java.util.*
 
 /**
  * Литерал, содержащий конкретное значение
@@ -20,7 +20,7 @@ abstract class ValueLiteral<V : Any, T : Type<V>>(
         get() = "${super.description} '$value'"
 
     override fun validateAndGetType(
-        domain: Domain,
+        domainModel: DomainModel,
         results: ExpressionValidationResults,
         context: ExpressionContext
     ): Type<*> {

@@ -1,6 +1,6 @@
 package its.model.nodes
 
-import its.model.definition.Domain
+import its.model.definition.DomainModel
 import its.model.expressions.Operator
 import its.model.nodes.visitors.DecisionTreeBehaviour
 
@@ -17,8 +17,12 @@ class BranchResultNode(
     override val linkedElements: List<DecisionTreeElement>
         get() = listOf()
 
-    override fun validate(domain: Domain, results: DecisionTreeValidationResults, context: DecisionTreeContext) {
-        actionExpr?.also { it.validateForDecisionTree(domain, results, context) }
+    override fun validate(
+        domainModel: DomainModel,
+        results: DecisionTreeValidationResults,
+        context: DecisionTreeContext
+    ) {
+        actionExpr?.also { it.validateForDecisionTree(domainModel, results, context) }
     }
 
     override fun <I> use(behaviour: DecisionTreeBehaviour<I>): I {

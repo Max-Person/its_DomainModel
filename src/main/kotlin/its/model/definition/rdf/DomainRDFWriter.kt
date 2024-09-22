@@ -11,14 +11,14 @@ import org.apache.jena.rdf.model.Resource
 import java.io.Writer
 
 /**
- * Записать данные из домена [Domain] в RDF
+ * Записать данные из домена [DomainModel] в RDF
  *
  * Данный формат записи совместим с [DomainRDFFiller] (с учетом [Option.NARY_RELATIONSHIPS_OLD_COMPAT] в обоих классах),
  * и соответственно записывает в рдф только информацию о классах, объектах и их содержимом.
  * Полноценно восстановить домен **только** из RDF не получится за нехваткой данных
  */
 class DomainRDFWriter private constructor(
-    val domain: Domain,
+    val domainModel: DomainModel,
     val basePrefix: String = RDFUtils.POAS_PREF,
     val options: Set<Option> = emptySet(),
 ) {
@@ -36,21 +36,21 @@ class DomainRDFWriter private constructor(
     companion object {
         @JvmStatic
         fun saveDomain(
-            domain: Domain,
+            domainModel: DomainModel,
             basePrefix: String = RDFUtils.POAS_PREF,
             saveOptions: Set<Option> = emptySet()
         ): Model {
-            return DomainRDFWriter(domain, basePrefix, saveOptions).write()
+            return DomainRDFWriter(domainModel, basePrefix, saveOptions).write()
         }
 
         @JvmStatic
         fun saveDomain(
-            domain: Domain,
+            domainModel: DomainModel,
             writer: Writer,
             basePrefix: String = RDFUtils.POAS_PREF,
             saveOptions: Set<Option> = emptySet()
         ) {
-            saveDomain(domain, basePrefix, saveOptions)
+            saveDomain(domainModel, basePrefix, saveOptions)
                 .write(writer, "TTL", basePrefix)
         }
     }
@@ -61,9 +61,9 @@ class DomainRDFWriter private constructor(
         rdfModel.setNsPrefix("rdfs", rdfsPrefix)
         rdfModel.setNsPrefix("xsd", XSD_PREF)
 
-        domain.classes.forEach { it.writeClass() }
-        domain.objects.forEach { it.writeObject() }
-        domain.variables.forEach { it.writeVariable() }
+        domainModel.classes.forEach { it.writeClass() }
+        domainModel.objects.forEach { it.writeObject() }
+        domainModel.variables.forEach { it.writeVariable() }
 
         return rdfModel
     }

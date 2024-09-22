@@ -1,6 +1,6 @@
 package its.model.nodes
 
-import its.model.definition.Domain
+import its.model.definition.DomainModel
 import its.model.nodes.visitors.LinkNodeBehaviour
 
 /**
@@ -24,12 +24,16 @@ class PredeterminingFactorsNode(
     val undetermined
         get() = outcomes.singleOrNull { it.key == null }
 
-    override fun validate(domain: Domain, results: DecisionTreeValidationResults, context: DecisionTreeContext) {
+    override fun validate(
+        domainModel: DomainModel,
+        results: DecisionTreeValidationResults,
+        context: DecisionTreeContext
+    ) {
         results.checkValid(
             outcomes.filter { it.key == null }.size <= 1,
             "$description cannot have more than one undetermined outcome (outcome without an associated ThoughtBranch)"
         )
-        validateLinked(domain, results, context)
+        validateLinked(domainModel, results, context)
     }
 
     override fun <I> use(behaviour: LinkNodeBehaviour<I>): I {

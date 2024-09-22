@@ -31,14 +31,14 @@ class PropertyValueStatement<Owner : ClassInheritorDef<Owner>>(
             "Cannot define ${property.description} in ${owner.description}"
         )
 
-        if (property.type is EnumType && !property.type.exists(domain)) {
+        if (property.type is EnumType && !property.type.exists(domainModel)) {
             results.unknown(
                 "No enum definition '${property.type.enumName}' found to check if a value fits to a enum type"
             )
         } else {
             //Соответствие типа значению
             results.checkValid(
-                property.type.fits(value, domain),
+                property.type.fits(value, domainModel),
                 "Type of ${property.description} (${property.type}) does not " +
                         "fit the value '$value' defined in ${owner.description}"
             )

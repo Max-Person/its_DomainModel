@@ -1,7 +1,7 @@
 package its.model.expressions.operators
 
 import its.model.TypedVariable
-import its.model.definition.Domain
+import its.model.definition.DomainModel
 import its.model.definition.types.BooleanType
 import its.model.definition.types.Type
 import its.model.expressions.ExpressionContext
@@ -27,19 +27,19 @@ class ForAllQuantifier(
         get() = listOf(selectorExpr, conditionExpr)
 
     override fun validateAndGetType(
-        domain: Domain,
+        domainModel: DomainModel,
         results: ExpressionValidationResults,
         context: ExpressionContext
     ): Type<*> {
-        variable.checkValid(domain, results, context, this)
+        variable.checkValid(domainModel, results, context, this)
 
         context.variableTypes[variable.varName] = variable.className
-        val selectorType = selectorExpr.validateAndGetType(domain, results, context)
+        val selectorType = selectorExpr.validateAndGetType(domainModel, results, context)
         results.checkValid(
             selectorType is BooleanType,
             "Selector argument of $description should be of boolean type, but was '$selectorType'"
         )
-        val conditionType = conditionExpr.validateAndGetType(domain, results, context)
+        val conditionType = conditionExpr.validateAndGetType(domainModel, results, context)
         results.checkValid(
             conditionType is BooleanType,
             "Condition argument of $description should be of boolean type, but was '$conditionType'"

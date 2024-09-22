@@ -1,6 +1,6 @@
 package its.model.nodes
 
-import its.model.definition.Domain
+import its.model.definition.DomainModel
 import its.model.definition.types.BooleanType
 import its.model.definition.types.Type
 import its.model.expressions.Operator
@@ -28,23 +28,27 @@ class QuestionNode(
     val canBeTrivial: Boolean
         get() = isSwitch || trivialityExpr != null
 
-    override fun validate(domain: Domain, results: DecisionTreeValidationResults, context: DecisionTreeContext) {
-        val exprType = expr.validateForDecisionTree(domain, results, context)
+    override fun validate(
+        domainModel: DomainModel,
+        results: DecisionTreeValidationResults,
+        context: DecisionTreeContext
+    ) {
+        val exprType = expr.validateForDecisionTree(domainModel, results, context)
         for (outcome in outcomes) {
             val outcomeType = Type.of(outcome.key)
             results.checkValid(
-                exprType.castFits(outcomeType, domain),
+                exprType.castFits(outcomeType, domainModel),
                 "Outcome key '${outcome.key}' cannot be cast to the node's type '$exprType' (in $description)"
             )
         }
         if (trivialityExpr != null) {
-            val trivialityType = trivialityExpr.validateForDecisionTree(domain, results, context)
+            val trivialityType = trivialityExpr.validateForDecisionTree(domainModel, results, context)
             results.checkValid(
                 trivialityType is BooleanType,
                 "Triviality expression for the $description returns $trivialityType, but must return a boolean"
             )
         }
-        validateLinked(domain, results, context)
+        validateLinked(domainModel, results, context)
     }
 
     override fun <I> use(behaviour: LinkNodeBehaviour<I>): I {

@@ -1,6 +1,6 @@
 package its.model.expressions.operators
 
-import its.model.definition.Domain
+import its.model.definition.DomainModel
 import its.model.definition.types.ObjectType
 import its.model.definition.types.Type
 import its.model.expressions.ExpressionContext
@@ -24,22 +24,22 @@ class GetByRelationship(
         get() = listOf(subjectExpr)
 
     override fun validateAndGetType(
-        domain: Domain,
+        domainModel: DomainModel,
         results: ExpressionValidationResults,
         context: ExpressionContext
     ): Type<*> {
         val invalidType = ObjectType.untyped()
-        val subjType = subjectExpr.validateAndGetType(domain, results, context)
+        val subjType = subjectExpr.validateAndGetType(domainModel, results, context)
         if (subjType !is ObjectType) {
             results.invalid("Argument of $description should be an object, but was $subjType")
             return invalidType
         }
-        if (!subjType.exists(domain)) {
+        if (!subjType.exists(domainModel)) {
             //Если невалидный класс, это кинется где-то ниже (где этот тип создавался)
             return invalidType
         }
 
-        val clazz = subjType.findIn(domain)
+        val clazz = subjType.findIn(domainModel)
         val relationship = clazz.findRelationshipDef(relationshipName)
         if (relationship == null) {
             results.nonConforming(

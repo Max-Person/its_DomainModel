@@ -20,7 +20,7 @@ class RelationshipDef(
      * или добавить сообщение о его неизвестности в [results]
      */
     internal fun getKnownSubjectClass(results: DomainValidationResults): ClassDef? {
-        val clazz = domain.classes.get(subjectClassName)
+        val clazz = domainModel.classes.get(subjectClassName)
         results.checkKnown(
             clazz != null,
             "No class definition '$subjectClassName' found, while $description is said to be declared in it"
@@ -34,7 +34,7 @@ class RelationshipDef(
      */
     internal fun getKnownObjectClasses(results: DomainValidationResults): List<ClassDef?> {
         return objectClassNames.map { className ->
-            val clazz = domain.classes.get(className)
+            val clazz = domainModel.classes.get(className)
             results.checkKnown(
                 clazz != null,
                 "No class definition '$className' found, while $description uses it as one of its object types"
@@ -49,7 +49,7 @@ class RelationshipDef(
      */
     internal fun getKnownBaseRelationship(results: DomainValidationResults): RelationshipDef? {
         if (kind !is DependantRelationshipKind) return null
-        val baseRelationship = kind.baseRelationshipRef.findIn(domain)
+        val baseRelationship = kind.baseRelationshipRef.findIn(domainModel)
         results.checkKnown(
             baseRelationship != null,
             "No relationship definition '${kind.baseRelationshipRef}' " +
@@ -277,8 +277,8 @@ class RelationshipRef(
     val className: String,
     val relationshipName: String,
 ) : DomainRef<RelationshipDef> {
-    override fun findIn(domain: Domain): RelationshipDef? {
-        val clazz = ClassRef(className).findIn(domain) ?: return null
+    override fun findIn(domainModel: DomainModel): RelationshipDef? {
+        val clazz = ClassRef(className).findIn(domainModel) ?: return null
         return clazz.declaredRelationships.get(relationshipName)
     }
 
