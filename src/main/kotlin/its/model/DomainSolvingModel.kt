@@ -11,7 +11,8 @@ import java.net.URL
 
 /**
  * Решение задач в предметной области
- * @param domain описание предметной области (домена)
+ * @param domain описание предметной области (домена), общее для всех ситуаций применения
+ * @param tagsData части предметной области, специфичные для отдельных ситуаций применения (т.н. теги)
  * @param decisionTrees деревья решений, описывающие решение задач в предметной области
  */
 class DomainSolvingModel(
@@ -123,6 +124,15 @@ class DomainSolvingModel(
     fun decisionTree(name: String): DecisionTree {
         require(decisionTrees.containsKey(name)) { "DomainModel does not have a decisionTree named '$name'." }
         return decisionTrees[name]!!
+    }
+
+    /**
+     * Получить обобщенную модель домена,
+     * созданную из [domain]-модели и тег-модели из [tagsData] по переданному имени [name]
+     */
+    fun getMergedTagDomain(name: String): Domain {
+        require(tagsData.containsKey(name)) { "DomainSolvingModel does not have a tag Domain model named '$name'" }
+        return domain.copy().apply { addMerge(tagsData[name]!!) }
     }
 
 }
