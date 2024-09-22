@@ -108,11 +108,16 @@ sealed class DefContainer<T : DomainDef<T>> : DomainElement(), MutableCollection
     }
 
     override fun removeAll(elements: Collection<T>): Boolean {
-        return elements.any { remove(it) }
+        var removed = false
+        for (el in elements) {
+            removed = remove(el) || removed
+        }
+        return removed
     }
 
     override fun retainAll(elements: Collection<T>): Boolean {
-        return this.any { if (!elements.contains(it)) remove(it) else false }
+        val toRemove = this.filter { !elements.contains(it) }
+        return removeAll(toRemove)
     }
 
     override fun clear() {
