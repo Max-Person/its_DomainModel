@@ -110,10 +110,16 @@ class RelationshipLinkStatements(owner: ObjectDef) : Statements<ObjectDef, Relat
         list.add(statement)
     }
 
-    override fun remove(statement: RelationshipLinkStatement) {
+    override fun remove(statement: RelationshipLinkStatement): Boolean {
         if (contains(statement)) {
             list.remove(statement)
+            return true
         }
+        return false
+    }
+
+    override fun clear() {
+        list.clear()
     }
 
     fun listByName(relationshipName: String): List<RelationshipLinkStatement> {
