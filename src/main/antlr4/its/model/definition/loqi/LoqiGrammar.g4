@@ -1,4 +1,9 @@
 grammar LoqiGrammar;
+
+topLevelRule : model
+             | exp
+             ;
+
 model : topDecl+ EOF
       ;
 
@@ -112,6 +117,36 @@ doubleRange : '[' doubleRangeStart ',' DOUBLE? ']'
 doubleRangeStart : DOUBLE? ; //костыль, чтобы в коде можно было отличить первую границу от второй
 doubleList : DOUBLE (',' DOUBLE)* ','? ;
 
+exp
+    : value                         #valueLiteral
+    | ID                            #treeVar
+    | CLASS':'ID                    #classLiteral
+    | OBJ':'ID                      #objLiteral
+    | '$'ID                         #variable
+    | exp '->' ID                   #getByRelationship
+    | exp '.' ID                    #getProperty
+    | NOT exp                       #notExp
+    | exp IS exp                    #isExp
+    | exp (GREATER|LESS|GTE|LTE) exp   #compareExp
+    | exp (EQ|NOT_EQ) exp           #equalityExp
+    | exp '.' COMPARE '(' exp ')'   #threewayCompareExp
+    | '(' exp ')'                   #parenthesisExp
+    | exp 'as' exp                   #castExp
+    | exp AND exp                   #andExp
+    | exp OR exp                    #orExp
+    | exp '->' ID '(' (exp ',')* exp ')'        #checkRelationshipExp
+    | exp '.' CLASS '(' ')'                     #getClassExp
+    | FIND ID ID '{' exp '}'                    #findByConditionExp
+    | FIND_EXTREME ID '[' exp ']' AMONG ID ID '{' exp '}'      #findExtremeExp
+    | EXIST ID ID '[' exp ']' '{' exp '}'                      #existQuantifierExp
+    | FOR_ALL ID ID '[' exp ']' '{' exp '}'                    #forAllQuantifierExp
+    | exp '+=>' ID '(' (exp ',')* exp ')'                      #addRelationshipExp
+    | <assoc=right> exp '=' exp                             #assignExp
+    | '{' (exp ';')+ '}'                                    #blockExp
+    | 'if' '(' exp ')' exp                                  #ifExp
+    | 'with' '(' ID '=' exp ')' exp                         #withExp
+    ;
+
 value : INTEGER
       | DOUBLE
       | BOOLEAN
@@ -150,6 +185,17 @@ STRING : '"""' (~[\\] | EscapeSequence)*? '"""'
 
 // Ключевые слова
 
+FIND  : 'find';
+FIND_EXTREME : 'find_extrem';
+IS   :   'is';
+AND     :  'and';
+OR   : 'or';
+NOT  : 'not';
+COMPARE : 'compare';
+EXIST  : 'exist';
+FOR_ALL : 'forall';
+AMONG    : 'among';
+
 CLASS : 'class' ;
 OBJ : 'obj' ;
 ENUM : 'enum' ;
@@ -180,6 +226,13 @@ STRING_TYPE : 'string' ;
 
 TRUE : 'true' ;
 FALSE : 'false' ;
+
+EQ : '==' ;
+NOT_EQ : '!=' ;
+GREATER : '>' ;
+LESS : '<' ;
+GTE : '>=' ;
+LTE : '<=';
 
 //Идентификаторы
 
