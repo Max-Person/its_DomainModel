@@ -7,13 +7,12 @@ import its.model.nodes.*
  * @param Info тип возвращаемого функциями поведения значения
  * @see LinkNode.use
  */
-interface LinkNodeBehaviour<Info> {
+interface LinkNodeBehaviour<out Info> {
     // ---------------------- Для узлов дерева решений ---------------------------
     fun process(node: CycleAggregationNode): Info
-    fun process(node: WhileAggregationNode): Info
+    fun process(node: WhileCycleNode): Info
     fun process(node: FindActionNode): Info
-    fun process(node: LogicAggregationNode): Info
-    fun process(node: PredeterminingFactorsNode): Info
+    fun process(node: BranchAggregationNode): Info
     fun process(node: QuestionNode): Info
     fun processTupleQuestionNode(node: TupleQuestionNode): Info
 }

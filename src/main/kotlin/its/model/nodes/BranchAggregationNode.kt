@@ -6,16 +6,16 @@ import its.model.nodes.visitors.LinkNodeBehaviour
 /**
  * Узел логической агрегации по ветвям
  *
- * Выполняет (условно параллельно) все ветви [thoughtBranches] и агрегирует их результаты по оператору [logicalOp];
+ * Выполняет (условно параллельно) все ветви [thoughtBranches] и агрегирует их результаты по методу [aggregationMethod];
  * Дальнейшие переходы осуществляются в зависимости от результата агрегации
  *
- * @param logicalOp логический оператор, агрегирующий результаты каждой итерации цикла
+ * @param aggregationMethod метод агрегации результатов ветвей мысли
  * @param thoughtBranches ветви мысли, результаты которых агрегируются в данном узле
  */
-class LogicAggregationNode(
-    override val logicalOp: LogicalOp,
+class BranchAggregationNode(
+    override val aggregationMethod: AggregationMethod,
     val thoughtBranches: List<ThoughtBranch>,
-    override val outcomes: Outcomes<Boolean>,
+    override val outcomes: Outcomes<BranchResult>,
 ) : AggregationNode() {
 
     override val linkedElements: List<DecisionTreeElement>
@@ -26,10 +26,6 @@ class LogicAggregationNode(
         results: DecisionTreeValidationResults,
         context: DecisionTreeContext
     ) {
-        results.checkValid(
-            outcomes.containsKey(true) && outcomes.containsKey(false),
-            "$description has to have both true and false outcomes"
-        )
         results.checkValid(
             thoughtBranches.isNotEmpty(),
             "$description has to have at least one ThoughtBranch"

@@ -11,22 +11,24 @@ import its.model.nodes.visitors.LinkNodeBehaviour
  *
  * Выполняет ветку [thoughtBranch] для каждого объекта соответствующего условию [selectorExpr]
  * (внутри ветки к объекту можно обращаться с помощью переменной [variable])
- * и агрегирует результаты ветви по оператору [logicalOp];
+ * и агрегирует результаты ветви по методу [aggregationMethod];
  * Дальнейшие переходы осуществляются в зависимости от результата агрегации
  *
- * @param logicalOp логический оператор, агрегирующий результаты каждой итерации цикла
+ * @see WhileCycleNode
+ *
+ * @param aggregationMethod метод агрегации результатов каждой итераций цикла
  * @param selectorExpr условие (предикат), определяющее объекты, перебираемые в цикле ([BooleanType]);
  * проверяемый объект подставляется в предикат как контекстная переменная с именем и типом соответствующими переменной [variable]
  * @param variable переменная дерева решений, соответствующая текущему рассматриваемому объекту внутри тела цикла
  * @param thoughtBranch тело цикла: ветвь мысли, выполняемая для каждого перебираемого объекта
  */
 class CycleAggregationNode(
-    override val logicalOp: LogicalOp,
+    override val aggregationMethod: AggregationMethod,
     val selectorExpr: Operator,
     val variable: TypedVariable,
     val errorCategories: List<FindErrorCategory>,
     val thoughtBranch: ThoughtBranch,
-    override val outcomes: Outcomes<Boolean>,
+    override val outcomes: Outcomes<BranchResult>,
 ) : AggregationNode() {
     init {
         errorCategories.forEach { it.initCheckedVariable(variable.className) }
@@ -52,10 +54,6 @@ class CycleAggregationNode(
             selectorType is BooleanType,
             "Selector expression for the $description returns $selectorType, but must return a boolean " +
                     "(be a predicate with respect to variable '${variable.varName}')"
-        )
-        results.checkValid(
-            outcomes.containsKey(true) && outcomes.containsKey(false),
-            "$description has to have both true and false outcomes"
         )
 
         validateLinked(domainModel, results, context, errorCategories)

@@ -171,6 +171,9 @@ object DecisionTreeNodeXMLBuilder : AbstractDecisionTreeXMLBuilder<DecisionTreeN
             val split = this.split(" ", limit = 2)
             return Obj(split[1])
         }
+        if (BranchResult.entries.map { it.name }.contains(this.uppercase())) {
+            return BranchResult.valueOf(this.uppercase())
+        }
         if (this.startsWith('(') && this.endsWith(')')) {
             return ValueTuple(
                 this.substring(1, length - 1)
@@ -183,7 +186,10 @@ object DecisionTreeNodeXMLBuilder : AbstractDecisionTreeXMLBuilder<DecisionTreeN
 
     private fun <T : Any> ElementBuildContext.getRequiredAttributeAs(attr: String, type: KClass<T>): T {
         val valueStr = getRequiredAttribute(attr)
-        val value = valueStr.parseValue()
+        var value = valueStr.parseValue()
+        if (value is Boolean && type == BranchResult::class) { //FIXME Обратная совместимость
+            value = if (value) BranchResult.CORRECT else BranchResult.ERROR
+        }
         if (!type.isInstance(value)) {
             throw createException(
                 "$this must have an attribute '$attr' that is parsable as a ${type.simpleName}, " +
@@ -194,24 +200,16 @@ object DecisionTreeNodeXMLBuilder : AbstractDecisionTreeXMLBuilder<DecisionTreeN
     }
 
     private fun <T : Any> ElementBuildContext.getOutcomes(keyType: KClass<T>): Outcomes<T> {
-        return getOutcomesNullable(keyType)
-    }
-
-    private fun <T : Any, T_act : T?> ElementBuildContext.getOutcomesNullable(keyType: KClass<T>): Outcomes<T_act> {
         return Outcomes(getChildren(OUTCOME_TAG).map {
-            buildOutcome<T, T_act>(createBuildContext(it, this.buildClass), keyType)
+            buildOutcome(createBuildContext(it, this.buildClass), keyType)
         })
     }
 
-    private fun <T : Any, T_act : T?> buildOutcome(el: ElementBuildContext, keyType: KClass<T>): Outcome<T_act> {
-        val key = if (keyType == ThoughtBranch::class)
-            el.findChild(THOUGHT_BRANCH_TAG)?.let { buildThoughtBranch(it) }
-        else
-            el.getRequiredAttributeAs(VALUE_ATTR, keyType)
+    private fun <T : Any> buildOutcome(el: ElementBuildContext, keyType: KClass<T>): Outcome<T> {
+        val key = el.getRequiredAttributeAs(VALUE_ATTR, keyType)
 
-        if (key != null && !keyType.isInstance(key))
+        if (!keyType.isInstance(key))
             throw createException("$el must have a key of type ${keyType.simpleName}, but was ${key::class.simpleName}")
-        key as T_act
 
         val nodeEl = el.getChildren().filter { it.tagName != THOUGHT_BRANCH_TAG }
         if (nodeEl.size != 1)
@@ -226,30 +224,30 @@ object DecisionTreeNodeXMLBuilder : AbstractDecisionTreeXMLBuilder<DecisionTreeN
 
     @BuildForTags(["BranchResultNode"])
     @BuildingClass(BranchResultNode::class)
-    private fun buildBrachResultNode(el: ElementBuildContext): BranchResultNode {
-        val value = el.getRequiredAttributeAs(VALUE_ATTR, Boolean::class)
+    private fun buildBranchResultNode(el: ElementBuildContext): BranchResultNode {
+        val value = el.getRequiredAttributeAs(VALUE_ATTR, BranchResult::class)
         val expr = el.findSingleByWrapper(EXPR_TAG)?.toExpr()
 
         return BranchResultNode(value, expr).collectMetadata(el)
     }
 
 
-    @BuildForTags(["LogicAggregationNode"])
-    @BuildingClass(LogicAggregationNode::class)
-    private fun buildLogicAggregationNode(el: ElementBuildContext): LogicAggregationNode {
-        val op = LogicalOp.fromString(el.getRequiredAttribute(LOGICAL_OP_ATTR))
+    @BuildForTags(["LogicAggregationNode", "BranchAggregationNode"]) //FIXME обратная совместимость
+    @BuildingClass(BranchAggregationNode::class)
+    private fun buildBranchAggregationNode(el: ElementBuildContext): BranchAggregationNode {
+        val op = AggregationMethod.fromString(el.getRequiredAttribute(LOGICAL_OP_ATTR))
             ?: throw createException("$el must have a valid logical operator described in its '$LOGICAL_OP_ATTR' attribute")
 
         val branches = el.getChildren(THOUGHT_BRANCH_TAG).map { buildThoughtBranch(it) }
-        val outcomes = el.getOutcomes(Boolean::class)
+        val outcomes = el.getOutcomes(BranchResult::class)
 
-        return LogicAggregationNode(op, branches, outcomes).collectMetadata(el)
+        return BranchAggregationNode(op, branches, outcomes).collectMetadata(el)
     }
 
     @BuildForTags(["CycleAggregationNode"])
     @BuildingClass(CycleAggregationNode::class)
     private fun buildCycleAggregationNode(el: ElementBuildContext): CycleAggregationNode {
-        val op = LogicalOp.fromString(el.getRequiredAttribute(LOGICAL_OP_ATTR))
+        val op = AggregationMethod.fromString(el.getRequiredAttribute(LOGICAL_OP_ATTR))
             ?: throw createException("$el must have a valid logical operator described in its '$LOGICAL_OP_ATTR' attribute")
         val selector = el.getRequiredSingleByWrapper("SelectorExpression").toExpr()
         val variable = buildTypedVariable(el.getRequiredChild(DECISION_TREE_VAR_DECL_TAG))
@@ -257,19 +255,17 @@ object DecisionTreeNodeXMLBuilder : AbstractDecisionTreeXMLBuilder<DecisionTreeN
             buildFindErrorCategory(createBuildContext(it, FindErrorCategory::class))
         }
         val branch = buildThoughtBranch(el.getRequiredChild(THOUGHT_BRANCH_TAG))
-        val outcomes = el.getOutcomes(Boolean::class)
+        val outcomes = el.getOutcomes(BranchResult::class)
         return CycleAggregationNode(op, selector, variable, errors, branch, outcomes).collectMetadata(el)
     }
 
-    @BuildForTags(["WhileAggregationNode"])
-    @BuildingClass(WhileAggregationNode::class)
-    private fun buildWhileAggregationNode(el: ElementBuildContext): WhileAggregationNode {
-        val op = LogicalOp.fromString(el.getRequiredAttribute(LOGICAL_OP_ATTR))
-            ?: throw createException("$el must have a valid logical operator described in its '$LOGICAL_OP_ATTR' attribute")
+    @BuildForTags(["WhileAggregationNode", "WhileCycleNode"]) //FIXME обратная совместимость
+    @BuildingClass(WhileCycleNode::class)
+    private fun buildWhileAggregationNode(el: ElementBuildContext): WhileCycleNode {
         val selector = el.getRequiredSingleByWrapper("SelectorExpression").toExpr()
         val branch = buildThoughtBranch(el.getRequiredChild(THOUGHT_BRANCH_TAG))
-        val outcomes = el.getOutcomes(Boolean::class)
-        return WhileAggregationNode(op, selector, branch, outcomes).collectMetadata(el)
+        val outcomes = el.getOutcomes(BranchResult::class)
+        return WhileCycleNode(selector, branch, outcomes).collectMetadata(el)
     }
 
 
@@ -300,14 +296,6 @@ object DecisionTreeNodeXMLBuilder : AbstractDecisionTreeXMLBuilder<DecisionTreeN
             }
         return TupleQuestionNode.TupleQuestionPart(expr, outcomes).collectMetadata(el)
     }
-
-    @BuildForTags(["PredeterminingFactorsNode"])
-    @BuildingClass(PredeterminingFactorsNode::class)
-    private fun buildPredeterminingFactorsNode(el: ElementBuildContext): PredeterminingFactorsNode {
-        val outcomes = el.getOutcomesNullable(ThoughtBranch::class)
-        return PredeterminingFactorsNode(outcomes).collectMetadata(el)
-    }
-
 
     private fun buildFindErrorCategory(el: ElementBuildContext): FindErrorCategory {
         val priority = el.getRequiredAttributeAs("priority", Int::class)

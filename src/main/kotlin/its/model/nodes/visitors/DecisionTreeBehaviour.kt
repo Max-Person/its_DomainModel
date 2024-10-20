@@ -8,7 +8,7 @@ import its.model.nodes.ThoughtBranch
  * @param Info тип возвращаемого функциями поведения значения
  * @see DecisionTreeNode.use
  */
-interface DecisionTreeBehaviour<Info> : LinkNodeBehaviour<Info> {
+interface DecisionTreeBehaviour<out Info> : LinkNodeBehaviour<Info> {
     // ---------------------- Для узлов дерева решений ---------------------------
     fun process(node: BranchResultNode): Info
     fun process(branch: ThoughtBranch): Info

@@ -10,9 +10,9 @@ import its.model.nodes.visitors.DecisionTreeBehaviour
  * @param actionExpr выполняемое при достижении данного узла побочное действие
  */
 class BranchResultNode(
-    val value: Boolean, //TODO исправить когда перейдем к зеленым деревьям
+    val value: BranchResult,
     val actionExpr: Operator?,
-) : DecisionTreeNode() {
+) : DecisionTreeNode(), EndingNode {
 
     override val linkedElements: List<DecisionTreeElement>
         get() = listOf()

@@ -10,20 +10,14 @@ class CounterVisitor{
         if (node !is LinkNode<*>) return
 
         tabs += "| "
-        if (node is LogicAggregationNode)
+        if (node is BranchAggregationNode)
             node.thoughtBranches.forEach { process(it) }
         else if (node is CycleAggregationNode)
             process(node.thoughtBranch)
-        else if (node is WhileAggregationNode)
+        else if (node is WhileCycleNode)
             process(node.thoughtBranch)
 
-        if (node is PredeterminingFactorsNode) {
-            node.outcomes.forEach {
-                if (it.key != null) process(it.key)
-                process(it.node)
-            }
-        } else
-            node.children.forEach { process(it) }
+        node.children.forEach { process(it) }
         tabs = tabs.dropLast(2)
     }
 

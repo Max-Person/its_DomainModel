@@ -6,22 +6,23 @@ import its.model.expressions.Operator
 import its.model.nodes.visitors.LinkNodeBehaviour
 
 /**
- * Узел агрегации в цикле 'while'
+ * Узел последовательного перебора ветвей 'while'
  *
- * Выполняет ветку [thoughtBranch], пока выполняется условие [conditionExpr]
- * и агрегирует результаты каждого выполнения ветви по оператору [logicalOp];
- * Дальнейшие переходы осуществляются в зависимости от результата агрегации
+ * Выполняет ветку [thoughtBranch], пока выполняется условие [conditionExpr].
+ * В случае, если очередная итерация цикла завершилась результатом, не равным [BranchResult.NULL],
+ * то выполнение останавливается и данный результат возвращается.
  *
- * @param logicalOp логический оператор, агрегирующий результаты каждой итерации цикла
+ * По смыслу похож на [CycleAggregationNode], но т.к. перебор типа "последовательность" имеет доп. ограничения
+ * (порядок цикла), то вынесен в отдельный узел.
+ *
  * @param conditionExpr условие продолжения выполнения цикла
  * @param thoughtBranch ветвь мысли, представляющая тело цикла
  */
-class WhileAggregationNode(
-    override val logicalOp: LogicalOp,
+class WhileCycleNode(
     val conditionExpr: Operator,
     val thoughtBranch: ThoughtBranch,
-    override val outcomes: Outcomes<Boolean>,
-) : AggregationNode() {
+    override val outcomes: Outcomes<BranchResult>,
+) : LinkNode<BranchResult>(), EndingNode {
 
     override val linkedElements: List<DecisionTreeElement>
         get() = listOf(thoughtBranch).plus(outcomes)
@@ -37,8 +38,8 @@ class WhileAggregationNode(
             "Condition expression for the $description returns $conditionType, but must return a boolean"
         )
         results.checkValid(
-            outcomes.containsKey(true) && outcomes.containsKey(false),
-            "$description has to have both true and false outcomes"
+            outcomes.containsKey(BranchResult.NULL),
+            "$description has to have a NULL continuation outcome."
         )
 
         validateLinked(domainModel, results, context)

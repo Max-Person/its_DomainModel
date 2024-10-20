@@ -10,12 +10,12 @@ import its.model.nodes.*
  * @param Info тип возвращаемого функциями поведения значения
  * @see DecisionTreeBehaviour
  */
-interface SimpleDecisionTreeBehaviour<Info> : DecisionTreeBehaviour<Info> {
+interface SimpleDecisionTreeBehaviour<out Info> : DecisionTreeBehaviour<Info> {
     override fun process(node: CycleAggregationNode): Info {
         return process(node as LinkNode<Boolean>)
     }
 
-    override fun process(node: WhileAggregationNode): Info {
+    override fun process(node: WhileCycleNode): Info {
         return process(node as LinkNode<Boolean>)
     }
 
@@ -23,12 +23,8 @@ interface SimpleDecisionTreeBehaviour<Info> : DecisionTreeBehaviour<Info> {
         return process(node as LinkNode<Boolean>)
     }
 
-    override fun process(node: LogicAggregationNode): Info {
+    override fun process(node: BranchAggregationNode): Info {
         return process(node as LinkNode<Boolean>)
-    }
-
-    override fun process(node: PredeterminingFactorsNode): Info {
-        return process(node as LinkNode<ThoughtBranch?>)
     }
 
     override fun process(node: QuestionNode): Info {
