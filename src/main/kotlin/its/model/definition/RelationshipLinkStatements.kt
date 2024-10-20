@@ -102,7 +102,7 @@ class RelationshipLinkStatements(owner: ObjectDef) : Statements<ObjectDef, Relat
 
     override fun isEmpty() = list.isEmpty()
     override fun containsAll(elements: Collection<RelationshipLinkStatement>) = list.containsAll(elements)
-    override fun contains(element: RelationshipLinkStatement) = list.contains(element)
+    override fun containsElement(element: Any?) = list.contains(element)
     override fun iterator() = list.iterator()
 
 
@@ -110,9 +110,10 @@ class RelationshipLinkStatements(owner: ObjectDef) : Statements<ObjectDef, Relat
         list.add(statement)
     }
 
-    override fun remove(statement: RelationshipLinkStatement): Boolean {
-        if (contains(statement)) {
-            list.remove(statement)
+    override fun removeElement(element: Any?): Boolean {
+        if (element !is RelationshipLinkStatement) return false
+        if (contains(element)) {
+            list.remove(element)
             return true
         }
         return false

@@ -1,5 +1,7 @@
 package its.model.definition
 
+import mp.utils.InteroperableMutableCollection
+
 /**
  * Утверждение об элементе домена
  */
@@ -21,7 +23,7 @@ abstract class Statement<Owner : DomainDef<Owner>> : DomainElement() {
  */
 abstract class Statements<Owner : DomainDef<Owner>, S : Statement<Owner>>(
     protected val owner: Owner,
-) : DomainElement(), MutableCollection<S> {
+) : DomainElement(), InteroperableMutableCollection<S> {
     override fun toString() = description
 
     override val domainModel: DomainModel
@@ -72,6 +74,4 @@ abstract class Statements<Owner : DomainDef<Owner>, S : Statement<Owner>>(
     override fun validate(results: DomainValidationResults) {
         this.forEach { it.validate(results) }
     }
-
-    abstract override fun contains(element: S): Boolean
 }

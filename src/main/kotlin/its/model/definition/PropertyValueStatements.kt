@@ -94,9 +94,10 @@ class PropertyValueStatements<Owner : ClassInheritorDef<Owner>>(
         add(statement)
     }
 
-    override fun remove(statement: PropertyValueStatement<Owner>): Boolean {
-        if (contains(statement)) {
-            map.remove(statement.propertyName)
+    override fun removeElement(element: Any?): Boolean {
+        if (element !is PropertyValueStatement<*>) return false
+        if (contains(element)) {
+            map.remove(element.propertyName)
             return true
         }
         return false
@@ -135,8 +136,8 @@ class PropertyValueStatements<Owner : ClassInheritorDef<Owner>>(
     override val size: Int
         get() = map.size
 
-
-    override fun contains(element: PropertyValueStatement<Owner>): Boolean {
+    override fun containsElement(element: Any?): Boolean {
+        if (element !is PropertyValueStatement<*>) return false
         return map.containsKey(element.propertyName) && map[element.propertyName] == element
     }
 
