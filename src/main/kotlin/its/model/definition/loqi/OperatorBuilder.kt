@@ -84,7 +84,7 @@ class OperatorBuilder : LoqiGrammarBaseVisitor<Operator>() {
     }
 
     override fun visitObjLiteral(ctx: LoqiGrammarParser.ObjLiteralContext): Operator {
-        return ObjectLiteral(ctx.ID().getName(), "")
+        return ObjectLiteral(ctx.ID().getName())
     }
 
     override fun visitClassLiteral(ctx: LoqiGrammarParser.ClassLiteralContext): Operator {

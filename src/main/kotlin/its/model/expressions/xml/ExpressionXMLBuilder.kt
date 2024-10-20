@@ -133,8 +133,7 @@ object ExpressionXMLBuilder : XMLBuilder<ExpressionXMLBuilder.ExpressionBuildCon
     @BuildingClass(ObjectLiteral::class)
     private fun buildObjectLiteral(el: ExpressionBuildContext): ObjectLiteral {
         val name = el.getRequiredAttribute(NAME)
-        val type = el.getRequiredAttribute(TYPE)
-        return ObjectLiteral(name, type)
+        return ObjectLiteral(name)
     }
 
     @BuildForTags(["ComparisonResult"])
