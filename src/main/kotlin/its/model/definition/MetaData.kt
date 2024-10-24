@@ -86,7 +86,7 @@ class MetaData(
      */
     fun addAll(other: MetaData) {
         other.propertyNamesToLocalizations.forEach { name, locCodes ->
-            this.propertyNamesToLocalizations.merge(name, locCodes) { thisLocCodes, otherLocCodes ->
+            this.propertyNamesToLocalizations.merge(name, locCodes.toMutableMap()) { thisLocCodes, otherLocCodes ->
                 thisLocCodes.apply { putAll(otherLocCodes) }
             }
         }
