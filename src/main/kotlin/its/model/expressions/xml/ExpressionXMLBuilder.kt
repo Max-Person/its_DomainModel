@@ -389,6 +389,7 @@ object ExpressionXMLBuilder : XMLBuilder<ExpressionXMLBuilder.ExpressionBuildCon
         return IfThen(
             el.op(0),
             el.op(1),
+            el.operands.getOrNull(2)
         )
     }
 

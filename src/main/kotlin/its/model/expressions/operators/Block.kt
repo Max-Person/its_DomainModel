@@ -1,7 +1,7 @@
 package its.model.expressions.operators
 
 import its.model.definition.DomainModel
-import its.model.definition.types.NoneType
+import its.model.definition.types.AnyType
 import its.model.definition.types.Type
 import its.model.expressions.ExpressionContext
 import its.model.expressions.ExpressionValidationResults
@@ -11,8 +11,8 @@ import its.model.expressions.visitors.OperatorBehaviour
 /**
  * Последовательное выполнение нескольких операторов
  *
- * Ничего не возвращает ([NoneType])
- * @param nestedExprs вложенные операторы (тип игнорируется)
+ * Возвращает последнее из вложенных выражений [nestedExprs] (типизируется соответствующе)
+ * @param nestedExprs вложенные операторы ([AnyType])
  */
 class Block(
     val nestedExprs: List<Operator>
@@ -25,8 +25,7 @@ class Block(
         results: ExpressionValidationResults,
         context: ExpressionContext
     ): Type<*> {
-        nestedExprs.forEach { it.validateAndGetType(domainModel, results, context) }
-        return NoneType
+        return nestedExprs.map { it.validateAndGetType(domainModel, results, context) }.last()
     }
 
 
