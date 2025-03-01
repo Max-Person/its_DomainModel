@@ -3,6 +3,7 @@ package its.model.expressions.operators
 import its.model.TypedVariable
 import its.model.definition.DomainModel
 import its.model.definition.types.BooleanType
+import its.model.definition.types.NoneType
 import its.model.definition.types.Type
 import its.model.expressions.ExpressionContext
 import its.model.expressions.ExpressionValidationResults
@@ -11,8 +12,10 @@ import its.model.expressions.visitors.OperatorBehaviour
 
 /**
  * Квантор общности ("Для всех ...")
+ * Может использоваться также в качестве цикла по объектам модели
  *
- * Возвращает [BooleanType]
+ * Возвращает [BooleanType], если [conditionExpr] имеет [BooleanType] (Агрегирует результаты по логическому И);
+ * Иначе ничего не возвращает ([NoneType])
  * @param variable контекстная переменная, задающая ссылку на проверяемый объект
  * @param selectorExpr условие, задающее область определения переменной ([BooleanType])
  * @param conditionExpr условие, предъявляемое к переменной в области определения ([BooleanType])
@@ -40,13 +43,12 @@ class ForAllQuantifier(
             "Selector argument of $description should be of boolean type, but was '$selectorType'"
         )
         val conditionType = conditionExpr.validateAndGetType(domainModel, results, context)
-        results.checkValid(
-            conditionType is BooleanType,
-            "Condition argument of $description should be of boolean type, but was '$conditionType'"
-        )
         context.variableTypes.remove(variable.varName)
 
-        return BooleanType
+        return if (conditionType is BooleanType)
+            BooleanType
+        else
+            NoneType
     }
 
     override fun <I> use(behaviour: OperatorBehaviour<I>): I {

@@ -142,9 +142,10 @@ exp
     | FOR_ALL ID ID '[' exp ']' '{' exp '}'                    #forAllQuantifierExp
     | exp '+=>' ID '(' (exp ',')* exp ')'                      #addRelationshipExp
     | <assoc=right> exp '=' exp                             #assignExp
-    | '{' (exp ';')+ '}'                                    #blockExp
-    | 'if' '(' exp ')' exp                                  #ifExp
+    | <assoc=right>  exp '?' exp ':' exp                    #ternaryIfExp
+    | <assoc=right> 'if' '(' exp ')' exp ('else' exp )?                  #ifExp
     | 'with' '(' ID '=' exp ')' exp                         #withExp
+    | '{' (exp ';')+ '}'                                    #blockExp
     ;
 
 value : INTEGER

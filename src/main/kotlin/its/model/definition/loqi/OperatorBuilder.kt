@@ -173,8 +173,12 @@ class OperatorBuilder : LoqiGrammarBaseVisitor<Operator>() {
         return GetByCondition(TypedVariable(ctx.ID(0).getName(), ctx.ID(1).getName()), visit(ctx.exp()))
     }
 
+    override fun visitTernaryIfExp(ctx: LoqiGrammarParser.TernaryIfExpContext): Operator {
+        return IfThen(visit(ctx.exp(0)), visit(ctx.exp(1)), visit(ctx.exp(2)))
+    }
+
     override fun visitIfExp(ctx: LoqiGrammarParser.IfExpContext): Operator {
-        return IfThen(visit(ctx.exp(0)), visit(ctx.exp(1)))
+        return IfThen(visit(ctx.exp(0)), visit(ctx.exp(1)), ctx.exp(2)?.let { visit(it) })
     }
 
     override fun visitForAllQuantifierExp(ctx: LoqiGrammarParser.ForAllQuantifierExpContext): Operator {
