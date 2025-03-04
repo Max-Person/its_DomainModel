@@ -264,7 +264,7 @@ fragment LetterOrDigit
     ;
 
 fragment Letter
-    : [a-zA-Z$_]
+    : [a-zA-Z_]
     ;
 
 fragment Digit
