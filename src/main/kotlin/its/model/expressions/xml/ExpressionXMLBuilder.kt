@@ -229,17 +229,6 @@ object ExpressionXMLBuilder : XMLBuilder<ExpressionXMLBuilder.ExpressionBuildCon
         )
     }
 
-    @BuildForTags(["CheckPropertyValue"])
-    @BuildingClass(CheckPropertyValue::class)
-    private fun buildCheckPropertyValue(el: ExpressionBuildContext): CheckPropertyValue {
-        val propertyName = el.getAttributeOrTakeFromChild(PROPERTY_NAME, 0)
-        return CheckPropertyValue(
-            el.op(0),
-            propertyName,
-            el.op(1),
-        )
-    }
-
 
     @BuildForTags(["CheckRelationship"])
     @BuildingClass(CheckRelationship::class)

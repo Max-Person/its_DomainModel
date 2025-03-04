@@ -14,7 +14,6 @@ interface OperatorBehaviour<Info> : LiteralBehaviour<Info> {
     fun process(op: AssignDecisionTreeVar): Info
     fun process(op: Cast): Info
     fun process(op: CheckClass): Info
-    fun process(op: CheckPropertyValue): Info
     fun process(op: CheckRelationship): Info
     fun process(op: Compare): Info
     fun process(op: CompareWithComparisonOperator): Info
