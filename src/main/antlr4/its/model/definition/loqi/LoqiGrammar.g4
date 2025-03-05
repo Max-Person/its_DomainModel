@@ -141,7 +141,7 @@ exp
     | exp (EQ|NOT_EQ) exp           #equalityExp
     | exp '.' COMPARE '(' exp ')'   #threewayCompareExp
     | '(' exp ')'                   #parenthesisExp
-    | exp 'as' exp                   #castExp
+    | exp AS exp                   #castExp
     | exp AND exp                   #andExp
     | exp OR exp                    #orExp
     | exp '->' ID paramsValuesExpr? '(' (exp ',')* exp ')' '.' ID  #getRelationshipParamExp
@@ -154,8 +154,8 @@ exp
     | exp '+=>' ID paramsValuesExpr? '(' (exp ',')* exp ')'    #addRelationshipExp
     | <assoc=right> exp '=' exp                             #assignExp
     | <assoc=right>  exp '?' exp ':' exp                    #ternaryIfExp
-    | <assoc=right> 'if' '(' exp ')' exp ('else' exp )?                  #ifExp
-    | 'with' '(' ID '=' exp ')' exp                         #withExp
+    | <assoc=right> IF '(' exp ')' exp (ELSE exp )?                  #ifExp
+    | WITH '(' ID '=' exp ')' exp                         #withExp
     | '{' (exp ';')+ '}'                                    #blockExp
     ;
 
@@ -204,8 +204,9 @@ STRING : '"""' (~[\\] | EscapeSequence)*? '"""'
 // Ключевые слова
 
 FIND  : 'find';
-FIND_EXTREME : 'find_extrem';
+FIND_EXTREME : 'findExtreme' | 'findextreme' ;
 IS   :   'is';
+AS : 'as' ;
 AND     :  'and';
 OR   : 'or';
 NOT  : 'not';
@@ -213,6 +214,9 @@ COMPARE : 'compare';
 EXIST  : 'exist';
 FOR_ALL : 'forall';
 AMONG    : 'among';
+IF : 'if' ;
+ELSE : 'else' ;
+WITH : 'with' ;
 
 CLASS : 'class' ;
 OBJ : 'obj' ;
