@@ -1,7 +1,8 @@
 package its.model.definition.loqi
 
 import its.model.TypedVariable
-import its.model.definition.*
+import its.model.definition.EnumValueRef
+import its.model.definition.ThisShouldNotHappen
 import its.model.definition.loqi.LoqiStringUtils.extractEscapes
 import its.model.expressions.Operator
 import its.model.expressions.literals.*
@@ -179,14 +180,6 @@ class OperatorLoqiBuilder : LoqiGrammarBaseVisitor<Operator>() {
 
     override fun visitBlockExp(ctx: LoqiGrammarParser.BlockExpContext): Operator {
         return Block(ctx.exp().map { visit(it) })
-    }
-
-    override fun visitWithExp(ctx: LoqiGrammarParser.WithExpContext): Operator {
-        return With(
-            visit(ctx.exp(0)),
-            ctx.ID().getName(),
-            visit(ctx.exp(1))
-        )
     }
 
     override fun visitEqualityExp(ctx: LoqiGrammarParser.EqualityExpContext): Operator {

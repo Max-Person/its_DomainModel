@@ -149,13 +149,12 @@ exp
     | exp '.' CLASS '(' ')'                     #getClassExp
     | FIND ID ID '{' exp '}'                    #findByConditionExp
     | FIND_EXTREME ID '[' exp ']' AMONG ID ID '{' exp '}'      #findExtremeExp
-    | EXIST ID ID '[' exp ']' '{' exp '}'                      #existQuantifierExp
+    | FOR_ANY ID ID '[' exp ']' '{' exp '}'                      #existQuantifierExp
     | FOR_ALL ID ID '[' exp ']' '{' exp '}'                    #forAllQuantifierExp
     | exp '+=>' ID paramsValuesExpr? '(' (exp ',')* exp ')'    #addRelationshipExp
     | <assoc=right> exp '=' exp                             #assignExp
     | <assoc=right>  exp '?' exp ':' exp                    #ternaryIfExp
     | <assoc=right> IF '(' exp ')' exp (ELSE exp )?                  #ifExp
-    | WITH '(' ID '=' exp ')' exp                         #withExp
     | '{' (exp ';')+ '}'                                    #blockExp
     ;
 
@@ -204,15 +203,15 @@ STRING : '"""' (~[\\] | EscapeSequence)*? '"""'
 // Ключевые слова
 
 FIND  : 'find';
-FIND_EXTREME : 'findExtreme' | 'findextreme' ;
+FIND_EXTREME : 'findExtreme' ;
 IS   :   'is';
 AS : 'as' ;
 AND     :  'and';
 OR   : 'or';
 NOT  : 'not';
 COMPARE : 'compare';
-EXIST  : 'exist';
-FOR_ALL : 'forall';
+FOR_ANY  : 'forAny';
+FOR_ALL : 'forAll';
 AMONG    : 'among';
 IF : 'if' ;
 ELSE : 'else' ;

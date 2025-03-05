@@ -31,5 +31,4 @@ interface OperatorBehaviour<Info> : LiteralBehaviour<Info> {
     fun process(op: AddRelationshipLink): Info
     fun process(op: Block): Info
     fun process(op: IfThen): Info
-    fun process(op: With): Info
 }

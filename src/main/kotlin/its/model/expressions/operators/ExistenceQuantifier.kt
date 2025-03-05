@@ -2,7 +2,9 @@ package its.model.expressions.operators
 
 import its.model.TypedVariable
 import its.model.definition.DomainModel
+import its.model.definition.types.AnyType
 import its.model.definition.types.BooleanType
+import its.model.definition.types.NoneType
 import its.model.definition.types.Type
 import its.model.expressions.ExpressionContext
 import its.model.expressions.ExpressionValidationResults
@@ -10,12 +12,14 @@ import its.model.expressions.Operator
 import its.model.expressions.visitors.OperatorBehaviour
 
 /**
- * Квантор существования (Возвращает [BooleanType])
+ * Квантор существования ("Для одного из ...")
+ * Может использоваться также в качестве операций над одним объектом (объявление переменной в
  *
- * Возвращает [BooleanType]
+ * Возвращает [BooleanType], если [conditionExpr] имеет [BooleanType] (Агрегирует результаты по логическому ИЛИ);
+ * Иначе ничего не возвращает ([NoneType])
  * @param variable контекстная переменная, задающая ссылку на проверяемый объект
  * @param selectorExpr условие, задающее область определения переменной ([BooleanType])
- * @param conditionExpr условие, предъявляемое к переменной в области определения ([BooleanType])
+ * @param conditionExpr выражение, определяющее действия с переменной в области определения ([AnyType])
  */
 class ExistenceQuantifier(
     val variable: TypedVariable,
@@ -40,13 +44,12 @@ class ExistenceQuantifier(
             "Selector argument of $description should be of boolean type, but was '$selectorType'"
         )
         val conditionType = conditionExpr.validateAndGetType(domainModel, results, context)
-        results.checkValid(
-            conditionType is BooleanType,
-            "Condition argument of $description should be of boolean type, but was '$conditionType'"
-        )
         context.variableTypes.remove(variable.varName)
 
-        return BooleanType
+        return if (conditionType is BooleanType)
+            BooleanType
+        else
+            NoneType
     }
 
     override fun <I> use(behaviour: OperatorBehaviour<I>): I {

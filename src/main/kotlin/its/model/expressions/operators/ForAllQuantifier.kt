@@ -2,6 +2,7 @@ package its.model.expressions.operators
 
 import its.model.TypedVariable
 import its.model.definition.DomainModel
+import its.model.definition.types.AnyType
 import its.model.definition.types.BooleanType
 import its.model.definition.types.NoneType
 import its.model.definition.types.Type
@@ -18,7 +19,7 @@ import its.model.expressions.visitors.OperatorBehaviour
  * Иначе ничего не возвращает ([NoneType])
  * @param variable контекстная переменная, задающая ссылку на проверяемый объект
  * @param selectorExpr условие, задающее область определения переменной ([BooleanType])
- * @param conditionExpr условие, предъявляемое к переменной в области определения ([BooleanType])
+ * @param conditionExpr выражение, определяющее действия с переменной в области определения ([AnyType])
  */
 class ForAllQuantifier(
     val variable: TypedVariable,

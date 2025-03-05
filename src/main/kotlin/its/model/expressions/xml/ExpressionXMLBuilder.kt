@@ -396,17 +396,6 @@ object ExpressionXMLBuilder : XMLBuilder<ExpressionXMLBuilder.ExpressionBuildCon
         )
     }
 
-    @BuildForTags(["With"])
-    @BuildingClass(With::class)
-    private fun buildWith(el: ExpressionBuildContext): With {
-        val varName = el.getRequiredAttribute(VAR_NAME)
-        return With(
-            el.op(0),
-            varName,
-            el.op(1),
-        )
-    }
-
     @BuildForTags(["Block"])
     @BuildingClass(Block::class)
     private fun buildBlock(el: ExpressionBuildContext): Block {
