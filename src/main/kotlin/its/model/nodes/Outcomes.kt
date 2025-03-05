@@ -1,6 +1,6 @@
 package its.model.nodes
 
-import its.model.Association
+import mp.utils.Association
 
 /**
  * Переход из узла дерева мысли ([LinkNode]) в некоторый следующий узел [node]

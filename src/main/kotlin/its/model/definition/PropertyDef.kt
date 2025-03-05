@@ -12,6 +12,7 @@ class PropertyDef(
     override val name: String,
     val type: Type<*>,
     val kind: PropertyKind,
+    val paramsDecl: ParamsDecl,
 ) : DomainDefWithMeta<PropertyDef>() {
 
     override val description = "${kind.toString().lowercase()} property $declaringClassName.$name"
@@ -70,12 +71,21 @@ class PropertyDef(
             }
         }
 
+        //Все параметры должны быть дискретными (с конечным множеством значений)
+        for (param in paramsDecl) {
+            results.checkValid(
+                param.type.isDiscrete(),
+                "All parameters in properties must have a discrete type," +
+                        " but param '${param.name}' in ${owner.description} has a non-discrete type ${param.type}"
+            )
+        }
+
         //уникальность не проверяется т.к. PropertyContainer ее гарантирует
     }
 
     //----------------------------------
 
-    override fun plainCopy() = PropertyDef(declaringClassName, name, type, kind)
+    override fun plainCopy() = PropertyDef(declaringClassName, name, type, kind, paramsDecl)
 
     override fun mergeEquals(other: PropertyDef): Boolean {
         if (!super.mergeEquals(other)) return false

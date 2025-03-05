@@ -164,7 +164,7 @@ class DomainDictionariesBuilder private constructor(
             } as ClassDef
 
             domainOpAt(rowNum, dictName) {
-                declaringClass.declaredProperties.add(PropertyDef(declaringClassName, name, type, kind))
+                declaringClass.declaredProperties.add(PropertyDef(declaringClassName, name, type, kind, ParamsDecl()))
             }
         }
     }

@@ -15,6 +15,7 @@ interface OperatorBehaviour<Info> : LiteralBehaviour<Info> {
     fun process(op: Cast): Info
     fun process(op: CheckClass): Info
     fun process(op: CheckRelationship): Info
+    fun process(op: GetRelationshipParamValue): Info
     fun process(op: Compare): Info
     fun process(op: CompareWithComparisonOperator): Info
     fun process(op: ExistenceQuantifier): Info
@@ -24,8 +25,6 @@ interface OperatorBehaviour<Info> : LiteralBehaviour<Info> {
     fun process(op: GetClass): Info
     fun process(op: GetExtreme): Info
     fun process(op: GetPropertyValue): Info
-
-    //fun process(op: IsReachable) : Info
     fun process(op: LogicalAnd): Info
     fun process(op: LogicalNot): Info
     fun process(op: LogicalOr): Info

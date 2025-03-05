@@ -39,6 +39,10 @@ sealed class Type<T : Any>(
         return this == subType
     }
 
+    open fun isDiscrete(): Boolean = false
+
+    open fun getDiscreteValues(inDomainModel: DomainModel): Set<T>? = null
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -88,7 +92,10 @@ object NoneType : Type<Nothing>(Nothing::class)
 /**
  * Логический (булев) тип
  */
-object BooleanType : Type<Boolean>(Boolean::class)
+object BooleanType : Type<Boolean>(Boolean::class) {
+    override fun isDiscrete(): Boolean = true
+    override fun getDiscreteValues(inDomainModel: DomainModel): Set<Boolean> = setOf(true, false)
+}
 
 /**
  * Численный тип
@@ -109,6 +116,17 @@ sealed class NumericType<T : Number>(
 
         return this.range.contains(subType.range)
     }
+
+    override fun isDiscrete(): Boolean {
+        return range is DiscreteRange
+    }
+
+    override fun getDiscreteValues(inDomainModel: DomainModel): Set<T>? {
+        if (range !is DiscreteRange) return null
+        return range.values.map { it.asValueType() }.filterNotNull().toSet()
+    }
+
+    protected abstract fun Double.asValueType(): T?
 
     override fun equals(other: Any?): Boolean {
         return super.equals(other)
@@ -131,6 +149,11 @@ class IntegerType(
     range: Range = AnyNumber,
 ) : NumericType<Int>(Int::class, range) {
     constructor(value: Int) : this(DiscreteRange(setOf(value.toDouble())))
+
+    override fun Double.asValueType(): Int? {
+        val int = this.toInt()
+        return if (this != int.toDouble()) null else int
+    }
 }
 
 /**
@@ -140,6 +163,10 @@ class DoubleType(
     range: Range = AnyNumber,
 ) : NumericType<Double>(Double::class, range) {
     constructor(value: Double) : this(DiscreteRange(setOf(value)))
+
+    override fun Double.asValueType(): Double {
+        return this
+    }
 }
 
 /**
@@ -199,6 +226,14 @@ open class EnumType(
 
         val enum = this.findIn(inDomainModel)
         return enum.name == value.enumName && enum.values.get(value.valueName) != null
+    }
+
+    override fun isDiscrete(): Boolean = true
+
+    override fun getDiscreteValues(inDomainModel: DomainModel): Set<EnumValue>? {
+        if (!this.exists(inDomainModel)) return null
+
+        return this.findIn(inDomainModel).values.map { it.reference }.toSet()
     }
 
     override fun equals(other: Any?): Boolean {

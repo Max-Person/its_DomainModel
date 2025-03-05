@@ -35,7 +35,7 @@ object DomainBuilderUtils {
 
     @JvmStatic
     fun <O : ClassInheritorDef<O>> O.setIntProperty(propertyName: String, value: Int) {
-        definedPropertyValues.addOrReplace(PropertyValueStatement(this, propertyName, value))
+        definedPropertyValues.addOrReplace(PropertyValueStatement(this, propertyName, ParamsValues.EMPTY, value))
     }
 
     @JvmStatic
@@ -44,6 +44,7 @@ object DomainBuilderUtils {
             PropertyValueStatement(
                 this,
                 propertyName,
+                ParamsValues.EMPTY,
                 EnumValue(enumName, enumValueName)
             )
         )
@@ -51,12 +52,19 @@ object DomainBuilderUtils {
 
     @JvmStatic
     fun <O : ClassInheritorDef<O>> O.setBoolProperty(propertyName: String, value: Boolean) {
-        definedPropertyValues.addOrReplace(PropertyValueStatement(this, propertyName, value))
+        definedPropertyValues.addOrReplace(PropertyValueStatement(this, propertyName, ParamsValues.EMPTY, value))
     }
 
     @JvmStatic
     fun ObjectDef.addRelationship(relationshipName: String, vararg objectNames: String) {
-        relationshipLinks.add(RelationshipLinkStatement(this, relationshipName, objectNames.toList()))
+        relationshipLinks.add(
+            RelationshipLinkStatement(
+                this,
+                relationshipName,
+                objectNames.toList(),
+                ParamsValues.EMPTY
+            )
+        )
     }
 
 

@@ -96,10 +96,17 @@ class ClassDef(
         get() = domainModel.classes.filter { clazz -> clazz.parentName == this.name }
 
     /**
-     * Прямые экземпляры данного класса
+     * Прямые экземпляры данного класса (наследуются напрямую от этого класса)
      */
     val directInstances: List<ObjectDef>
         get() = domainModel.objects.filter { obj -> obj.className == this.name }
+
+
+    /**
+     * Объекты экземпляры данного класса
+     */
+    val instances: List<ObjectDef>
+        get() = domainModel.objects.filter { obj -> obj.isInstanceOf(this.name) }
 
     /**
      * Является ли класс конкретным (имеет ли объекты-экземпляры)

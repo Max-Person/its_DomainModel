@@ -1,6 +1,8 @@
 package its.model.definition
 
 import its.model.definition.types.EnumType
+import mp.utils.MutableMultimapIterator
+import mp.utils.getCombinations
 import java.util.*
 
 /**
@@ -9,11 +11,13 @@ import java.util.*
 class PropertyValueStatement<Owner : ClassInheritorDef<Owner>>(
     override val owner: Owner,
     val propertyName: String,
+    val paramsValues: ParamsValues,
     val value: Any,
 ) : Statement<Owner>() {
-    override fun copyForOwner(owner: Owner) = PropertyValueStatement(owner, propertyName, value)
+    override fun copyForOwner(owner: Owner) = PropertyValueStatement(owner, propertyName, paramsValues, value)
 
-    override val description = "statement ${owner.name}.$propertyName = $value"
+    override val description =
+        "statement ${owner.name}.$propertyName${if (paramsValues.isEmpty()) "" else paramsValues.toString()} = $value"
 
     override fun validate(results: DomainValidationResults) {
         //Существование свойства
@@ -44,8 +48,15 @@ class PropertyValueStatement<Owner : ClassInheritorDef<Owner>>(
             )
         }
 
+        //Валидация параметров (количества и типизации)
+        paramsValues.validate(property.paramsDecl, domainModel, this, results)
+
         //Переопределение значений выше? Но можно сказать что это разрешено
         //Проверка на количество значений не выполняется, т.к. PropertyValueStatements гарантирует уникальность
+    }
+
+    fun matches(propertyName: String, valuesMap: Map<String, Any>, paramsDecl: ParamsDecl): Boolean {
+        return this.propertyName == propertyName && paramsValues.matchesStrict(valuesMap, paramsDecl)
     }
 
     override fun equals(other: Any?): Boolean {
@@ -56,13 +67,14 @@ class PropertyValueStatement<Owner : ClassInheritorDef<Owner>>(
 
         if (owner != other.owner) return false
         if (propertyName != other.propertyName) return false
+        if (paramsValues != other.paramsValues) return false
         if (value != other.value) return false
 
         return true
     }
 
     override fun hashCode(): Int {
-        return Objects.hash(owner, propertyName, value)
+        return Objects.hash(owner, propertyName, paramsValues, value)
     }
 }
 
@@ -73,62 +85,116 @@ typealias ObjectPropertyValueStatement = PropertyValueStatement<ObjectDef>
 class PropertyValueStatements<Owner : ClassInheritorDef<Owner>>(
     owner: Owner,
 ) : Statements<Owner, PropertyValueStatement<Owner>>(owner) {
-    protected val map = mutableMapOf<String, PropertyValueStatement<Owner>>()
-    override fun iterator() = map.values.iterator()
+    protected val map = mutableMapOf<String, MutableList<PropertyValueStatement<Owner>>>()
 
     override fun addToInner(statement: PropertyValueStatement<Owner>) {
-        val existing = get(statement.propertyName)
+        val existing = getExisting(statement)
         checkValid(
             existing == null || existing.value == statement.value,
             "cannot add ${statement.description}, " +
-                    "because ${owner.description} already defines a value '${existing?.value}'" +
-                    "for property '${statement.propertyName}'"
+                    "because ${owner.description} already defines $existing"
         )
-        map[statement.propertyName] = statement
+        map.computeIfAbsent(statement.propertyName) { mutableListOf() }.add(statement)
     }
 
     fun addOrReplace(statement: PropertyValueStatement<Owner>) {
-        if (get(statement.propertyName) != null) {
-            map.remove(statement.propertyName)
-        }
+        removeElement(getExisting(statement))
         add(statement)
     }
 
     override fun removeElement(element: Any?): Boolean {
         if (element !is PropertyValueStatement<*>) return false
         if (contains(element)) {
-            map.remove(element.propertyName)
+            val list = map[element.propertyName]!!
+            list.remove(element)
+            if (list.isEmpty()) {
+                map.remove(element.propertyName)
+            }
             return true
         }
         return false
+    }
+
+    override fun iterator() = object : MutableMultimapIterator<PropertyValueStatement<Owner>>(map) {
+        override fun remove(value: PropertyValueStatement<Owner>) {
+            removeElement(value)
+        }
     }
 
     override fun clear() {
         map.clear()
     }
 
-    fun get(propertyName: String): PropertyValueStatement<Owner>? {
-        return map[propertyName]
+    fun get(propertyName: String, paramsValuesMap: Map<String, Any> = mapOf()): PropertyValueStatement<Owner>? {
+        val paramsDecl = findParamsDecl(propertyName) ?: ParamsDecl()
+        return map[propertyName]?.firstOrNull { it.matches(propertyName, paramsValuesMap, paramsDecl) }
+    }
+
+    private fun getExisting(statement: PropertyValueStatement<*>): PropertyValueStatement<Owner>? {
+        val propertyName = statement.propertyName
+        val paramsDecl = findParamsDecl(propertyName)
+        return map[propertyName]?.firstOrNull {
+            if (paramsDecl != null)
+                it.paramsValues.matchesStrict(statement.paramsValues, paramsDecl)
+            else
+                it.paramsValues == statement.paramsValues
+        }
+    }
+
+    private fun findParamsDecl(propertyName: String): ParamsDecl? {
+        return owner.findPropertyDef(propertyName, DomainValidationResults())?.paramsDecl
     }
 
     override fun validate(results: DomainValidationResults) {
         super.validate(results)
 
-        if (owner is ObjectDef) return //Пока что решили, что объекты не проверяются, и кидается ошибка в рантайме
-        if (owner is ClassDef && !owner.isConcrete) return
-        //Определяет все нужные свойства
-        val topDownLineage = owner.getKnownInheritanceLineage(results).reversed()
-        val undefinedClassProperties = mutableSetOf<PropertyDef>()
-        for (clazz in topDownLineage) {
-            undefinedClassProperties.addAll(clazz.declaredProperties.filter { it.kind.fits(owner) })
-            undefinedClassProperties.removeIf {
-                it.kind.fits(clazz) && clazz.definedPropertyValues.get(it.name) != null
+        //Нет пересечений по параметрам (это не обязательно гарантируется на этапе добавления)
+        map.forEach { (propertyName, statementsList) ->
+            val paramsDecl = findParamsDecl(propertyName)
+            if (paramsDecl != null) {
+                statementsList.forEachIndexed { indexA, statementA ->
+                    statementsList.subList(indexA + 1, statementsList.size).forEach { statementB ->
+                        results.checkValid(
+                            !statementB.paramsValues.matchesStrict(statementA.paramsValues, paramsDecl),
+                            "Cannot define both $statementA and $statementB," +
+                                    " as they define a value for the same property and parameters"
+                        )
+                    }
+                }
             }
         }
-        for (undefinedProperty in undefinedClassProperties) {
+
+        //Определяет все нужные свойства для всех комбинаций параметров
+        if (owner is ObjectDef) return //Пока что решили, что объекты не проверяются, и кидается ошибка в рантайме
+        if (owner is ClassDef && !owner.isConcrete) return
+        val topDownLineage = owner.getKnownInheritanceLineage(results).reversed()
+        val undefinedPropertiesAndParams = mutableSetOf<Pair<PropertyDef, Map<String, Any>>>()
+        for (clazz in topDownLineage) {
+            //добавляем требования
+            for (property in clazz.declaredProperties.filter { it.kind.fits(owner) }) {
+                val paramsValuesOptions = property.paramsDecl.mapNotNull { it.type.getDiscreteValues(domainModel) }
+                if (paramsValuesOptions.size != property.paramsDecl.size) {
+                    //Если не все параметры дискретные, то не проверяем - это ошибка само по себе
+                    continue
+                }
+                val paramsValuesCombinations = getCombinations(paramsValuesOptions)
+                paramsValuesCombinations.forEach { paramsValues ->
+                    val paramsValuesMap = paramsValues.mapIndexed { i, value ->
+                        property.paramsDecl[i].name to value
+                    }.toMap()
+                    undefinedPropertiesAndParams.add(property to paramsValuesMap)
+                }
+            }
+            //Убираем требования если определены
+            undefinedPropertiesAndParams.removeIf { (property, parametersValueMap) ->
+                clazz.definedPropertyValues.get(property.name, parametersValueMap) != null
+            }
+        }
+
+        for ((property, paramsValueMap) in undefinedPropertiesAndParams) {
             results.checkKnown(
-                get(undefinedProperty.name) != null,
-                "${owner.description} does not define a value for ${undefinedProperty.description}"
+                get(property.name, paramsValueMap) != null,
+                "${owner.description} does not define a value for ${property.description} with params $paramsValueMap"
             )
         }
     }
@@ -138,7 +204,7 @@ class PropertyValueStatements<Owner : ClassInheritorDef<Owner>>(
 
     override fun containsElement(element: Any?): Boolean {
         if (element !is PropertyValueStatement<*>) return false
-        return map.containsKey(element.propertyName) && map[element.propertyName] == element
+        return getExisting(element) == element
     }
 
     override fun containsAll(elements: Collection<PropertyValueStatement<Owner>>) = elements.all { contains(it) }

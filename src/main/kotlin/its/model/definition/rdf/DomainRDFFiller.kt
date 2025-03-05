@@ -105,7 +105,14 @@ class DomainRDFFiller private constructor(
             val rdfProperty = rdfModel.getProperty(basePrefix, property.name)!!
             val rdfStatement = resource.getProperty(rdfProperty) ?: continue
             val value = rdfStatement.`object`.asPropertyValue(property.type)
-            clazz.definedPropertyValues.add(ClassPropertyValueStatement(clazz, property.name, value))
+            clazz.definedPropertyValues.add(
+                ClassPropertyValueStatement(
+                    clazz,
+                    property.name,
+                    ParamsValues.EMPTY,
+                    value
+                )
+            )
             usedRdfProperties.add(rdfProperty)
         }
 
@@ -132,7 +139,7 @@ class DomainRDFFiller private constructor(
             val rdfProperty = rdfModel.getProperty(basePrefix, property.name)!!
             val rdfStatement = resource.getProperty(rdfProperty) ?: continue
             val value = rdfStatement.`object`.asPropertyValue(property.type)
-            obj.definedPropertyValues.add(ObjectPropertyValueStatement(obj, property.name, value))
+            obj.definedPropertyValues.add(ObjectPropertyValueStatement(obj, property.name, ParamsValues.EMPTY, value))
             usedRdfProperties.add(rdfProperty)
         }
 
@@ -154,7 +161,14 @@ class DomainRDFFiller private constructor(
                     val permutations = objNames.permutations()
                     for ((i, linkObjectPerm) in permutations.withIndex()) {
                         try {
-                            obj.relationshipLinks.add(RelationshipLinkStatement(obj, relationship.name, linkObjectPerm))
+                            obj.relationshipLinks.add(
+                                RelationshipLinkStatement(
+                                    obj,
+                                    relationship.name,
+                                    linkObjectPerm,
+                                    ParamsValues.EMPTY
+                                )
+                            )
                             break
                         } catch (e: DomainDefinitionException) {
                             if (i == permutations.size - 1) throw e
@@ -177,7 +191,14 @@ class DomainRDFFiller private constructor(
                                 linkResource.getProperty(objRdfProp).`object`?.asResource()?.name
                             }.filterNotNull()
                         }
-                    obj.relationshipLinks.add(RelationshipLinkStatement(obj, relationship.name, objNames))
+                    obj.relationshipLinks.add(
+                        RelationshipLinkStatement(
+                            obj,
+                            relationship.name,
+                            objNames,
+                            ParamsValues.EMPTY
+                        )
+                    )
                 }
                 usedRdfProperties.add(subjRdfProp)
             }

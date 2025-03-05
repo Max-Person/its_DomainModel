@@ -71,7 +71,7 @@ class CompareWithComparisonOperator(
                 "EQ", "EQUAL" -> Equal
                 "LESSEQ", "LE", "LESSEQUAL", "LESS_EQ", "LESS_EQUAL" -> LessEqual
                 "GREATEREQ", "GE", "GREATEREQUAL", "GREATER_EQ", "GREATER_EQUAL" -> GreaterEqual
-                "NOTEQ", "NE", "NOTEQUAL", "NOT_EQ", "NOT_EQUAL" -> NotEqual
+                "NOTEQ", "NE", "NEQ", "NOTEQUAL", "NOT_EQ", "NOT_EQUAL" -> NotEqual
                 else -> throw IllegalArgumentException("Cannot convert String '$value' into a ComparisonOperator")
             }
         }

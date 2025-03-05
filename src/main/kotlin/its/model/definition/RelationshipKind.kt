@@ -19,6 +19,7 @@ sealed interface RelationshipKind {
 class BaseRelationshipKind(
     val scaleType: ScaleType? = null,
     val quantifier: LinkQuantifier? = null,
+    val paramsDecl: ParamsDecl = ParamsDecl(),
 ) : RelationshipKind {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

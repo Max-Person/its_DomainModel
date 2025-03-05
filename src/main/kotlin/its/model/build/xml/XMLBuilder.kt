@@ -29,7 +29,7 @@ abstract class XMLBuilder<Context : ElementBuildContext, Build : Any> {
      */
     fun buildFromElement(el: Element): Build {
         return try {
-            if (methodMap.containsKey(el.nodeName)) {
+            if (canBuildFrom(el)) {
                 val converter = methodMap[el.nodeName]!!
                 val buildingClass = converter.buildClass
                 val context = createBuildContext(el, buildingClass)
@@ -41,6 +41,10 @@ abstract class XMLBuilder<Context : ElementBuildContext, Build : Any> {
         } catch (e: InvocationTargetException) {
             throw e.targetException
         }
+    }
+
+    protected fun canBuildFrom(el: Element): Boolean {
+        return methodMap.containsKey(el.nodeName)
     }
 
     /**

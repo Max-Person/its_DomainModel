@@ -6,22 +6,26 @@ import its.model.definition.types.Type
 import its.model.expressions.ExpressionContext
 import its.model.expressions.ExpressionValidationResults
 import its.model.expressions.Operator
+import its.model.expressions.utils.ParamsValuesExprList
 import its.model.expressions.visitors.OperatorBehaviour
 
 /**
- * Получить объект по отношению
+ * Получить объект, с которым субъект связан по заданному отношению.
+ * Если таких связей много, то выкидывается ошибка
  *
  * Возвращает [ObjectType], выбрасывает ошибку, если объекта нет
- * @param subjectExpr исходный объект (субъект) проверяемой связи ([ObjectType])
+ * @param subjectExpr исходный объект (субъект) искомой связи ([ObjectType])
  * @param relationshipName имя отношения
+ * @param paramsValues значения параметров, с которыми сопоставляется искомая связь. Могут быть описаны полностью или частично
  */
 class GetByRelationship(
     val subjectExpr: Operator,
     val relationshipName: String,
+    val paramsValues: ParamsValuesExprList = ParamsValuesExprList.EMPTY,
 ) : Operator() {
 
     override val children: List<Operator>
-        get() = listOf(subjectExpr)
+        get() = listOf(subjectExpr).plus(paramsValues.getExprList())
 
     override fun validateAndGetType(
         domainModel: DomainModel,
@@ -49,6 +53,8 @@ class GetByRelationship(
             return invalidType
         }
 
+        paramsValues.validatePartial(relationship.effectiveParams, this, domainModel, results, context)
+
         if (!relationship.isBinary) {
             results.invalid(
                 "Non-binary relationship '$relationshipName' " +
@@ -57,14 +63,6 @@ class GetByRelationship(
             )
             return invalidType
         }
-
-        results.checkValid(
-            relationship.effectiveQuantifier.objCount == 1,
-            "Relationship '$relationshipName' " +
-                    "cannot be used with $description, " +
-                    "as it has to be quantified as many-to-one ( {...->1} ), " +
-                    "in order to be able to determine a single object"
-        )
 
         return ObjectType(relationship.objectClassNames.first())
     }

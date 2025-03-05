@@ -7,6 +7,7 @@ import its.model.definition.types.Type
 import its.model.expressions.ExpressionContext
 import its.model.expressions.ExpressionValidationResults
 import its.model.expressions.Operator
+import its.model.expressions.utils.ParamsValuesExprList
 import its.model.expressions.visitors.OperatorBehaviour
 
 /**
@@ -15,14 +16,17 @@ import its.model.expressions.visitors.OperatorBehaviour
  * Возвращает тип соответствующий типу свойства
  * @param objectExpr целевой объект ([ObjectType])
  * @param propertyName имя свойства
+ * @param paramsValues значения параметров, для которых получается значение свойства
+ *      (должны быть прописаны все параметры, определяемые свойством)
  */
 class GetPropertyValue(
     val objectExpr: Operator,
     val propertyName: String,
+    val paramsValues: ParamsValuesExprList = ParamsValuesExprList.EMPTY,
 ) : Operator() {
 
     override val children: List<Operator>
-        get() = listOf(objectExpr)
+        get() = listOf(objectExpr).plus(paramsValues.getExprList())
 
     override fun validateAndGetType(
         domainModel: DomainModel,
@@ -49,6 +53,8 @@ class GetPropertyValue(
             )
             return invalidType
         }
+
+        paramsValues.validateFull(property.paramsDecl, this, domainModel, results, context)
 
         return property.type
     }

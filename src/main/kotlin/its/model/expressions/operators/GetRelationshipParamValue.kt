@@ -1,9 +1,7 @@
 package its.model.expressions.operators
 
-import its.model.definition.ClassDef
 import its.model.definition.DomainModel
-import its.model.definition.RelationshipDef
-import its.model.definition.types.BooleanType
+import its.model.definition.types.NoneType
 import its.model.definition.types.ObjectType
 import its.model.definition.types.Type
 import its.model.expressions.ExpressionContext
@@ -13,19 +11,23 @@ import its.model.expressions.utils.ParamsValuesExprList
 import its.model.expressions.visitors.OperatorBehaviour
 
 /**
- * Проверка наличия связи по отношению между объектами (с учетом вычисляемых отношений и проекции)
+ * Получить значение параметра связи между объектами по отношению.
+ * Во многом аналогичен [CheckRelationship], но не использует проекцию.
+ * Если под критерии поиска связи подходит несколько связей, то выкидывается ошибка.
  *
- * Возвращает [BooleanType]
- * @param subjectExpr исходный объект (субъект) проверяемой связи ([ObjectType])
+ * Возвращает тип, соответствующий типу указанного параметра
+ * @param subjectExpr исходный объект (субъект) искомой связи ([ObjectType])
  * @param relationshipName имя отношения
  * @param paramsValues значения параметров, с которыми сопоставляется искомая связь. Могут быть описаны полностью или частично
- * @param objectExprs выходные объекты проверямой связи (Все [ObjectType])
+ * @param objectExprs выходные объекты искомой связи (Все [ObjectType])
+ * @param paramName имя параметра, чье значение получается в этом выражении
  */
-class CheckRelationship(
+class GetRelationshipParamValue(
     val subjectExpr: Operator,
     val relationshipName: String,
     val paramsValues: ParamsValuesExprList = ParamsValuesExprList.EMPTY,
     val objectExprs: List<Operator>,
+    val paramName: String,
 ) : Operator() {
 
     override val children: List<Operator>
@@ -36,7 +38,7 @@ class CheckRelationship(
         results: ExpressionValidationResults,
         context: ExpressionContext
     ): Type<*> {
-        val type = BooleanType
+        val invalidType = NoneType
 
         val objectTypes = objectExprs.map { it.validateAndGetType(domainModel, results, context) }
         val areAllObjectsOfObjectType = objectTypes.all { it is ObjectType }
@@ -49,17 +51,30 @@ class CheckRelationship(
         val subjType = subjectExpr.validateAndGetType(domainModel, results, context)
         if (subjType !is ObjectType) {
             results.invalid("Subject-argument of $description should be an object, but was $subjType")
-            return type
+            return invalidType
         }
         if (!subjType.exists(domainModel)) {
             //Если невалидный класс, это кинется где-то ниже (где этот тип создавался)
-            return type
+            return invalidType
         }
 
         val clazz = subjType.findIn(domainModel)
-        val relationship = getRelationship(clazz, results) ?: return type
+        val relationship = clazz.findRelationshipDef(relationshipName)
+        if (relationship == null) {
+            results.nonConforming(
+                "No relationship '$relationshipName' exists for objects of type '${clazz.name}' " +
+                        "to be read via $description." +
+                        " Keep in mind that getting relationship params cannot be done with projected relationships."
+            )
+            return invalidType
+        }
 
         paramsValues.validatePartial(relationship.effectiveParams, this, domainModel, results, context)
+        results.checkConforming(
+            relationship.effectiveParams.containsKey(paramName),
+            "No parameter with name '$paramName' exists for $relationship to be read via $description"
+        )
+        val type = relationship.effectiveParams[paramName]?.type ?: invalidType
 
         val isCorrectObjectCount = objectExprs.size == relationship.objectClassNames.size
         results.checkConforming(
@@ -84,40 +99,6 @@ class CheckRelationship(
 
         return type
     }
-
-    private fun getRelationship(
-        subjClass: ClassDef,
-        results: ExpressionValidationResults,
-    ): RelationshipDef? {
-        var relationship = subjClass.findRelationshipDef(relationshipName)
-        if (relationship == null) {
-            val possibleRelationships =
-                subjClass.projectionClasses.mapNotNull { it.findRelationshipDef(relationshipName) }
-            if (possibleRelationships.isEmpty()) {
-                results.nonConforming(
-                    "No relationship '$relationshipName' exists for objects of type '${subjClass.name}' " +
-                            "to be read via $description"
-                )
-                return null
-            }
-            if (possibleRelationships.size >= 2) {
-                results.nonConforming(
-                    "Multiple relationship definitions for name '$relationshipName' are available to check " +
-                            "for objects of type '${subjClass.name}' via projection in $description: " +
-                            possibleRelationships.joinToString(", ")
-                )
-                return null
-            }
-            relationship = possibleRelationships.single()
-        }
-        return relationship
-    }
-
-    /**
-     * Получить отношение с учетом проекции
-     */
-    fun getRelationship(subjClass: ClassDef) =
-        getRelationship(subjClass, ExpressionValidationResults(true))!!
 
     override fun <I> use(behaviour: OperatorBehaviour<I>): I {
         return behaviour.process(this)

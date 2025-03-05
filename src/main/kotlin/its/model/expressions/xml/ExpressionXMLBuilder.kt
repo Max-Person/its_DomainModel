@@ -4,13 +4,15 @@ import its.model.TypedVariable
 import its.model.build.xml.ElementBuildContext
 import its.model.build.xml.XMLBuildException
 import its.model.build.xml.XMLBuilder
-import its.model.definition.ThisShouldNotHappen
 import its.model.definition.types.Comparison
 import its.model.definition.types.EnumValue
 import its.model.expressions.Operator
 import its.model.expressions.getTypesFromConditionExpr
 import its.model.expressions.literals.*
 import its.model.expressions.operators.*
+import its.model.expressions.utils.NamedParamsValuesExprList
+import its.model.expressions.utils.OrderedParamsValuesExprList
+import its.model.expressions.utils.ParamsValuesExprList
 import org.w3c.dom.Element
 import kotlin.reflect.KClass
 
@@ -52,16 +54,18 @@ object ExpressionXMLBuilder : XMLBuilder<ExpressionXMLBuilder.ExpressionBuildCon
     private const val PROPERTY_NAME = "propertyName"
     private const val RELATIONSHIP_NAME = "relationshipName"
 
+    private const val PARAMS_VALUES = "ParamsValues"
+
     class ExpressionBuildContext(
         el: Element,
         buildClass: KClass<*>,
-        var operands: List<Operator>,
+        val operands: MutableList<Operator>,
     ) : ElementBuildContext(el, buildClass)
 
     override fun createException(message: String) = ExpressionXMLBuildException(message)
 
     override fun createBuildContext(el: Element, buildClass: KClass<*>): ExpressionBuildContext {
-        val operands = el.getChildren().map { build(it) }
+        val operands = el.getChildren().filter { canBuildFrom(it) }.map { build(it) }.toMutableList()
         return ExpressionBuildContext(el, buildClass, operands)
     }
 
@@ -78,23 +82,31 @@ object ExpressionXMLBuilder : XMLBuilder<ExpressionXMLBuilder.ExpressionBuildCon
         attr: String,
         childIndex: Int,
     ): String {
-        val el = operands.toMutableList()
         return this.findAttribute(attr)
             ?: run {
-                if (operands.size <= childIndex
-                    || operands[childIndex].let { it !is ValueLiteral<*, *> && it !is ReferenceLiteral }
-                )
+                val children = el.getChildren()
+                if (children.size <= childIndex || !children[childIndex].hasAttribute(NAME))
                     throw createException(
                         "$this must either have a '$attr' attribute " +
-                                "or have a named operand (child tag) at index $childIndex"
+                                "or have a named child tag at index $childIndex"
                     )
-                val child = el.removeAt(childIndex)
-                operands = el
-                when (child) {
-                    is ValueLiteral<*, *> -> child.value.toString()
-                    is ReferenceLiteral -> child.name
-                    else -> throw ThisShouldNotHappen()
-                }
+                return children[childIndex].getAttribute(NAME)
+            }
+    }
+
+    private fun ExpressionBuildContext.getAttributeOrTakeFromOperand(
+        attr: String,
+        childIndex: Int,
+    ): String {
+        return this.findAttribute(attr)
+            ?: run {
+                if (operands.size <= childIndex || operands[childIndex] !is ReferenceLiteral)
+                    throw createException(
+                        "$this must either have a '$attr' attribute " +
+                                "or have a named reference literal operand at index $childIndex"
+                    )
+                val operand = operands.removeAt(childIndex)
+                return (operand as ReferenceLiteral).name
             }
     }
 
@@ -107,6 +119,18 @@ object ExpressionXMLBuilder : XMLBuilder<ExpressionXMLBuilder.ExpressionBuildCon
     }
 
     //--- Построение ---
+
+    private fun buildParamsValues(el: Element?): ParamsValuesExprList {
+        if (el == null) return ParamsValuesExprList.EMPTY
+        val type = el.getAttribute(TYPE)
+        return if (type == "named") {
+            NamedParamsValuesExprList(el.getChildren().filter { it.findChild() != null }.associate {
+                it.getAttribute(NAME) to build(it.findChild()!!)
+            })
+        } else {
+            OrderedParamsValuesExprList(el.getChildren().map { build(it) })
+        }
+    }
 
     @BuildForTags(["Variable"])
     @BuildingClass(VariableLiteral::class)
@@ -182,7 +206,7 @@ object ExpressionXMLBuilder : XMLBuilder<ExpressionXMLBuilder.ExpressionBuildCon
     @BuildForTags(["AssignToDecisionTreeVar"])
     @BuildingClass(AssignDecisionTreeVar::class)
     private fun buildAssignToDecisionTreeVar(el: ExpressionBuildContext): AssignDecisionTreeVar {
-        val varName = el.getAttributeOrTakeFromChild(VAR_NAME, 0)
+        val varName = el.getAttributeOrTakeFromOperand(VAR_NAME, 0)
         return AssignDecisionTreeVar(
             varName,
             el.op(0)
@@ -196,6 +220,7 @@ object ExpressionXMLBuilder : XMLBuilder<ExpressionXMLBuilder.ExpressionBuildCon
         return AssignProperty(
             el.op(0),
             propertyName,
+            buildParamsValues(el.findChild(PARAMS_VALUES)),
             el.op(1),
         )
     }
@@ -207,6 +232,7 @@ object ExpressionXMLBuilder : XMLBuilder<ExpressionXMLBuilder.ExpressionBuildCon
         return AddRelationshipLink(
             el.op(0),
             relationshipName,
+            buildParamsValues(el.findChild(PARAMS_VALUES)),
             el.operands.subList(1, el.operands.size),
         )
     }
@@ -237,7 +263,22 @@ object ExpressionXMLBuilder : XMLBuilder<ExpressionXMLBuilder.ExpressionBuildCon
         return CheckRelationship(
             el.op(0),
             relationshipName,
+            buildParamsValues(el.findChild(PARAMS_VALUES)),
             el.operands.subList(1, el.operands.size),
+        )
+    }
+
+    @BuildForTags(["GetRelationshipParamValue"])
+    @BuildingClass(GetRelationshipParamValue::class)
+    private fun buildGetRelationshipParamValue(el: ExpressionBuildContext): GetRelationshipParamValue {
+        val relationshipName = el.getAttributeOrTakeFromChild(RELATIONSHIP_NAME, 0)
+        val paramName = el.getRequiredAttribute("paramName")
+        return GetRelationshipParamValue(
+            el.op(0),
+            relationshipName,
+            buildParamsValues(el.findChild(PARAMS_VALUES)),
+            el.operands.subList(1, el.operands.size),
+            paramName,
         )
     }
 
@@ -297,6 +338,7 @@ object ExpressionXMLBuilder : XMLBuilder<ExpressionXMLBuilder.ExpressionBuildCon
         return GetByRelationship(
             el.op(0),
             relationshipName,
+            buildParamsValues(el.findChild(PARAMS_VALUES)),
         )
     }
 
@@ -324,6 +366,7 @@ object ExpressionXMLBuilder : XMLBuilder<ExpressionXMLBuilder.ExpressionBuildCon
         return GetPropertyValue(
             el.op(0),
             propertyName,
+            buildParamsValues(el.findChild(PARAMS_VALUES)),
         )
     }
 
@@ -380,14 +423,6 @@ object ExpressionXMLBuilder : XMLBuilder<ExpressionXMLBuilder.ExpressionBuildCon
             el.op(1),
             el.operands.getOrNull(2)
         )
-    }
-
-    override fun buildDefault(el: ExpressionBuildContext): Operator {
-        //В случае неизвестного типа узла собираем имя в строковый литерал
-        //Это нужно чтобы данные из устаревших типов операторов (ссылка на свойство и т.п.) не потерялись
-        return el.findAttribute(NAME)
-            ?.let { StringLiteral(it) }
-            .orElseBuildErr("No build functions exist for tags '${el.nodeName}' to construct an Operator.")
     }
 
 }

@@ -1,12 +1,14 @@
 package its.model.definition.loqi
 
 import its.model.TypedVariable
-import its.model.definition.EnumValueRef
-import its.model.definition.ThisShouldNotHappen
+import its.model.definition.*
 import its.model.definition.loqi.LoqiStringUtils.extractEscapes
 import its.model.expressions.Operator
 import its.model.expressions.literals.*
 import its.model.expressions.operators.*
+import its.model.expressions.utils.NamedParamsValuesExprList
+import its.model.expressions.utils.OrderedParamsValuesExprList
+import its.model.expressions.utils.ParamsValuesExprList
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.tree.ParseTree
@@ -17,7 +19,7 @@ import java.io.StringReader
 /**
  * Построение дерева выражений [Operator] на основе текстовой записи
  */
-class OperatorBuilder : LoqiGrammarBaseVisitor<Operator>() {
+class OperatorLoqiBuilder : LoqiGrammarBaseVisitor<Operator>() {
 
     companion object {
 
@@ -39,7 +41,7 @@ class OperatorBuilder : LoqiGrammarBaseVisitor<Operator>() {
             val tree: ParseTree = parser.exp()
             errorListener.getSyntaxErrors().firstOrNull()?.exception?.apply { throw this }
 
-            val builder = OperatorBuilder()
+            val builder = OperatorLoqiBuilder()
             return tree.accept(builder)
         }
 
@@ -52,19 +54,34 @@ class OperatorBuilder : LoqiGrammarBaseVisitor<Operator>() {
         }
     }
 
+    private fun getParamsValues(ctx: LoqiGrammarParser.ParamsValuesExprContext?): ParamsValuesExprList {
+        if (ctx == null) return ParamsValuesExprList.EMPTY
+        return when (ctx) {
+            is LoqiGrammarParser.NamedParamsValuesExprContext ->
+                NamedParamsValuesExprList(ctx.namedParamValueExpr().associate {
+                    it.ID().getName() to visit(it.exp())
+                })
+
+            is LoqiGrammarParser.OrderedParamsValuesExprContext ->
+                OrderedParamsValuesExprList(ctx.exp().map { visit(it) })
+
+            else -> throw ThisShouldNotHappen()
+        }
+    }
+
     override fun visitAssignExp(ctx: LoqiGrammarParser.AssignExpContext): Operator {
         val left = visit(ctx.exp(0))
         val right = visit(ctx.exp(1))
         if (left is DecisionTreeVarLiteral) {
             return AssignDecisionTreeVar(left.name, right)
         } else if (left is GetPropertyValue) {
-            return AssignProperty(left.objectExpr, left.propertyName, right)
+            return AssignProperty(left.objectExpr, left.propertyName, left.paramsValues, right)
         }
         throw ThisShouldNotHappen()
     }
 
     override fun visitGetProperty(ctx: LoqiGrammarParser.GetPropertyContext): Operator {
-        return GetPropertyValue(visit(ctx.exp()), ctx.ID().getName())
+        return GetPropertyValue(visit(ctx.exp()), ctx.ID().getName(), getParamsValues(ctx.paramsValuesExpr()))
     }
 
     override fun visitAndExp(ctx: LoqiGrammarParser.AndExpContext): Operator {
@@ -107,10 +124,21 @@ class OperatorBuilder : LoqiGrammarBaseVisitor<Operator>() {
         return LogicalOr(visit(ctx.exp(0)), visit(ctx.exp(1)))
     }
 
+    override fun visitGetRelationshipParamExp(ctx: LoqiGrammarParser.GetRelationshipParamExpContext): Operator {
+        return GetRelationshipParamValue(
+            visit(ctx.exp(0)),
+            ctx.ID(0).getName(),
+            getParamsValues(ctx.paramsValuesExpr()),
+            ctx.exp().drop(1).map { visit(it) },
+            ctx.ID(1).getName(),
+        )
+    }
+
     override fun visitCheckRelationshipExp(ctx: LoqiGrammarParser.CheckRelationshipExpContext): Operator {
         return CheckRelationship(
             visit(ctx.exp(0)),
             ctx.ID().getName(),
+            getParamsValues(ctx.paramsValuesExpr()),
             ctx.exp().drop(1).map { visit(it) }
         )
     }
@@ -119,6 +147,7 @@ class OperatorBuilder : LoqiGrammarBaseVisitor<Operator>() {
         return AddRelationshipLink(
             visit(ctx.exp(0)),
             ctx.ID().getName(),
+            getParamsValues(ctx.paramsValuesExpr()),
             ctx.exp().drop(1).map { visit(it) }
         )
     }
@@ -208,7 +237,7 @@ class OperatorBuilder : LoqiGrammarBaseVisitor<Operator>() {
     }
 
     override fun visitGetByRelationship(ctx: LoqiGrammarParser.GetByRelationshipContext): Operator {
-        return GetByRelationship(visit(ctx.exp()), ctx.ID().getName())
+        return GetByRelationship(visit(ctx.exp()), ctx.ID().getName(), getParamsValues(ctx.paramsValuesExpr()))
     }
 
     private fun TerminalNode.getName(): String {

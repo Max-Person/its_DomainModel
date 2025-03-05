@@ -140,38 +140,38 @@ class RelationshipDef(
 
                 if (dependencyLineage.isNotEmpty()) {
                     //Соответствие типов с отношением, от которого зависит
-                    val dependenctRelationship = dependencyLineage.first()
+                    val baseRelationship = dependencyLineage.first()
                     val validTypes = when (kind.type) {
-                        DependantRelationshipKind.Type.OPPOSITE -> this.isBinary && dependenctRelationship.isBinary
-                                && this.subjectClassName == dependenctRelationship.objectClassNames.first()
-                                && this.objectClassNames.first() == dependenctRelationship.subjectClassName
+                        DependantRelationshipKind.Type.OPPOSITE -> this.isBinary && baseRelationship.isBinary
+                                && this.subjectClassName == baseRelationship.objectClassNames.first()
+                                && this.objectClassNames.first() == baseRelationship.subjectClassName
 
-                        DependantRelationshipKind.Type.TRANSITIVE -> this.isBinary && dependenctRelationship.isBinary
-                                && this.subjectClassName == dependenctRelationship.subjectClassName
-                                && this.objectClassNames.first() == dependenctRelationship.objectClassNames.first()
+                        DependantRelationshipKind.Type.TRANSITIVE -> this.isBinary && baseRelationship.isBinary
+                                && this.subjectClassName == baseRelationship.subjectClassName
+                                && this.objectClassNames.first() == baseRelationship.objectClassNames.first()
 
                         DependantRelationshipKind.Type.BETWEEN,
                         DependantRelationshipKind.Type.CLOSER,
-                        DependantRelationshipKind.Type.FURTHER -> this.isTernary && dependenctRelationship.isBinary
-                                && this.subjectClassName == dependenctRelationship.subjectClassName
-                                && this.objectClassNames[0] == dependenctRelationship.objectClassNames.first()
-                                && this.objectClassNames[1] == dependenctRelationship.objectClassNames.first()
+                        DependantRelationshipKind.Type.FURTHER -> this.isTernary && baseRelationship.isBinary
+                                && this.subjectClassName == baseRelationship.subjectClassName
+                                && this.objectClassNames[0] == baseRelationship.objectClassNames.first()
+                                && this.objectClassNames[1] == baseRelationship.objectClassNames.first()
                     }
 
                     results.checkValid(
                         validTypes,
                         "typing of $description isn't valid " +
-                                "given the typing of its dependency relationship, ${dependenctRelationship.description}"
+                                "given the typing of its base relationship, ${baseRelationship.description}"
                     )
 
                     //"Транзитивность" (?) и "между", "ближе", "дальше" можно рассчитать только на шкалах
-                    val baseRelationship = dependencyLineage.last()
-                    if (baseRelationship.kind is BaseRelationshipKind) {
+                    val rootRelationship = dependencyLineage.last()
+                    if (rootRelationship.kind is BaseRelationshipKind) {
                         results.checkValid(
                             kind.type == DependantRelationshipKind.Type.OPPOSITE ||
-                                    baseRelationship.isScalar,
-                            "${kind.type} relationships can only be based on scalar relationships, " +
-                                    "but $description is based on ${baseRelationship.description}, which is not scalar"
+                                    rootRelationship.isScalar,
+                            "${kind.type} relationships can only depend on scalar relationships, " +
+                                    "but $description is depends on ${rootRelationship.description}, which is not scalar"
                         )
                     }
                 }
@@ -268,6 +268,12 @@ class RelationshipDef(
                     return LinkQuantifier.ManyToMany()
                 }
             }
+        }
+
+    val effectiveParams: ParamsDecl
+        get() = when (kind) {
+            is BaseRelationshipKind -> kind.paramsDecl
+            is DependantRelationshipKind -> baseRelationship!!.effectiveParams
         }
 }
 

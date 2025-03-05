@@ -1,5 +1,6 @@
 package its.model.expressions.operators
 
+import its.model.definition.BaseRelationshipKind
 import its.model.definition.DomainModel
 import its.model.definition.types.NoneType
 import its.model.definition.types.ObjectType
@@ -7,6 +8,7 @@ import its.model.definition.types.Type
 import its.model.expressions.ExpressionContext
 import its.model.expressions.ExpressionValidationResults
 import its.model.expressions.Operator
+import its.model.expressions.utils.ParamsValuesExprList
 import its.model.expressions.visitors.OperatorBehaviour
 
 /**
@@ -15,16 +17,19 @@ import its.model.expressions.visitors.OperatorBehaviour
  * Ничего не возвращает ([NoneType])
  * @param subjectExpr исходный объект (субъект) проставляемой связи ([ObjectType])
  * @param relationshipName имя отношения
+ * @param paramsValues значения параметров, которые необходимо выставить в создаваемую связь
+ *      (должны быть прописаны все параметры, определяемые отношением)
  * @param objectExprs выходные объекты проставляемой связи (Все [ObjectType])
  */
 class AddRelationshipLink(
     val subjectExpr: Operator,
     val relationshipName: String,
+    val paramsValues: ParamsValuesExprList = ParamsValuesExprList.EMPTY,
     val objectExprs: List<Operator>,
 ) : Operator() {
 
     override val children: List<Operator>
-        get() = listOf(subjectExpr).plus(objectExprs)
+        get() = listOf(subjectExpr).plus(objectExprs).plus(paramsValues.getExprList())
 
     override fun validateAndGetType(
         domainModel: DomainModel,
@@ -61,6 +66,13 @@ class AddRelationshipLink(
             )
             return type
         }
+
+        results.checkConforming(
+            relationship.kind is BaseRelationshipKind,
+            "Cannot add a link for a dependent relationship '$relationshipName'"
+        )
+
+        paramsValues.validateFull(relationship.effectiveParams, this, domainModel, results, context)
 
         val isCorrectObjectCount = objectExprs.size == relationship.objectClassNames.size
         results.checkConforming(

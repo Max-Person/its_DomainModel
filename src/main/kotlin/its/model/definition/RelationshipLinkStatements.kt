@@ -9,10 +9,15 @@ class RelationshipLinkStatement(
     override val owner: ObjectDef,
     val relationshipName: String,
     val objectNames: List<String>,
+    val paramsValues: ParamsValues,
 ) : Statement<ObjectDef>() {
-    override val description = "statement ${owner.name}=>$relationshipName(${objectNames.joinToString(", ")})"
+    override val description =
+        "statement ${owner.name}=>$relationshipName${if (paramsValues.isEmpty()) "" else paramsValues.toString()}(${
+            objectNames.joinToString(", ")
+        })"
 
-    override fun copyForOwner(owner: ObjectDef) = RelationshipLinkStatement(owner, relationshipName, objectNames)
+    override fun copyForOwner(owner: ObjectDef) =
+        RelationshipLinkStatement(owner, relationshipName, objectNames, paramsValues)
 
     internal fun getKnownRelationship(results: DomainValidationResults): RelationshipDef? {
         val relationship = owner.findRelationshipDef(relationshipName, results)
@@ -68,6 +73,9 @@ class RelationshipLinkStatement(
                 }
             }
         }
+
+        //Валидность параметров (совпадение по типу и имени)
+        paramsValues.validate(relationship.effectiveParams, domainModel, this, results)
     }
 
     override fun equals(other: Any?): Boolean {

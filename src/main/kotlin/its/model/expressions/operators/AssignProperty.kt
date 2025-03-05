@@ -9,6 +9,7 @@ import its.model.definition.types.Type
 import its.model.expressions.ExpressionContext
 import its.model.expressions.ExpressionValidationResults
 import its.model.expressions.Operator
+import its.model.expressions.utils.ParamsValuesExprList
 import its.model.expressions.visitors.OperatorBehaviour
 
 /**
@@ -17,16 +18,19 @@ import its.model.expressions.visitors.OperatorBehaviour
  * Ничего не возвращает ([NoneType])
  * @param objectExpr целевой объект ([ObjectType])
  * @param propertyName имя свойства
+ * @param paramsValues значения параметров, для которых проставляется значение свойства
+ *      (должны быть прописаны все параметры, определяемые свойством)
  * @param valueExpr присваиваемое значение свойства (Тип соответствующий типу свойства)
  */
 class AssignProperty(
     val objectExpr: Operator,
     val propertyName: String,
+    val paramsValues: ParamsValuesExprList = ParamsValuesExprList.EMPTY,
     val valueExpr: Operator,
 ) : Operator() {
 
     override val children: List<Operator>
-        get() = listOf(objectExpr, valueExpr)
+        get() = listOf(objectExpr, valueExpr).plus(paramsValues.getExprList())
 
     override fun validateAndGetType(
         domainModel: DomainModel,
@@ -49,10 +53,12 @@ class AssignProperty(
         if (property == null) {
             results.nonConforming(
                 "No property '$propertyName' exists for objects of type '${clazz.name}' " +
-                        "to be read via $description"
+                        "to be assigned via $description"
             )
             return type
         }
+
+        paramsValues.validateFull(property.paramsDecl, this, domainModel, results, context)
 
         results.checkConforming(
             property.kind == PropertyDef.PropertyKind.OBJECT,

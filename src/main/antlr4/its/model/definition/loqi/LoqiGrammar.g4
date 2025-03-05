@@ -26,11 +26,11 @@ classMemberDecl : propertyDecl
                 | relationshipDecl
                 ;
 
-propertyDecl : (CLASS | OBJ) PROP id ':' type metadataSection? ';'
+propertyDecl : (CLASS | OBJ) PROP id paramsDecl? ':' type metadataSection? ';'
              | (CLASS | OBJ) PROP id (':' type)? '=' value metadataSection? ';'
              ;
 
-relationshipDecl : REL id '(' idList ')' (':' relationshipKind)? metadataSection? ';' ;
+relationshipDecl : REL id paramsDecl? '(' idList ')' (':' relationshipKind)? metadataSection? ';' ;
 
 relationshipKind : scaleType
                  | scaleType? relationshipQuantifier
@@ -70,9 +70,9 @@ objStatement : propertyValueStatement
              | relationshipLinkStatement
              ;
 
-propertyValueStatement : id '=' value ';' ;
+propertyValueStatement : id paramsValues? '=' value ';' ;
 
-relationshipLinkStatement : id '(' idList ')' ';' ;
+relationshipLinkStatement : id paramsValues? '(' idList ')' ';' ;
 
 varDecl :  varLeftPart id;
 
@@ -92,9 +92,19 @@ metaRef : OBJ? id
 
 metadataSection : '[' metadataPropertyDecl* ']' ;
 
-metadataPropertyDecl : (id '.')? id ('=' value)? ';' ;
+metadataPropertyDecl : (id '.')? id '=' value ';' ;
 
 // Прочее -----------------
+
+paramsDecl : '<' (paramDecl (',' paramDecl)* ','?)? '>' ;
+
+paramDecl : id ':' type ;
+
+paramsValues : '<' value (',' value)* ','? '>' #orderedParamsValues
+            | '<' (namedParamValue (',' namedParamValue)* ','?) ? '>' #namedParamsValues
+            ;
+
+namedParamValue : id '=' value ;
 
 type : id       //ссылка на Enum
      | intType
@@ -123,8 +133,8 @@ exp
     | CLASS':'ID                    #classLiteral
     | OBJ':'ID                      #objLiteral
     | '$'ID                         #variable
-    | exp '->' ID                   #getByRelationship
-    | exp '.' ID                    #getProperty
+    | exp '->' paramsValuesExpr? ID                   #getByRelationship
+    | exp '.' paramsValuesExpr? ID                    #getProperty
     | NOT exp                       #notExp
     | exp IS exp                    #isExp
     | exp (GREATER|LESS|GTE|LTE) exp   #compareExp
@@ -134,19 +144,26 @@ exp
     | exp 'as' exp                   #castExp
     | exp AND exp                   #andExp
     | exp OR exp                    #orExp
-    | exp '->' ID '(' (exp ',')* exp ')'        #checkRelationshipExp
+    | exp '->' ID paramsValuesExpr? '(' (exp ',')* exp ')' '.' ID  #getRelationshipParamExp
+    | exp '->' ID paramsValuesExpr? '(' (exp ',')* exp ')'     #checkRelationshipExp
     | exp '.' CLASS '(' ')'                     #getClassExp
     | FIND ID ID '{' exp '}'                    #findByConditionExp
     | FIND_EXTREME ID '[' exp ']' AMONG ID ID '{' exp '}'      #findExtremeExp
     | EXIST ID ID '[' exp ']' '{' exp '}'                      #existQuantifierExp
     | FOR_ALL ID ID '[' exp ']' '{' exp '}'                    #forAllQuantifierExp
-    | exp '+=>' ID '(' (exp ',')* exp ')'                      #addRelationshipExp
+    | exp '+=>' ID paramsValuesExpr? '(' (exp ',')* exp ')'    #addRelationshipExp
     | <assoc=right> exp '=' exp                             #assignExp
     | <assoc=right>  exp '?' exp ':' exp                    #ternaryIfExp
     | <assoc=right> 'if' '(' exp ')' exp ('else' exp )?                  #ifExp
     | 'with' '(' ID '=' exp ')' exp                         #withExp
     | '{' (exp ';')+ '}'                                    #blockExp
     ;
+
+paramsValuesExpr : '<' exp (',' exp)* ','? '>' #orderedParamsValuesExpr
+            | '<' (namedParamValueExpr (',' namedParamValueExpr)* ','?) ? '>' #namedParamsValuesExpr
+            ;
+
+namedParamValueExpr : ID '=' exp ;
 
 value : INTEGER
       | DOUBLE

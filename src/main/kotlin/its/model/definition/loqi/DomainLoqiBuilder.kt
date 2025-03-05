@@ -95,11 +95,19 @@ class DomainLoqiBuilder private constructor(
         val name = ctx.id().getName()
         val type = if (ctx.type() != null) ctx.type().getType() else ctx.value().getTypeAndValue().type
         val value = ctx.value()?.getTypeAndValue()?.value
+        val paramsDecl = getParamsDecl(ctx.paramsDecl())
 
-        val property = domainOpAt(line) { clazz.declaredProperties.added(PropertyDef(clazz.name, name, type, kind)) }
-        value?.also {
-            val tmpStatement = ClassPropertyValueStatement(clazz, name, it)
-            domainOpAt(ctx.value().start.line) { clazz.definedPropertyValues.add(tmpStatement) }
+        val property = domainOpAt(line) {
+            clazz.declaredProperties.added(
+                PropertyDef(clazz.name, name, type, kind, paramsDecl)
+            )
+        }
+        if (value != null) {
+            domainOpAt(ctx.value().start.line) {
+                clazz.definedPropertyValues.add(
+                    ClassPropertyValueStatement(clazz, name, ParamsValues.EMPTY, value)
+                )
+            }
         }
         property.fillMetadata(ctx.metadataSection())
     }
@@ -108,10 +116,17 @@ class DomainLoqiBuilder private constructor(
         val line = ctx.id().start.line
         val name = ctx.id().getName()
         val objTypeNames = ctx.idList().id().map { it.getName() }
-        val kind = ctx.relationshipKind()?.getRelationshipKind(clazz.name) ?: BaseRelationshipKind()
+        val paramsDecl = getParamsDecl(ctx.paramsDecl())
+        val kind = ctx.relationshipKind()?.getRelationshipKind(clazz.name, paramsDecl)
+
+        if (paramsDecl.isNotEmpty() && kind is DependantRelationshipKind) {
+            throw LoqiDomainBuildException(line, "Only base relationships can have params declaration")
+        }
 
         val relationship = domainOpAt(line) {
-            clazz.declaredRelationships.added(RelationshipDef(clazz.name, name, objTypeNames, kind))
+            clazz.declaredRelationships.added(
+                RelationshipDef(clazz.name, name, objTypeNames, kind ?: BaseRelationshipKind(paramsDecl = paramsDecl))
+            )
         }
         relationship.fillMetadata(ctx.metadataSection())
     }
@@ -119,9 +134,39 @@ class DomainLoqiBuilder private constructor(
     private fun processPropertyValueStatement(clazz: ClassDef, ctx: PropertyValueStatementContext) {
         val line = ctx.value().start.line
         val name = ctx.id().getName()
+        val paramsValues = getParamsValues(ctx.paramsValues())
         val value = ctx.value().getTypeAndValue().value
 
-        domainOpAt(line) { clazz.definedPropertyValues.add(ClassPropertyValueStatement(clazz, name, value)) }
+        domainOpAt(line) {
+            clazz.definedPropertyValues.add(
+                ClassPropertyValueStatement(
+                    clazz,
+                    name,
+                    paramsValues,
+                    value
+                )
+            )
+        }
+    }
+
+    private fun getParamsDecl(ctx: ParamsDeclContext?): ParamsDecl {
+        if (ctx == null) return ParamsDecl()
+        return ParamsDecl(ctx.paramDecl().map { ParamDecl(it.id().getName(), it.type().getType()) })
+    }
+
+    private fun getParamsValues(ctx: ParamsValuesContext?): ParamsValues {
+        if (ctx == null) return ParamsValues.EMPTY
+        return when (ctx) {
+            is NamedParamsValuesContext ->
+                NamedParamsValues(ctx.namedParamValue().associate {
+                    it.id().getName() to it.value().getTypeAndValue().value
+                })
+
+            is OrderedParamsValuesContext ->
+                OrderedParamsValues(ctx.value().map { it.getTypeAndValue().value })
+
+            else -> throw ThisShouldNotHappen()
+        }
     }
 
     override fun visitEnumDecl(ctx: EnumDeclContext) {
@@ -167,17 +212,19 @@ class DomainLoqiBuilder private constructor(
     private fun processPropertyValueStatement(obj: ObjectDef, ctx: PropertyValueStatementContext) {
         val line = ctx.value().start.line
         val name = ctx.id().getName()
+        val paramsValues = getParamsValues(ctx.paramsValues())
         val value = ctx.value().getTypeAndValue().value
 
-        domainOpAt(line) { obj.definedPropertyValues.add(ObjectPropertyValueStatement(obj, name, value)) }
+        domainOpAt(line) { obj.definedPropertyValues.add(ObjectPropertyValueStatement(obj, name, paramsValues, value)) }
     }
 
     private fun processRelationshipLinkStatement(obj: ObjectDef, ctx: RelationshipLinkStatementContext) {
         val line = ctx.id().start.line
         val name = ctx.id().getName()
         val objNames = ctx.idList().id().map { it.getName() }
+        val paramsValues = getParamsValues(ctx.paramsValues())
 
-        domainOpAt(line) { obj.relationshipLinks.add(RelationshipLinkStatement(obj, name, objNames)) }
+        domainOpAt(line) { obj.relationshipLinks.add(RelationshipLinkStatement(obj, name, objNames, paramsValues)) }
     }
 
     override fun visitVarDecl(ctx: VarDeclContext) {
@@ -203,9 +250,12 @@ class DomainLoqiBuilder private constructor(
 
         ctx.propertyValueStatement().forEach { propertyValue ->
             val name = propertyValue.id().getName()
+            val paramsValues = getParamsValues(propertyValue.paramsValues())
             val value = propertyValue.value().getTypeAndValue().value
             domainOpAt(propertyValue.start.line) {
-                syntheticClass.definedPropertyValues.add(ClassPropertyValueStatement(syntheticClass, name, value))
+                syntheticClass.definedPropertyValues.add(
+                    ClassPropertyValueStatement(syntheticClass, name, paramsValues, value)
+                )
             }
         }
 
@@ -314,7 +364,10 @@ class DomainLoqiBuilder private constructor(
         return out.extractEscapes()
     }
 
-    private fun RelationshipKindContext.getRelationshipKind(currentClassName: String): RelationshipKind {
+    private fun RelationshipKindContext.getRelationshipKind(
+        currentClassName: String,
+        paramsDecl: ParamsDecl
+    ): RelationshipKind {
         if (relationshipDependency() != null) {
             val type = getRelationshipDependencyType(relationshipDependency().relationshipDependencyType().text)
             val ref =
@@ -326,7 +379,7 @@ class DomainLoqiBuilder private constructor(
         } else {
             val scale = scaleType()?.run { getRelationshipScale(this.text) }
             val quantifier = relationshipQuantifier()?.getQuantifier()
-            return BaseRelationshipKind(scale, quantifier)
+            return BaseRelationshipKind(scale, quantifier, paramsDecl)
         }
     }
 

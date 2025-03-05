@@ -37,8 +37,8 @@ class DomainModel : DomainElement() {
      * @see DefContainer.add
      */
     fun add(other: DomainModel) {
-        classes.addAll(other.classes)
         enums.addAll(other.enums)
+        classes.addAll(other.classes)
         objects.addAll(other.objects)
 
         variables.addAll(other.variables)
@@ -52,8 +52,8 @@ class DomainModel : DomainElement() {
      * @see DefContainer.addMerge
      */
     fun addMerge(other: DomainModel) {
-        classes.addAllMerge(other.classes)
         enums.addAllMerge(other.enums)
+        classes.addAllMerge(other.classes)
         objects.addAllMerge(other.objects)
 
         variables.addAllMerge(other.variables)
@@ -63,8 +63,8 @@ class DomainModel : DomainElement() {
     }
 
     fun subtract(other: DomainModel) {
-        classes.subtract(other.classes)
         enums.subtract(other.enums)
+        classes.subtract(other.classes)
         objects.subtract(other.objects)
 
         variables.subtract(other.variables)

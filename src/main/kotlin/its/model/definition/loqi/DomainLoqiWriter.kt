@@ -122,8 +122,9 @@ class DomainLoqiWriter private constructor(
                 newLine()
             }
             if (!hasOption(LoqiWriteOptions.SEPARATE_CLASS_PROPERTY_VALUES)) {
-                val nonDeclaredPropertyValues = definedPropertyValues.toMutableList()
-                nonDeclaredPropertyValues.removeIf { declaredProperties.get(it.propertyName) != null }
+                val nonDeclaredPropertyValues = definedPropertyValues.filter {
+                    !it.paramsValues.isEmpty() || declaredProperties.get(it.propertyName) == null
+                }
 
                 nonDeclaredPropertyValues.forEach {
                     it.writePropertyValue()
@@ -169,8 +170,9 @@ class DomainLoqiWriter private constructor(
             PropertyDef.PropertyKind.CLASS -> CLASS
             PropertyDef.PropertyKind.OBJECT -> OBJ
         }
-        write("$kindString prop ${name.toLoqiName()}: ${type.toLoqi()}")
+        write("$kindString prop ${name.toLoqiName()}${paramsDecl.toLoqi()}: ${type.toLoqi()}")
         if (!hasOption(LoqiWriteOptions.SEPARATE_CLASS_PROPERTY_VALUES)
+            && paramsDecl.isNotEmpty()
             && owner.definedPropertyValues.get(name) != null
         ) {
             val value = owner.definedPropertyValues.get(name)!!.value
@@ -182,12 +184,29 @@ class DomainLoqiWriter private constructor(
         write(" ;")
     }
 
+    private fun ParamsDecl.toLoqi(): String {
+        if (this.isEmpty()) return ""
+        return "<" + joinToString(", ") { param -> "${param.name.toLoqiName()} : ${param.type.toLoqi()}" } + ">"
+    }
+
+    private fun ParamsValues.toLoqi(): String {
+        if (this.isEmpty()) return ""
+        return when (this) {
+            is OrderedParamsValues ->
+                "<" + this.values.joinToString(", ") { it.toLoqiValue() } + ">"
+
+            is NamedParamsValues ->
+                "<" + this.valuesMap.entries.joinToString(", ") { (paramName, paramValue) -> "${paramName.toLoqiName()} = ${paramValue.toLoqiValue()}" } + ">"
+        }
+    }
+
     private fun PropertyValueStatement<*>.writePropertyValue() {
-        write("${propertyName.toLoqiName()} = ${value.toLoqiValue()} ;")
+        write("${propertyName.toLoqiName()}${paramsValues.toLoqi()} = ${value.toLoqiValue()} ;")
     }
 
     private fun RelationshipDef.writeRelationship(owner: ClassDef) {
-        write("rel ${name.toLoqiName()}(${objectClassNames.map { it.toLoqiName() }.joinToString(", ")})")
+        val paramsString = if (kind is BaseRelationshipKind) effectiveParams.toLoqi() else ""
+        write("rel ${name.toLoqiName()}$paramsString(${objectClassNames.map { it.toLoqiName() }.joinToString(", ")})")
         when (kind) {
             is BaseRelationshipKind -> if (isScalar || kind.quantifier != null) {
                 write(" : ")
@@ -244,7 +263,11 @@ class DomainLoqiWriter private constructor(
     }
 
     private fun RelationshipLinkStatement.writeRelationshipLink() {
-        write("${relationshipName.toLoqiName()}(${objectNames.map { it.toLoqiName() }.joinToString(", ")}) ;")
+        write(
+            "${relationshipName.toLoqiName()}${paramsValues.toLoqi()}(${
+                objectNames.map { it.toLoqiName() }.joinToString(", ")
+            }) ;"
+        )
     }
 
     private fun writeVariableSection() {
