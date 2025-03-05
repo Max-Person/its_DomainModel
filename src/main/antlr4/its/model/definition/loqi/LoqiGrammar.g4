@@ -149,8 +149,8 @@ exp
     | exp '.' CLASS '(' ')'                     #getClassExp
     | FIND ID ID '{' exp '}'                    #findByConditionExp
     | FIND_EXTREME ID '[' exp ']' AMONG ID ID '{' exp '}'      #findExtremeExp
-    | FOR_ANY ID ID '[' exp ']' '{' exp '}'                      #existQuantifierExp
-    | FOR_ALL ID ID '[' exp ']' '{' exp '}'                    #forAllQuantifierExp
+    | FOR_ANY ID ID ('[' exp ']')? '{' exp '}'                      #existQuantifierExp
+    | FOR_ALL ID ID ('[' exp ']')? '{' exp '}'                    #forAllQuantifierExp
     | exp '+=>' ID paramsValuesExpr? '(' (exp ',')* exp ')'    #addRelationshipExp
     | <assoc=right> exp '=' exp                             #assignExp
     | <assoc=right>  exp '?' exp ':' exp                    #ternaryIfExp

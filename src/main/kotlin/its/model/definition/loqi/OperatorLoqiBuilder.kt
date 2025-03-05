@@ -114,10 +114,15 @@ class OperatorLoqiBuilder : LoqiGrammarBaseVisitor<Operator>() {
     }
 
     override fun visitExistQuantifierExp(ctx: LoqiGrammarParser.ExistQuantifierExpContext): Operator {
+        val (selector, condition) =
+            if (ctx.exp().size == 2)
+                visit(ctx.exp(0)) to visit(ctx.exp(1))
+            else
+                null to visit(ctx.exp(0))
         return ExistenceQuantifier(
             TypedVariable(ctx.ID(0).getName(), ctx.ID(1).getName()),
-            visit(ctx.exp(0)),
-            visit(ctx.exp(1))
+            selector,
+            condition
         )
     }
 
@@ -204,10 +209,15 @@ class OperatorLoqiBuilder : LoqiGrammarBaseVisitor<Operator>() {
     }
 
     override fun visitForAllQuantifierExp(ctx: LoqiGrammarParser.ForAllQuantifierExpContext): Operator {
+        val (selector, condition) =
+            if (ctx.exp().size == 2)
+                visit(ctx.exp(0)) to visit(ctx.exp(1))
+            else
+                null to visit(ctx.exp(0))
         return ForAllQuantifier(
             TypedVariable(ctx.ID(0).getName(), ctx.ID(1).getName()),
-            visit(ctx.exp(0)),
-            visit(ctx.exp(1))
+            selector,
+            condition
         )
     }
 

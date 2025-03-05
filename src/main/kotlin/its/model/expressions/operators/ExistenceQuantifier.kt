@@ -18,17 +18,18 @@ import its.model.expressions.visitors.OperatorBehaviour
  * Возвращает [BooleanType], если [conditionExpr] имеет [BooleanType] (Агрегирует результаты по логическому ИЛИ);
  * Иначе ничего не возвращает ([NoneType])
  * @param variable контекстная переменная, задающая ссылку на проверяемый объект
- * @param selectorExpr условие, задающее область определения переменной ([BooleanType])
+ * @param selectorExpr условие, задающее область определения переменной ([BooleanType]);
+ *      Может отсутствовать, в таком случае область определения считается равной всем объектам заданного типа.
  * @param conditionExpr выражение, определяющее действия с переменной в области определения ([AnyType])
  */
 class ExistenceQuantifier(
     val variable: TypedVariable,
-    val selectorExpr: Operator,
+    val selectorExpr: Operator? = null,
     val conditionExpr: Operator,
 ) : Operator() {
 
     override val children: List<Operator>
-        get() = listOf(selectorExpr, conditionExpr)
+        get() = listOf(selectorExpr, conditionExpr).filterNotNull()
 
     override fun validateAndGetType(
         domainModel: DomainModel,
@@ -38,11 +39,13 @@ class ExistenceQuantifier(
         variable.checkValid(domainModel, results, context, this)
 
         context.variableTypes[variable.varName] = variable.className
-        val selectorType = selectorExpr.validateAndGetType(domainModel, results, context)
-        results.checkValid(
-            selectorType is BooleanType,
-            "Selector argument of $description should be of boolean type, but was '$selectorType'"
-        )
+        if (selectorExpr != null) {
+            val selectorType = selectorExpr.validateAndGetType(domainModel, results, context)
+            results.checkValid(
+                selectorType is BooleanType,
+                "Selector argument of $description should be of boolean type, but was '$selectorType'"
+            )
+        }
         val conditionType = conditionExpr.validateAndGetType(domainModel, results, context)
         context.variableTypes.remove(variable.varName)
 

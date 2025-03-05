@@ -110,8 +110,8 @@ object ExpressionXMLBuilder : XMLBuilder<ExpressionXMLBuilder.ExpressionBuildCon
             }
     }
 
-    private fun ExpressionBuildContext.getTypeFromConditionExpr(condition: Operator, varName: String): String {
-        val types = getTypesFromConditionExpr(condition, varName)
+    private fun ExpressionBuildContext.getTypeFromConditionExpr(condition: Operator?, varName: String): String {
+        val types = condition?.let { getTypesFromConditionExpr(condition, varName) } ?: listOf()
         if (types.size != 1) {
             throw createException("Cannot infer type for variable '$varName' in $this")
         }
@@ -305,8 +305,11 @@ object ExpressionXMLBuilder : XMLBuilder<ExpressionXMLBuilder.ExpressionBuildCon
     @BuildForTags(["ExistenceQuantifier"])
     @BuildingClass(ExistenceQuantifier::class)
     private fun buildExistenceQuantifier(el: ExpressionBuildContext): ExistenceQuantifier {
-        val selector = el.op(0)
-        val condition = el.op(1)
+        val (selector, condition) =
+            if (el.operands.size == 2)
+                el.op(0) to el.op(1)
+            else
+                null to el.op(0)
         val varName = el.getRequiredAttribute(VAR_NAME)
         val type = el.findAttribute(TYPE) ?: el.getTypeFromConditionExpr(selector, varName)
         return ExistenceQuantifier(TypedVariable(type, varName), selector, condition)
@@ -315,8 +318,11 @@ object ExpressionXMLBuilder : XMLBuilder<ExpressionXMLBuilder.ExpressionBuildCon
     @BuildForTags(["ForAllQuantifier"])
     @BuildingClass(ForAllQuantifier::class)
     private fun buildForAllQuantifier(el: ExpressionBuildContext): ForAllQuantifier {
-        val selector = el.op(0)
-        val condition = el.op(1)
+        val (selector, condition) =
+            if (el.operands.size == 2)
+                el.op(0) to el.op(1)
+            else
+                null to el.op(0)
         val varName = el.getRequiredAttribute(VAR_NAME)
         val type = el.findAttribute(TYPE) ?: el.getTypeFromConditionExpr(selector, varName)
         return ForAllQuantifier(TypedVariable(type, varName), selector, condition)
