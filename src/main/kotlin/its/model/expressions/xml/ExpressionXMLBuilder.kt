@@ -357,8 +357,8 @@ object ExpressionXMLBuilder : XMLBuilder<ExpressionXMLBuilder.ExpressionBuildCon
     @BuildForTags(["GetExtreme"])
     @BuildingClass(GetExtreme::class)
     private fun buildGetExtreme(el: ExpressionBuildContext): GetExtreme {
-        val extremeCondition = el.op(0)
-        val condition = el.op(1)
+        val extremeCondition = el.op(1)
+        val condition = el.op(0)
         val extremeVarName = el.getRequiredAttribute("extremeVarName")
         val varName = el.getRequiredAttribute(VAR_NAME)
         val type = el.findAttribute(TYPE) ?: el.getTypeFromConditionExpr(condition, varName)
