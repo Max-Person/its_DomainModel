@@ -20,6 +20,13 @@ sealed class LinkNode<AnswerType : Any> : DecisionTreeNode() {
     val children
         get() = outcomes.map { it.node }
 
+    /**
+     * Получить узел, к которому будет совершен переход из текущего узла, в случае ответа [answer]
+     */
+    fun getNextNode(answer: AnswerType): DecisionTreeNode? {
+        return this.outcomes[answer]?.node
+    }
+
     abstract fun <I> use(behaviour: LinkNodeBehaviour<I>): I
     override fun <I> use(behaviour: DecisionTreeBehaviour<I>): I {
         return this.use(behaviour as LinkNodeBehaviour<I>)
