@@ -8,7 +8,7 @@ import its.model.nodes.visitors.LinkNodeBehaviour
  *
  * Данный тип узлов составляет основную часть дерева решений
  */
-sealed class LinkNode<AnswerType> : DecisionTreeNode() {
+sealed class LinkNode<AnswerType : Any> : DecisionTreeNode() {
     /**
      * Переходы из текущего узла
      */

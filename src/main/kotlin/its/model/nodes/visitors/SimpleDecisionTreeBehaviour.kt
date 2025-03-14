@@ -35,5 +35,5 @@ interface SimpleDecisionTreeBehaviour<out Info> : DecisionTreeBehaviour<Info> {
         return process(node as LinkNode<ValueTuple>)
     }
 
-    fun <AnswerType> process(node: LinkNode<AnswerType>): Info
+    fun <AnswerType : Any> process(node: LinkNode<AnswerType>): Info
 }
