@@ -94,7 +94,9 @@ class PropertyValueStatements<Owner : ClassInheritorDef<Owner>>(
             "cannot add ${statement.description}, " +
                     "because ${owner.description} already defines $existing"
         )
-        map.computeIfAbsent(statement.propertyName) { mutableListOf() }.add(statement)
+        if (existing == null) {
+            map.computeIfAbsent(statement.propertyName) { mutableListOf() }.add(statement)
+        }
     }
 
     fun addOrReplace(statement: PropertyValueStatement<Owner>) {
