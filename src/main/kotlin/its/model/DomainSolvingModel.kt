@@ -100,12 +100,11 @@ class DomainSolvingModel(
      */
     fun validate(): DomainSolvingModel {
         domainModel.validateAndThrow()
-        tagsData.values.forEach { tagDomain ->
-            tagDomain.copy()
-                .apply { addMerge(this@DomainSolvingModel.domainModel) }
-                .validateAndThrow()
+        tagsData.keys.forEach { tagName ->
+            val mergedTagDomain = getMergedTagDomain(tagName)
+            mergedTagDomain.validateAndThrow() //Деревья должны корректно работать со всеми теговыми моделями
+            decisionTrees.values.forEach { it.validate(mergedTagDomain) }
         }
-        decisionTrees.values.forEach { it.validate(domainModel) }
         return this
     }
 
