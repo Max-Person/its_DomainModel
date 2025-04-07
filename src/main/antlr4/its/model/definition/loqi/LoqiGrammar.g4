@@ -133,8 +133,8 @@ exp
     | CLASS':'ID                    #classLiteral
     | OBJ':'ID                      #objLiteral
     | '$'ID                         #variable
-    | exp '->' paramsValuesExpr? ID                   #getByRelationship
-    | exp '.' paramsValuesExpr? ID                    #getProperty
+    | exp '->' ID paramsValuesExpr?                   #getByRelationship
+    | exp '.'  ID paramsValuesExpr?                    #getProperty
     | NOT exp                       #notExp
     | exp IS exp                    #isExp
     | exp (GREATER|LESS|GTE|LTE) exp   #compareExp
@@ -158,8 +158,8 @@ exp
     | '{' (exp ';')+ '}'                                    #blockExp
     ;
 
-paramsValuesExpr : '<' exp (',' exp)* ','? '>' #orderedParamsValuesExpr
-            | '<' (namedParamValueExpr (',' namedParamValueExpr)* ','?) ? '>' #namedParamsValuesExpr
+paramsValuesExpr : '<' (namedParamValueExpr (',' namedParamValueExpr)* ','?) ? '>' #namedParamsValuesExpr
+            |'<' exp (',' exp)* ','? '>' #orderedParamsValuesExpr
             ;
 
 namedParamValueExpr : ID '=' exp ;
