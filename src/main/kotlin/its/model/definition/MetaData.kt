@@ -55,12 +55,12 @@ class MetaData(
     /**
      * Получить нелокализованные строковые метаданные
      */
-    fun getString(name: String) = get(name)!! as String
+    fun getString(name: String) = get(name)?.toString()
 
     /**
      * Получить локализированные строковые метаданные
      */
-    fun getString(locCode: String?, name: String) = get(locCode, name)!! as String
+    fun getString(locCode: String?, name: String) = get(locCode, name)?.toString()
 
     private fun add(property: MetadataProperty, value: Any) {
         propertyNamesToLocalizations.merge(
