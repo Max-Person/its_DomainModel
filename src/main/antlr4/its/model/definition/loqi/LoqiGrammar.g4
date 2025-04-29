@@ -127,33 +127,34 @@ doubleRange : '[' doubleRangeStart ',' DOUBLE? ']'
 doubleRangeStart : DOUBLE? ; //костыль, чтобы в коде можно было отличить первую границу от второй
 doubleList : DOUBLE (',' DOUBLE)* ','? ;
 
+//Меняя состав или порядок приоритета выражений не забудьте поменять OperatorLoqiWriter
 exp
     : value                         #valueLiteral
     | ID                            #treeVar
     | CLASS':'ID                    #classLiteral
     | OBJ':'ID                      #objLiteral
     | '$'ID                         #variable
+    | '(' exp ')'                   #parenthesisExp
     | exp '->' ID paramsValuesExpr?                   #getByRelationship
     | exp '.'  ID paramsValuesExpr?                    #getProperty
+    | exp '.' CLASS '(' ')'                     #getClassExp
+    | exp '->' ID paramsValuesExpr? '(' (exp ',')* exp ')' '.' ID  #getRelationshipParamExp
+    | exp '->' ID paramsValuesExpr? '(' (exp ',')* exp ')'     #checkRelationshipExp
     | NOT exp                       #notExp
     | exp IS exp                    #isExp
     | exp (GREATER|LESS|GTE|LTE) exp   #compareExp
-    | exp (EQ|NOT_EQ) exp           #equalityExp
     | exp '.' COMPARE '(' exp ')'   #threewayCompareExp
-    | '(' exp ')'                   #parenthesisExp
+    | exp (EQ|NOT_EQ) exp           #equalityExp
     | exp AS exp                   #castExp
     | exp AND exp                   #andExp
     | exp OR exp                    #orExp
-    | exp '->' ID paramsValuesExpr? '(' (exp ',')* exp ')' '.' ID  #getRelationshipParamExp
-    | exp '->' ID paramsValuesExpr? '(' (exp ',')* exp ')'     #checkRelationshipExp
-    | exp '.' CLASS '(' ')'                     #getClassExp
     | FIND ID ID '{' exp '}'                    #findByConditionExp
     | FIND_EXTREME ID '[' exp ']' AMONG ID ID '{' exp '}'      #findExtremeExp
     | FOR_ANY ID ID ('[' exp ']')? '{' exp '}'                      #existQuantifierExp
     | FOR_ALL ID ID ('[' exp ']')? '{' exp '}'                    #forAllQuantifierExp
+    | <assoc=right>  exp '?' exp ':' exp                    #ternaryIfExp
     | exp '+=>' ID paramsValuesExpr? '(' (exp ',')* exp ')'    #addRelationshipExp
     | <assoc=right> exp '=' exp                             #assignExp
-    | <assoc=right>  exp '?' exp ':' exp                    #ternaryIfExp
     | <assoc=right> IF '(' exp ')' exp (ELSE exp )?                  #ifExp
     | '{' (exp ';')+ '}'                                    #blockExp
     ;

@@ -45,17 +45,14 @@ class IfThen(
             return NoneType
 
         val elseType = elseExpr.validateAndGetType(domainModel, results, context)
-        val thenIsSuper = thenType.castFits(elseType, domainModel)
-        val elseIsSuper = elseType.castFits(thenType, domainModel)
+
+        val commonSupertype = thenType.findCommonSupertype(elseType, domainModel)
         results.checkValid(
-            thenIsSuper || elseIsSuper,
+            commonSupertype != null,
             "The alternatives of a $description have incompatible types"
         )
 
-        return if (elseIsSuper)
-            elseType
-        else //если thenIsSuper, или в случае несовместимых типов
-            thenType
+        return commonSupertype ?: thenType
     }
 
 

@@ -39,6 +39,15 @@ sealed class Type<T : Any>(
         return this == subType
     }
 
+    /**
+     * Найти ближайший общий родительский тип для данных типов
+     */
+    open fun findCommonSupertype(other: Type<*>, inDomainModel: DomainModel): Type<*>? {
+        if (this.castFits(other, inDomainModel)) return this
+        if (other.castFits(this, inDomainModel)) return other
+        return null
+    }
+
     open fun isDiscrete(): Boolean = false
 
     open fun getDiscreteValues(inDomainModel: DomainModel): Set<T>? = null

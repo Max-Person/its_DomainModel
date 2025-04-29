@@ -2,6 +2,7 @@ package its.model.expressions
 
 import its.model.Describable
 import its.model.definition.DomainModel
+import its.model.definition.loqi.OperatorLoqiWriter
 import its.model.definition.types.Type
 import its.model.expressions.visitors.OperatorBehaviour
 
@@ -26,7 +27,11 @@ abstract class Operator : Cloneable, Describable {
      * Описание оператора
      */
     override val description
-        get() = "a ${this::class.simpleName} operator"
+        get() = OperatorLoqiWriter.getWrittenExpression(this)
+
+    override fun toString(): String {
+        return description
+    }
 
     /**
      * Динамически определяемый тип данных оператора

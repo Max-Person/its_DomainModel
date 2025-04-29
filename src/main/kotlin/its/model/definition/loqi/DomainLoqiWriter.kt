@@ -3,7 +3,7 @@ package its.model.definition.loqi
 import its.model.definition.*
 import its.model.definition.LinkQuantifier.Companion.ANY_COUNT
 import its.model.definition.loqi.LoqiStringUtils.insertEscapes
-import its.model.definition.loqi.LoqiStringUtils.isSimpleLoqiName
+import its.model.definition.loqi.LoqiStringUtils.toLoqiName
 import its.model.definition.types.*
 import java.io.Writer
 
@@ -366,10 +366,6 @@ class DomainLoqiWriter private constructor(
 //            }
 //        }
 //    }
-
-    private fun String.toLoqiName(): String {
-        return if (!this.isSimpleLoqiName()) "`$this`" else this
-    }
 
     private fun DomainRef<*>.toLoqiString(): String {
         return when (this) {

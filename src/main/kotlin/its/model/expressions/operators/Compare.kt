@@ -1,7 +1,10 @@
 package its.model.expressions.operators
 
 import its.model.definition.DomainModel
-import its.model.definition.types.*
+import its.model.definition.types.Comparison
+import its.model.definition.types.EnumType
+import its.model.definition.types.NumericType
+import its.model.definition.types.Type
 import its.model.expressions.ExpressionContext
 import its.model.expressions.ExpressionValidationResults
 import its.model.expressions.Operator
@@ -10,7 +13,7 @@ import its.model.expressions.visitors.OperatorBehaviour
 /**
  * Трехзначное сравнение (больше/меньше/равно)
  *
- * Возвращает [ComparisonType]
+ * Возвращает [EnumType] сравнения ([Comparison.Type])
  * @param firstExpr первое сравниваемое значение ([NumericType])
  * @param secondExpr второе сравниваемое значение ([NumericType])
  */

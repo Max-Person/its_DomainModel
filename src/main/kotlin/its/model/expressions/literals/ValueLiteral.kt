@@ -16,9 +16,6 @@ abstract class ValueLiteral<V : Any, T : Type<V>>(
     val type: T,
 ) : Literal() {
 
-    override val description: String
-        get() = "${super.description} '$value'"
-
     override fun validateAndGetType(
         domainModel: DomainModel,
         results: ExpressionValidationResults,

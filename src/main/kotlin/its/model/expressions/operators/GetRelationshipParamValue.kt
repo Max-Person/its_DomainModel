@@ -91,9 +91,7 @@ class GetRelationshipParamValue(
             objectType as ObjectType
             results.checkConforming(
                 expectedType.castFits(objectType, domainModel) || expectedType.projectFits(objectType, domainModel),
-                "Link object at index $i in a ${relationship.description} " +
-                        "is expected to be of type $expectedClassName, but was ${objectType.className}; " +
-                        "No valid projections available (in $description)"
+                "Link object at index $i in a ${relationship.description} " + "is expected to be of type $expectedClassName, but was ${objectType.className} (in $description)"
             )
         }
 

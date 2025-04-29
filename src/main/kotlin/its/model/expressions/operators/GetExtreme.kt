@@ -51,6 +51,10 @@ class GetExtreme(
         )
 
         TypedVariable(className, extremeVarName).checkValid(domainModel, results, context, this)
+        results.checkValid(
+            varName != extremeVarName,
+            "General and extreme variable names cannot be equal (were '$varName', in $description)"
+        )
         context.variableTypes[extremeVarName] = className
         val extremeConditionType = extremeConditionExpr.validateAndGetType(domainModel, results, context)
         context.variableTypes.remove(extremeVarName)

@@ -23,6 +23,10 @@ internal object LoqiStringUtils {
         return this.matches("[a-zA-Z\$_][a-zA-Z0-9\$_]*".toRegex()) && !keywords.contains(this)
     }
 
+    fun String.toLoqiName(): String {
+        return if (!this.isSimpleLoqiName()) "`$this`" else this
+    }
+
 
     val knownSequences = listOf(
         "\\" to "\\\\", //Важно что просто слеши заменяются первыми

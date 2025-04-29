@@ -2,6 +2,7 @@ package its.model.expressions.operators
 
 import its.model.definition.DomainModel
 import its.model.definition.types.AnyType
+import its.model.definition.types.NoneType
 import its.model.definition.types.Type
 import its.model.expressions.ExpressionContext
 import its.model.expressions.ExpressionValidationResults
@@ -25,6 +26,9 @@ class Block(
         results: ExpressionValidationResults,
         context: ExpressionContext
     ): Type<*> {
+        if (nestedExprs.isEmpty()) {
+            return NoneType
+        }
         return nestedExprs.map { it.validateAndGetType(domainModel, results, context) }.last()
     }
 
