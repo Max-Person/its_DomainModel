@@ -23,10 +23,6 @@ class FindActionNode(
     override val outcomes: Outcomes<Boolean>,
 ) : LinkNode<Boolean>() {
 
-    init {
-        errorCategories.forEach { it.initCheckedVariable(varAssignment.variable.className) }
-    }
-
     override val linkedElements: List<DecisionTreeElement>
         get() = listOf(varAssignment).plus(errorCategories).plus(secondaryAssignments).plus(outcomes)
 

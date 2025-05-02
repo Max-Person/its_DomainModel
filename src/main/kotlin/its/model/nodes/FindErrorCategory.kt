@@ -4,7 +4,6 @@ import its.model.TypedVariable
 import its.model.definition.DomainModel
 import its.model.definition.types.BooleanType
 import its.model.expressions.Operator
-import mp.utils.SetOnce
 
 /**
  * Категория ошибок в узле [FindActionNode]
@@ -20,15 +19,11 @@ import mp.utils.SetOnce
 class FindErrorCategory(
     val priority: Int,
     val selectorExpr: Operator,
+    val checkedVariable: TypedVariable,
 ) : HelperDecisionTreeElement() {
 
     companion object {
         const val CHECKED_OBJ = "checked"
-    }
-
-    var checkedVariable: TypedVariable by SetOnce()
-    fun initCheckedVariable(className: String, variableName: String = CHECKED_OBJ) {
-        checkedVariable = TypedVariable(className, variableName)
     }
 
     override fun validate(

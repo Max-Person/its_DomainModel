@@ -30,9 +30,6 @@ class CycleAggregationNode(
     val thoughtBranch: ThoughtBranch,
     override val outcomes: Outcomes<BranchResult>,
 ) : AggregationNode() {
-    init {
-        errorCategories.forEach { it.initCheckedVariable(variable.className) }
-    }
 
     override val linkedElements: List<DecisionTreeElement>
         get() = listOf(thoughtBranch).plus(outcomes)

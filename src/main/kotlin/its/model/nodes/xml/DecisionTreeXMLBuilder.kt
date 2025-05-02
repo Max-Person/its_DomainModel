@@ -111,7 +111,7 @@ object DecisionTreeXMLBuilder : AbstractDecisionTreeXMLBuilder<DecisionTree>() {
     @JvmStatic
     fun build(el: Element) = buildFromElement(el)
 
-    @BuildForTags(["StartNode"])
+    @BuildForTags(["StartNode", "DecisionTree"])
     @BuildingClass(DecisionTree::class)
     private fun buildDecisionTree(el: ElementBuildContext): DecisionTree {
         val variableWrapper = el.findChild("InputVariables")
@@ -187,6 +187,9 @@ object DecisionTreeNodeXMLBuilder : AbstractDecisionTreeXMLBuilder<DecisionTreeN
     private fun <T : Any> ElementBuildContext.getRequiredAttributeAs(attr: String, type: KClass<T>): T {
         val valueStr = getRequiredAttribute(attr)
         var value = valueStr.parseValue()
+        if(value is String && type == Boolean::class) { //FIXME Обратная совместимость
+            value = (value.lowercase() == "found")
+        }
         if (value is Boolean && type == BranchResult::class) { //FIXME Обратная совместимость
             value = if (value) BranchResult.CORRECT else BranchResult.ERROR
         }
@@ -252,7 +255,7 @@ object DecisionTreeNodeXMLBuilder : AbstractDecisionTreeXMLBuilder<DecisionTreeN
         val selector = el.getRequiredSingleByWrapper("SelectorExpression").toExpr()
         val variable = buildTypedVariable(el.getRequiredChild(DECISION_TREE_VAR_DECL_TAG))
         val errors = el.getChildren("FindError").map {
-            buildFindErrorCategory(createBuildContext(it, FindErrorCategory::class))
+            buildFindErrorCategory(createBuildContext(it, FindErrorCategory::class), variable.className)
         }
         val branch = buildThoughtBranch(el.getRequiredChild(THOUGHT_BRANCH_TAG))
         val outcomes = el.getOutcomes(BranchResult::class)
@@ -297,13 +300,14 @@ object DecisionTreeNodeXMLBuilder : AbstractDecisionTreeXMLBuilder<DecisionTreeN
         return TupleQuestionNode.TupleQuestionPart(expr, outcomes).collectMetadata(el)
     }
 
-    private fun buildFindErrorCategory(el: ElementBuildContext): FindErrorCategory {
+    private fun buildFindErrorCategory(el: ElementBuildContext, parentTypeName: String): FindErrorCategory {
         val priority = el.getRequiredAttributeAs("priority", Int::class)
         val expr = el.getRequiredSingleByWrapper(EXPR_TAG).toExpr()
+        val varType = el.findAttribute(TYPE_ATTR) ?: parentTypeName
+        val varName = el.findAttribute("checkedVar") ?: FindErrorCategory.CHECKED_OBJ
 
-        return FindErrorCategory(priority, expr)
+        return FindErrorCategory(priority, expr, TypedVariable(varType, varName))
             .collectMetadata(el)
-            .also { category -> el.findAttribute(TYPE_ATTR)?.also { category.initCheckedVariable(it) } }
     }
 
     @BuildForTags(["FindActionNode"])
@@ -314,15 +318,13 @@ object DecisionTreeNodeXMLBuilder : AbstractDecisionTreeXMLBuilder<DecisionTreeN
         val mainAssignment = DecisionTreeVarAssignment(variable, expr)
 
         val errors = el.getChildren("FindError").map {
-            buildFindErrorCategory(createBuildContext(it, FindErrorCategory::class))
+            buildFindErrorCategory(createBuildContext(it, FindErrorCategory::class), variable.className)
         }
 
         val secondaryAssignments = el.getChildren(ADDITIONAL_DECISION_TREE_VAR_DECL_TAG).map {
             buildVarAssignment(it)
         }
-        val outcomes = Outcomes(el.getOutcomes(String::class).map {
-            Outcome(it.key.lowercase() == "found", it.node).apply { metadata.addAll(it.metadata) }
-        })
+        val outcomes = el.getOutcomes(Boolean::class)
 
         return FindActionNode(mainAssignment, errors, secondaryAssignments, outcomes).collectMetadata(el)
     }
