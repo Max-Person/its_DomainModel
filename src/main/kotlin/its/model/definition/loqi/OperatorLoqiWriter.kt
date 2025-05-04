@@ -64,7 +64,7 @@ class OperatorLoqiWriter private constructor(
         val string = when (value) {
             is String -> "\"${value.insertEscapes()}\""
             is EnumValueRef -> "${value.enumName.toLoqiName()}:${value.valueName.toLoqiName()}"
-            else -> this.toString()
+            else -> value.toString()
         }
         write(string)
     }
@@ -138,8 +138,8 @@ class OperatorLoqiWriter private constructor(
             asString { op.subjectExpr.writeLeft(op) },
             "->"
                 + op.relationshipName.toLoqiName()
-                + asString { writeParams(op.paramsValues) }
-                + asString { writeMultipleEnclosed("(", op.objectExprs, ",", ")") },
+                + asString { writeMultipleEnclosed("(", op.objectExprs, ",", ")") }
+                + asString { writeParams(op.paramsValues) },
         )
     }
 
@@ -147,8 +147,8 @@ class OperatorLoqiWriter private constructor(
         writeAndContinue(asString { op.subjectExpr.writeLeft(op) },
             "->"
                 + op.relationshipName.toLoqiName()
-                + asString { writeParams(op.paramsValues) }
-                + asString { writeMultipleEnclosed("(", op.objectExprs, ",", ")") },
+                + asString { writeMultipleEnclosed("(", op.objectExprs, ",", ")") }
+                + asString { writeParams(op.paramsValues) },
             ".${op.paramName.toLoqiName()}"
         )
     }
