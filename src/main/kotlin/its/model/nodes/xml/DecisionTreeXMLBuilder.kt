@@ -6,6 +6,7 @@ import its.model.build.xml.ElementBuildContext
 import its.model.build.xml.XMLBuildException
 import its.model.build.xml.XMLBuilder
 import its.model.definition.build.DomainBuilderUtils
+import its.model.definition.loqi.OperatorLoqiBuilder
 import its.model.definition.types.Clazz
 import its.model.definition.types.EnumValue
 import its.model.definition.types.Obj
@@ -49,7 +50,16 @@ sealed class AbstractDecisionTreeXMLBuilder<T : DecisionTreeElement> : XMLBuilde
         const val ADDITIONAL_INFO_PREFIX = "_"
     }
 
-    protected fun Element.toExpr(): Operator = ExpressionXMLBuilder.build(this)
+    protected fun ElementBuildContext.findExpr(wrapperName: String = EXPR_TAG) : Operator? {
+        val wrapper = findChild(wrapperName) ?: return null
+        return wrapper.getCData().firstOrNull()?.wholeText?.let { OperatorLoqiBuilder.buildExp(it) }
+               ?: wrapper.findChild()?.let { ExpressionXMLBuilder.build(it) }
+    }
+
+    protected fun ElementBuildContext.getExpr(wrapperName: String = EXPR_TAG) : Operator {
+        return findExpr(wrapperName)
+               ?: throw createException("$this should contain an expression wrapped in a '$wrapperName' tag")
+    }
 
     protected fun <T : DecisionTreeElement> T.collectMetadata(el: Element): T {
         for (i in 0 until el.attributes.length) {
@@ -76,7 +86,7 @@ sealed class AbstractDecisionTreeXMLBuilder<T : DecisionTreeElement> : XMLBuilde
     protected fun buildVarAssignment(el: Element): DecisionTreeVarAssignment {
         val el = createBuildContext(el, DecisionTreeVarAssignment::class)
         val variable = DecisionTreeNodeXMLBuilder.buildTypedVariable(el.el)
-        val valueExpr = el.getRequiredSingleByWrapper(EXPR_TAG).toExpr()
+        val valueExpr = el.getExpr()
 
         return DecisionTreeVarAssignment(variable, valueExpr).collectMetadata(el)
     }
@@ -229,7 +239,7 @@ object DecisionTreeNodeXMLBuilder : AbstractDecisionTreeXMLBuilder<DecisionTreeN
     @BuildingClass(BranchResultNode::class)
     private fun buildBranchResultNode(el: ElementBuildContext): BranchResultNode {
         val value = el.getRequiredAttributeAs(VALUE_ATTR, BranchResult::class)
-        val expr = el.findSingleByWrapper(EXPR_TAG)?.toExpr()
+        val expr = el.findExpr()
 
         return BranchResultNode(value, expr).collectMetadata(el)
     }
@@ -252,7 +262,7 @@ object DecisionTreeNodeXMLBuilder : AbstractDecisionTreeXMLBuilder<DecisionTreeN
     private fun buildCycleAggregationNode(el: ElementBuildContext): CycleAggregationNode {
         val op = AggregationMethod.fromString(el.getRequiredAttribute(LOGICAL_OP_ATTR))
             ?: throw createException("$el must have a valid logical operator described in its '$LOGICAL_OP_ATTR' attribute")
-        val selector = el.getRequiredSingleByWrapper("SelectorExpression").toExpr()
+        val selector = el.getExpr("SelectorExpression")
         val variable = buildTypedVariable(el.getRequiredChild(DECISION_TREE_VAR_DECL_TAG))
         val errors = el.getChildren("FindError").map {
             buildFindErrorCategory(createBuildContext(it, FindErrorCategory::class), variable.className)
@@ -265,7 +275,7 @@ object DecisionTreeNodeXMLBuilder : AbstractDecisionTreeXMLBuilder<DecisionTreeN
     @BuildForTags(["WhileAggregationNode", "WhileCycleNode"]) //FIXME обратная совместимость
     @BuildingClass(WhileCycleNode::class)
     private fun buildWhileAggregationNode(el: ElementBuildContext): WhileCycleNode {
-        val selector = el.getRequiredSingleByWrapper("SelectorExpression").toExpr()
+        val selector = el.getExpr("SelectorExpression")
         val branch = buildThoughtBranch(el.getRequiredChild(THOUGHT_BRANCH_TAG))
         val outcomes = el.getOutcomes(BranchResult::class)
         return WhileCycleNode(selector, branch, outcomes).collectMetadata(el)
@@ -275,10 +285,10 @@ object DecisionTreeNodeXMLBuilder : AbstractDecisionTreeXMLBuilder<DecisionTreeN
     @BuildForTags(["QuestionNode"])
     @BuildingClass(QuestionNode::class)
     private fun buildQuestionNode(el: ElementBuildContext): QuestionNode {
-        val expr = el.getRequiredSingleByWrapper(EXPR_TAG).toExpr()
+        val expr = el.getExpr()
         val isSwitch = el.findAttribute("isSwitch")?.toBoolean() ?: false
         val outcomes = el.getOutcomes(Any::class)
-        val trivialityExpr: Operator? = el.findSingleByWrapper("Triviality")?.toExpr()
+        val trivialityExpr: Operator? = el.findExpr("Triviality")
         return QuestionNode(expr, outcomes, isSwitch, trivialityExpr).collectMetadata(el)
     }
 
@@ -292,7 +302,7 @@ object DecisionTreeNodeXMLBuilder : AbstractDecisionTreeXMLBuilder<DecisionTreeN
     }
 
     private fun buildTupleQuestionNodePart(el: ElementBuildContext): TupleQuestionNode.TupleQuestionPart {
-        val expr = el.getRequiredSingleByWrapper(EXPR_TAG).toExpr()
+        val expr = el.getExpr()
         val outcomes = el.getChildren(OUTCOME_TAG)
             .map {
                 TupleQuestionNode.TupleQuestionOutcome(it.getAttribute(VALUE_ATTR).parseValue()).collectMetadata(it)
@@ -302,7 +312,7 @@ object DecisionTreeNodeXMLBuilder : AbstractDecisionTreeXMLBuilder<DecisionTreeN
 
     private fun buildFindErrorCategory(el: ElementBuildContext, parentTypeName: String): FindErrorCategory {
         val priority = el.getRequiredAttributeAs("priority", Int::class)
-        val expr = el.getRequiredSingleByWrapper(EXPR_TAG).toExpr()
+        val expr = el.getExpr()
         val varType = el.findAttribute(TYPE_ATTR) ?: parentTypeName
         val varName = el.findAttribute("checkedVar") ?: FindErrorCategory.CHECKED_OBJ
 
@@ -313,7 +323,7 @@ object DecisionTreeNodeXMLBuilder : AbstractDecisionTreeXMLBuilder<DecisionTreeN
     @BuildForTags(["FindActionNode"])
     @BuildingClass(FindActionNode::class)
     private fun buildFindActionNode(el: ElementBuildContext): FindActionNode {
-        val expr = el.getRequiredSingleByWrapper(EXPR_TAG).toExpr()
+        val expr = el.getExpr()
         val variable = buildTypedVariable(el.getRequiredChild(DECISION_TREE_VAR_DECL_TAG))
         val mainAssignment = DecisionTreeVarAssignment(variable, expr)
 

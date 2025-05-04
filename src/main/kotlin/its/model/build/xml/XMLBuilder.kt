@@ -1,6 +1,7 @@
 package its.model.build.xml
 
 import its.model.build.xml.XMLBuilder.BuildForTags
+import org.w3c.dom.CDATASection
 import org.w3c.dom.Element
 import org.w3c.dom.Node
 import org.xml.sax.InputSource
@@ -78,16 +79,24 @@ abstract class XMLBuilder<Context : ElementBuildContext, Build : Any> {
 
     //---- Утилитарные методы ---------
 
-    protected fun Element.getChildren(): List<Element> {
-        val out = mutableListOf<Element>()
+    private fun <T : Node> Element.getChildNodesOfType(nodeType: Short, nodeClass: KClass<T>) : List<T>{
+        val out = mutableListOf<T>()
         var child = this.firstChild
         while (child != null) {
-            if (child.nodeType == Node.ELEMENT_NODE) {
-                out.add(child as Element)
+            if (child.nodeType == nodeType && nodeClass.isInstance(child)) {
+                out.add(child as T)
             }
             child = child.nextSibling
         }
         return out
+    }
+
+    protected fun Element.getCData(): List<CDATASection> {
+        return getChildNodesOfType(Node.CDATA_SECTION_NODE, CDATASection::class)
+    }
+
+    protected fun Element.getChildren(): List<Element> {
+        return getChildNodesOfType(Node.ELEMENT_NODE, Element::class)
     }
 
     protected fun Element.findChild(): Element? {

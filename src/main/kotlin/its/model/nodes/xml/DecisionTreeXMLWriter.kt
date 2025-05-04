@@ -2,6 +2,7 @@ package its.model.nodes.xml
 
 import its.model.TypedVariable
 import its.model.build.xml.XMLWriter
+import its.model.definition.loqi.OperatorLoqiWriter
 import its.model.expressions.Operator
 import its.model.expressions.xml.ExpressionXMLWriter
 import its.model.nodes.*
@@ -35,6 +36,16 @@ class DecisionTreeXMLWriter(document: Document) : XMLWriter(document), DecisionT
             return writeToXmlString { document -> DecisionTreeXMLWriter(document).createTreeElement(decisionTree) }
         }
 
+        /**
+         * Если установлено в `true`, вызовы данного класса для преобразования дерева решений в xml будут использовать
+         * [OperatorLoqiWriter] для записи выражений в xml.
+         * В итоговом xml полученные выражения будут обернуты в CDATA.
+         *
+         * По умочанию - `false`.
+         */
+        @JvmStatic
+        var SHOULD_USE_CDATA_EXPRESSIONS = false
+
         private const val OUTCOME_TAG = "Outcome"
         private const val EXPR_TAG = "Expression"
         private const val DECISION_TREE_VAR_DECL_TAG = "DecisionTreeVarDecl"
@@ -52,7 +63,12 @@ class DecisionTreeXMLWriter(document: Document) : XMLWriter(document), DecisionT
     private fun Element.withExpr(tagName: String, expr: Operator) : Element {
         return this.withChild(
             newElement(tagName)
-                .withChild(ExpressionXMLWriter.expressionToElement(expr, document))
+                .apply {
+                    if(SHOULD_USE_CDATA_EXPRESSIONS)
+                        withCDATA("\n" + OperatorLoqiWriter.getWrittenExpression(expr) + "\n")
+                    else
+                        withChild(ExpressionXMLWriter.expressionToElement(expr, document))
+                }
         )
     }
 

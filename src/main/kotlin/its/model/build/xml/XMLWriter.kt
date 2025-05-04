@@ -27,7 +27,7 @@ abstract class XMLWriter protected constructor(protected val document: Document)
         return this.apply { appendChild(child) }
     }
 
-    protected fun Element.withText(text:String) : Element {
+    protected fun Element.withCDATA(text:String) : Element {
         return this.apply { appendChild(document.createCDATASection(text)) }
     }
 
