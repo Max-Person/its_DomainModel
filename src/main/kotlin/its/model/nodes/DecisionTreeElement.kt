@@ -14,7 +14,7 @@ import kotlin.properties.Delegates
  * Элемент дерева решений [DecisionTree]
  */
 sealed class DecisionTreeElement : MetaOwner, Describable {
-    override val metadata = MetaData(this)
+    override val metadata = MetaData()
 
     /**
      * Ссылка на дерево решений, к которому принадлежит данный элемент

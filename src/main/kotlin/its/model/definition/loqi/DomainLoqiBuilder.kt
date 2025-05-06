@@ -236,12 +236,12 @@ class DomainLoqiBuilder private constructor(
 
     override fun visitAddMetaDecl(ctx: AddMetaDeclContext) {
         val ref = ctx.metaRef().getRef()
-        val syntheticObj = syntheticObj() //Костыль, потому что метадата не существует без владельца
-        syntheticObj.fillMetadata(ctx.metadataSection())
+        val metadata = MetaData()
+        metadata.fill(ctx.metadataSection())
 
-        if (syntheticObj.metadata.isEmpty()) return //Пустые метаданные игнорируем
+        if (metadata.isEmpty()) return //Пустые метаданные игнорируем
 
-        domainOpAt(ctx.metaRef().start.line) { domainModel.separateMetadata.add(ref, syntheticObj.metadata) }
+        domainOpAt(ctx.metaRef().start.line) { domainModel.separateMetadata.add(ref, metadata) }
     }
 
     override fun visitAddClassDataDecl(ctx: AddClassDataDeclContext) {
@@ -274,7 +274,6 @@ class DomainLoqiBuilder private constructor(
     }
 
     private val SYNTHETIC = "LOQI_SYNTHETIC"
-    private fun syntheticObj() = ObjectDef(SYNTHETIC, SYNTHETIC)
     private fun syntheticClass(name: String) = ClassDef(name, SYNTHETIC)
 
     private fun MetaRefContext.getRef(): DomainRef<*> {
@@ -286,7 +285,7 @@ class DomainLoqiBuilder private constructor(
         else return ObjectRef(id().getName())
     }
 
-    private fun MetaOwner.fillMetadata(ctx: MetadataSectionContext?) {
+    private fun MetaData.fill(ctx: MetadataSectionContext?) {
         if (ctx == null) return
         for (metadataPropertyDecl in ctx.metadataPropertyDecl()) {
             val locCode =
@@ -298,8 +297,12 @@ class DomainLoqiBuilder private constructor(
 
             val value = metadataPropertyDecl.value().getTypeAndValue().value
 
-            this.metadata.add(locCode, propName, value)
+            this.add(locCode, propName, value)
         }
+    }
+
+    private fun MetaOwner.fillMetadata(ctx: MetadataSectionContext?) {
+        metadata.fill(ctx)
     }
 
     private fun TypeContext.getType(): Type<*> {

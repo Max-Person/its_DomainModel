@@ -9,9 +9,7 @@ package its.model.definition
  *
  * TODO добавить возможность кастомной валидации метаданных
  */
-class MetaData(
-    private val owner: MetaOwner,
-) {
+class MetaData {
     private val propertyNamesToLocalizations = mutableMapOf<String, MutableMap<String?, Any>>()
 
     /**
@@ -33,13 +31,7 @@ class MetaData(
     }
 
     private operator fun get(key: MetadataProperty): Any? {
-        return if (getLocalizations(key.name).containsKey(key.locCode)) {
-            getLocalizations(key.name)[key.locCode]
-        } else if (owner is ClassInheritorDef<*> && owner.parentClass != null) {
-            owner.parentClass!!.metadata[key]
-        } else {
-            null
-        }
+        return getLocalizations(key.name)[key.locCode]
     }
 
     /**
@@ -144,17 +136,6 @@ class MetaData(
                 MetadataPropertyValue(locCodeToValue.key, nameToLocCodes.key, locCodeToValue.value)
             }
         }.toSet()
-
-
-    companion object {
-        private class SyntheticOwner : MetaOwner {
-            override val metadata = MetaData(this)
-            override val description = "SEPARATE_META_SYNTHETIC_OWNER"
-        }
-
-        @JvmStatic
-        fun separate() = SyntheticOwner().metadata
-    }
 }
 
 /**
@@ -193,7 +174,7 @@ interface MetaOwner {
 }
 
 sealed class DomainDefWithMeta<Self : DomainDefWithMeta<Self>> : DomainDef<Self>(), MetaOwner {
-    override val metadata = MetaData(this)
+    override val metadata = MetaData()
     override fun addMerge(other: Self) {
         super.addMerge(other)
         this.metadata.addAll(other.metadata)
