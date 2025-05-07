@@ -32,9 +32,9 @@ class GetByCondition(
     ): Type<*> {
         variable.checkValid(domainModel, results, context, this)
 
-        context.variableTypes[variable.varName] = variable.className
+        context.add(variable)
         val conditionType = conditionExpr.validateAndGetType(domainModel, results, context)
-        context.variableTypes.remove(variable.varName)
+        context.remove(variable)
         results.checkValid(
             conditionType is BooleanType,
             "Condition argument of $description should be of boolean type, but was '$conditionType'"

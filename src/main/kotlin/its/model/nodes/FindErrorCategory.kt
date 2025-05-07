@@ -36,7 +36,7 @@ class FindErrorCategory(
             domainModel,
             results,
             context,
-            withVariables = mapOf(checkedVariable.varName to checkedVariable.className)
+            withVariables = listOf(checkedVariable)
         )
         results.checkValid(
             selectorType is BooleanType,

@@ -1,6 +1,7 @@
 package its.model.nodes
 
 import its.model.Describable
+import its.model.TypedVariable
 import its.model.definition.DomainModel
 import its.model.definition.MetaData
 import its.model.definition.MetaOwner
@@ -86,11 +87,11 @@ sealed class DecisionTreeElement : MetaOwner, Describable {
         domainModel: DomainModel,
         results: DecisionTreeValidationResults,
         context: DecisionTreeContext,
-        withVariables: Map<String, String> = emptyMap(),
+        withVariables: List<TypedVariable> = emptyList(),
     ): Type<*> {
         val (exprType, exprResults) = this.validateAndGet(
             domainModel,
-            ExpressionContext.from(context).apply { variableTypes.putAll(withVariables) }
+            ExpressionContext.from(context).apply { withVariables.forEach { add(it) } }
         )
         results.addAll(exprResults)
         return exprType

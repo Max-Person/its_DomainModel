@@ -45,7 +45,7 @@ class CycleAggregationNode(
             domainModel,
             results,
             context,
-            withVariables = mapOf(variable.varName to variable.className)
+            withVariables = listOf(variable)
         )
         results.checkValid(
             selectorType is BooleanType,

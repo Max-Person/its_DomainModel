@@ -37,7 +37,7 @@ class AssignDecisionTreeVar(
             results.invalid("No decision tree variable '$variableName' is known to assign in $description")
             return type
         }
-        val variableType = ObjectType(context.decisionTreeVariableTypes[variableName]!!)
+        val variableType = context.decisionTreeVariableTypes[variableName]!!
 
         results.checkValid(
             variableType.castFits(valueType, domainModel),

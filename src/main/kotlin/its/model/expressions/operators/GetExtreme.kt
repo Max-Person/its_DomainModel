@@ -43,7 +43,7 @@ class GetExtreme(
         context: ExpressionContext
     ): Type<*> {
         TypedVariable(className, varName).checkValid(domainModel, results, context, this)
-        context.variableTypes[varName] = className
+        context.variableTypes[varName] = ObjectType(className)
         val conditionType = conditionExpr.validateAndGetType(domainModel, results, context)
         results.checkValid(
             conditionType is BooleanType,
@@ -55,7 +55,7 @@ class GetExtreme(
             varName != extremeVarName,
             "General and extreme variable names cannot be equal (were '$varName', in $description)"
         )
-        context.variableTypes[extremeVarName] = className
+        context.variableTypes[extremeVarName] = ObjectType(className)
         val extremeConditionType = extremeConditionExpr.validateAndGetType(domainModel, results, context)
         context.variableTypes.remove(extremeVarName)
         context.variableTypes.remove(varName)

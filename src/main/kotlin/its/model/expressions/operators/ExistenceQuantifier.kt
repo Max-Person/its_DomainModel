@@ -38,7 +38,7 @@ class ExistenceQuantifier(
     ): Type<*> {
         variable.checkValid(domainModel, results, context, this)
 
-        context.variableTypes[variable.varName] = variable.className
+        context.add(variable)
         if (selectorExpr != null) {
             val selectorType = selectorExpr.validateAndGetType(domainModel, results, context)
             results.checkValid(
@@ -47,7 +47,7 @@ class ExistenceQuantifier(
             )
         }
         val conditionType = conditionExpr.validateAndGetType(domainModel, results, context)
-        context.variableTypes.remove(variable.varName)
+        context.remove(variable)
 
         return if (conditionType is BooleanType)
             BooleanType
