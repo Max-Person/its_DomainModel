@@ -4,8 +4,10 @@ import its.model.Utils.plus
 import its.model.definition.DomainModel
 import its.model.definition.compat.DomainDictionariesRDFBuilder
 import its.model.definition.loqi.DomainLoqiBuilder
+import its.model.definition.loqi.DomainLoqiWriter
 import its.model.nodes.DecisionTree
 import its.model.nodes.xml.DecisionTreeXMLBuilder
+import its.model.nodes.xml.DecisionTreeXMLWriter
 import java.io.File
 import java.net.URL
 
@@ -29,18 +31,23 @@ class DomainSolvingModel(
     /**
      * Построить модель на основе данных, взятых из директории [directoryUrl]
      *
-     * - Ожидается, что словари являются файломи в данной директории и называются
-     * `'enums.csv'`, `'classes.csv'`, `'properties.csv'` и `'relationships.csv'` соответственно.
-     * - RDF-данные аналогично читаются из turtle-файла `'domain.ttl'`
-     * - Деревья решений аналогично читаются из XML файлов вида tree_<имя дерева>.xml
+     * Если [buildMethod] == [BuildMethod.DICT_RDF], то:
+     * - Данные модели домена [domainModel] читаются из .csv словарей и .ttl данных (подробнее см. [DomainDictionariesRDFBuilder])
+     * - [tagsData] не заполняется
+     *
+     * Иначе (если [buildMethod] == [BuildMethod.LOQI])
+     * - Данные модели домена [domainModel] читаются из файла '`domain.loqi`' (подробнее см. [DomainLoqiBuilder])
+     * - Данные тегов [tagsData] аналогично читаются из файлов вида '`tag_<имя тега>.loqi`'
+     *
+     * Деревья решений в любом случае читаются из XML файлов вида '`tree_<имя дерева>.xml`' (подробнее см. [DecisionTreeXMLBuilder])
      */
-    constructor(directoryURL: URL, buildMethod: BuildMethod = BuildMethod.DICT_RDF) : this(
+    constructor(directoryURL: URL, buildMethod: BuildMethod = BuildMethod.LOQI) : this(
         collectDomain(directoryURL, buildMethod),
-        collectTags(directoryURL),
+        collectTags(directoryURL, buildMethod),
         collectTrees(directoryURL)
     )
 
-    constructor(directoryPath: String, buildMethod: BuildMethod = BuildMethod.DICT_RDF)
+    constructor(directoryPath: String, buildMethod: BuildMethod = BuildMethod.LOQI)
             : this(File(directoryPath).toURI().toURL(), buildMethod)
 
 
@@ -56,7 +63,7 @@ class DomainSolvingModel(
          * Построить домен на основе файлов в директории
          */
         @JvmStatic
-        fun collectDomain(directoryURL: URL, buildMethod: BuildMethod = BuildMethod.DICT_RDF): DomainModel {
+        fun collectDomain(directoryURL: URL, buildMethod: BuildMethod = BuildMethod.LOQI): DomainModel {
             return when (buildMethod) {
                 BuildMethod.LOQI -> DomainLoqiBuilder.buildDomain(
                     (directoryURL + "domain.loqi").openStream().bufferedReader()
@@ -67,7 +74,9 @@ class DomainSolvingModel(
         }
 
         @JvmStatic
-        fun collectTags(directoryURL: URL): Map<String, DomainModel> {
+        fun collectTags(directoryURL: URL, buildMethod: BuildMethod = BuildMethod.LOQI): Map<String, DomainModel> {
+            if (buildMethod != BuildMethod.LOQI)
+                return emptyMap()
             return DirectoryScanUtils.findFilesMatching(directoryURL, Regex("tag_(\\S+)\\.loqi"))
                 .map { (fileUrl, regexMatch) ->
                     val (name) = regexMatch.destructured
@@ -91,6 +100,36 @@ class DomainSolvingModel(
                 }
                 .toMap()
         }
+
+        /**
+         * Записать полную информацию о модели [model] в директорию [directoryPath] так,
+         * что при чтении с помощью конструктора, принимающего [directoryPath], модель сможет быть восстановлена.
+         *
+         * *Обратите внимание, что для записи информации о моделях домена используется [DomainLoqiWriter],
+         * т.е. читать такую запись нужно будет с помощью [BuildMethod.LOQI]*
+         */
+        @JvmStatic
+        fun writeModelToDirectory(model: DomainSolvingModel, directoryPath: String) {
+            File(directoryPath).mkdir()
+            DomainLoqiWriter.saveDomain(
+                model.domainModel,
+                File(directoryPath, "domain.loqi").bufferedWriter()
+            )
+            model.tagsData.forEach { (tagName, tagModel) ->
+                DomainLoqiWriter.saveDomain(
+                    tagModel,
+                    File(directoryPath, "tag_$tagName.loqi").bufferedWriter()
+                )
+            }
+            model.decisionTrees.forEach { (treeName, decisionTree) ->
+                val treeFileName = if(treeName.isEmpty()) "" else "_$treeName"
+                DecisionTreeXMLWriter.writeDecisionTreeToXml(
+                    decisionTree,
+                    File(directoryPath, "tree$treeFileName.xml").bufferedWriter()
+                )
+            }
+        }
+
     }
 
 
