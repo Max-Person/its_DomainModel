@@ -1,6 +1,7 @@
 package its.model.expressions.operators
 
 import its.model.definition.DomainModel
+import its.model.definition.PropertyDef
 import its.model.definition.types.AnyType
 import its.model.definition.types.ObjectType
 import its.model.definition.types.Type
@@ -57,6 +58,12 @@ class GetPropertyValue(
         paramsValues.validateFull(property.paramsDecl, this, domainModel, results, context)
 
         return property.type
+    }
+
+    fun getPropertyDef(domainModel: DomainModel): PropertyDef {
+        val objectType = objectExpr.resolvedType(domainModel) as ObjectType
+        val classDef = objectType.findIn(domainModel)
+        return classDef.findPropertyDef(propertyName)!!
     }
 
     override fun <I> use(behaviour: OperatorBehaviour<I>): I {
