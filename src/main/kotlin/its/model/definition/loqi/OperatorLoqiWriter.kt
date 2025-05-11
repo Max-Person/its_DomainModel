@@ -228,7 +228,6 @@ class OperatorLoqiWriter private constructor(
         newLine()
         unindent()
         write("}")
-        writeMultipleEnclosed("{", op.nestedExprs, ";", "}")
     }
 
     override fun process(op: IfThen) {
