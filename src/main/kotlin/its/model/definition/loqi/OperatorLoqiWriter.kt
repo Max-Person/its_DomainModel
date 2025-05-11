@@ -136,19 +136,19 @@ class OperatorLoqiWriter private constructor(
     override fun process(op: CheckRelationship) {
         writeAndContinue(
             asString { op.subjectExpr.writeLeft(op) },
-            "->"
+            "=>"
                 + op.relationshipName.toLoqiName()
-                + asString { writeMultipleEnclosed("(", op.objectExprs, ",", ")") }
-                + asString { writeParams(op.paramsValues) },
+                + asString { writeParams(op.paramsValues) }
+                + asString { writeMultipleEnclosed("(", op.objectExprs, ",", ")") },
         )
     }
 
     override fun process(op: GetRelationshipParamValue) {
         writeAndContinue(asString { op.subjectExpr.writeLeft(op) },
-            "->"
+            "=>"
                 + op.relationshipName.toLoqiName()
-                + asString { writeMultipleEnclosed("(", op.objectExprs, ",", ")") }
-                + asString { writeParams(op.paramsValues) },
+                + asString { writeParams(op.paramsValues) }
+                + asString { writeMultipleEnclosed("(", op.objectExprs, ",", ")") },
             ".${op.paramName.toLoqiName()}"
         )
     }

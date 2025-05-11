@@ -138,8 +138,8 @@ exp
     | exp '->' ID paramsValuesExpr?                   #getByRelationship
     | exp '.'  ID paramsValuesExpr?                    #getProperty
     | exp '.' CLASS '(' ')'                     #getClassExp
-    | exp '->' ID '(' (exp ',')* exp ','? ')' paramsValuesExpr? '.' ID  #getRelationshipParamExp
-    | exp '->' ID '(' (exp ',')* exp ','? ')' paramsValuesExpr?     #checkRelationshipExp
+    | exp '=>' ID paramsValuesExpr? '(' (exp ',')* exp ','? ')'  '.' ID  #getRelationshipParamExp
+    | exp '=>' ID paramsValuesExpr? '(' (exp ',')* exp ','? ')'     #checkRelationshipExp
     | NOT exp                       #notExp
     | exp IS exp                    #isExp
     | exp (GREATER|LESS|GTE|LTE) exp   #compareExp
