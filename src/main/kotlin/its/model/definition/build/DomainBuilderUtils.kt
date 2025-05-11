@@ -70,7 +70,8 @@ object DomainBuilderUtils {
 
     @JvmStatic
     fun splitMetadataPropertyName(propertyName: String, delimiter: Char = '_'): MetadataProperty {
-        val splitRegex = "([A-Z]{2})$delimiter(.+)".toRegex()
+        //TODO изменить эту систему разбивки (и например в XML можно использовать точку вместо _ )
+        val splitRegex = "([A-Z]{2})\\$delimiter(.+)".toRegex()
         val splitMatchResult = splitRegex.matchEntire(propertyName)
         if (splitMatchResult != null) {
             val (locCode, property) = splitMatchResult.destructured

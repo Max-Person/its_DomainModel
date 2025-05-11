@@ -67,7 +67,6 @@ sealed class AbstractDecisionTreeXMLBuilder<T : DecisionTreeElement> : XMLBuilde
             if (attr.nodeName.startsWith(ADDITIONAL_INFO_PREFIX)) {
                 val (locCode, metaPropertyName) = DomainBuilderUtils.splitMetadataPropertyName(
                     attr.nodeName.drop(ADDITIONAL_INFO_PREFIX.length),
-                    delimiter = '.'
                 )
 
                 metadata.add(locCode, metaPropertyName, attr.nodeValue)
