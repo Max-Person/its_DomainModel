@@ -172,7 +172,7 @@ class DomainLoqiWriter private constructor(
         }
         write("$kindString prop ${name.toLoqiName()}${paramsDecl.toLoqi()}: ${type.toLoqi()}")
         if (!hasOption(LoqiWriteOptions.SEPARATE_CLASS_PROPERTY_VALUES)
-            && paramsDecl.isNotEmpty()
+            && paramsDecl.isEmpty()
             && owner.definedPropertyValues.get(name) != null
         ) {
             val value = owner.definedPropertyValues.get(name)!!.value
