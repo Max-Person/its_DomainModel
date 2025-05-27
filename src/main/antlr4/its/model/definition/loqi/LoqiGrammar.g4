@@ -1,8 +1,6 @@
 grammar LoqiGrammar;
 
-topLevelRule : model
-             | exp
-             ;
+fullExp : exp EOF;
 
 model : topDecl+ EOF
       ;
@@ -186,7 +184,7 @@ INTEGER : DECIMAL ;
 
 DECIMAL : ( '0' | [1-9] Digit* ) ;
 
-DOUBLE : (Digit+ '.' Digit* | '.' Digit+) ExponentPart?
+DOUBLE : (Digit* '.' Digit+) ExponentPart?
        | Digit+ ExponentPart
        | DECIMAL [dD]
        ;

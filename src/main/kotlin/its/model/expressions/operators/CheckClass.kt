@@ -46,19 +46,6 @@ class CheckClass(
             "Class-argument of $description should be a class, but was $objType"
         )
 
-        if (!objIsOfObjectType || !classIsOfClassType) return type
-
-        objType as ObjectType
-        classType as ClassType
-        if (!objType.exists(domainModel) || !classType.exists(domainModel)) return type
-
-        val objClassType = objType.toClassType()
-        results.checkConforming(
-            objClassType.castFits(classType, domainModel),
-            "$description checks for a class ${classType.className} on an object " +
-                    "of a non-compatible type '${objType.className}'"
-        )
-
         return type
     }
 

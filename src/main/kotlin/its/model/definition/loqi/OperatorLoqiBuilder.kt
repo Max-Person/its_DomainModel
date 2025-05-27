@@ -39,7 +39,7 @@ class OperatorLoqiBuilder : LoqiGrammarBaseVisitor<Operator>() {
             val errorListener = SyntaxErrorListener()
             parser.addErrorListener(errorListener)
 
-            val tree: ParseTree = parser.exp()
+            val tree: ParseTree = parser.fullExp().exp()
             errorListener.getSyntaxErrors().firstOrNull()?.exception?.apply { throw this }
 
             val builder = OperatorLoqiBuilder()
