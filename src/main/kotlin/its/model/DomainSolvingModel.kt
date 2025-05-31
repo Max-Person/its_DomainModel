@@ -144,6 +144,9 @@ class DomainSolvingModel(
             mergedTagDomain.validateAndThrow() //Деревья должны корректно работать со всеми теговыми моделями
             decisionTrees.values.forEach { it.validate(mergedTagDomain) }
         }
+        if(tagsData.isEmpty()){
+            decisionTrees.values.forEach { it.validate(domainModel) }
+        }
         return this
     }
 
