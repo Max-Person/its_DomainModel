@@ -36,8 +36,8 @@ abstract class Operator : Cloneable, Describable {
     /**
      * Динамически определяемый тип данных оператора
      */
-    open fun resolvedType(domainModel: DomainModel): Type<*> =
-        validateAndGetType(domainModel, ExpressionValidationResults(true), ExpressionContext())
+    open fun resolvedType(domainModel: DomainModel, expressionContext: ExpressionContext = ExpressionContext()): Type<*> =
+        validateAndGetType(domainModel, ExpressionValidationResults(true), expressionContext)
 
     /**
      * Валидация - провалидировать выражение (с учетом контекста [context]) и положить все потенциальные ошибки в [results]
