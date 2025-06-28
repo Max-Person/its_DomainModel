@@ -46,8 +46,8 @@ class FindActionNode(
 
         //Далее части валидируются с добавлением в контекст известных переменных
         context.add(varAssignment.variable)
-        validateLinked(domainModel, results, context, errorCategories)
         secondaryAssignments.validate(domainModel, results, context, this)
+        validateLinked(domainModel, results, context, errorCategories)
         nextIfFound.validate(domainModel, results, context)
         context.remove(varAssignment.variable)
         secondaryAssignments.forEach { context.remove(it.variable) }
